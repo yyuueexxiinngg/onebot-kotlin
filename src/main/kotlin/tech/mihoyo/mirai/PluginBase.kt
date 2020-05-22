@@ -7,7 +7,6 @@ import java.io.File
 
 object PluginBase : PluginBase() {
     var services: HttpApiServices = HttpApiServices(this)
-    val pluginPath = dataFolder
 
     override fun onLoad() {
         services.onLoad()

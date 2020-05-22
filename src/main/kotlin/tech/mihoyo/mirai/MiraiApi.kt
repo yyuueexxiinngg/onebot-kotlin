@@ -38,7 +38,11 @@ class MiraiApi(val bot: Bot) {
         val messages = try {
             params["message"]?.jsonArray
         } catch (e: JsonException) {
-            params["message"]?.content
+            try {
+                params["message"]?.content
+            } catch (e: JsonException) {
+                params["message"]?.jsonObject
+            }
         }
         val group = bot.getGroup(targetGroupId)
         cqMessageToMessageChains(bot, group, messages, raw)?.let {
@@ -55,7 +59,11 @@ class MiraiApi(val bot: Bot) {
         val messages = try {
             params["message"]?.jsonArray
         } catch (e: JsonException) {
-            params["message"]?.content
+            try {
+                params["message"]?.content
+            } catch (e: JsonException) {
+                params["message"]?.jsonObject
+            }
         }
 
         val contact = try {

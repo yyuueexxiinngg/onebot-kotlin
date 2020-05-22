@@ -64,18 +64,20 @@ class ReportService(
                 else -> {
                     val event = this
                     configByBots[bot.id]?.apply {
-                        val config = this
-                        event.toCQDTO(isRawMessage = config.postMessageFormat == "string")
-                            .takeIf { it !is CQIgnoreEventDTO }?.apply {
-                                report(config.postUrl, bot.id, this.toJson(), config.secret)
-                            }
+                        if (this.postUrl != "") {
+                            val config = this
+                            event.toCQDTO(isRawMessage = config.postMessageFormat == "string")
+                                .takeIf { it !is CQIgnoreEventDTO }?.apply {
+                                    report(config.postUrl, bot.id, this.toJson(), config.secret)
+                                }
+                        }
                     }
                 }
             }
         }
     }
 
-    suspend fun report(url: String, botId: Long, json: String, secret: String): String {
+    private suspend fun report(url: String, botId: Long, json: String, secret: String): String {
         return http.request {
             url(url)
             headers {
@@ -92,7 +94,7 @@ class ReportService(
         }
     }
 
-    fun getSha1Hash(botId: Long, content: String): String {
+    private fun getSha1Hash(botId: Long, content: String): String {
         sha1UtilByBot[botId]?.apply {
             return this.doFinal(content.toByteArray()).fold("", { str, it -> str + "%02x".format(it) })
         }

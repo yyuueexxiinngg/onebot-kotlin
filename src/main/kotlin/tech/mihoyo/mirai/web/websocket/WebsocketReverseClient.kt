@@ -9,6 +9,7 @@ import io.ktor.http.cio.websocket.Frame
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.http.cio.websocket.readText
 import io.ktor.util.KtorExperimentalAPI
+import io.ktor.util.rootCause
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.Bot
@@ -156,7 +157,8 @@ class WebSocketReverseClient(
                         delay(config.reconnectInterval)
                         startWebsocketClient(bot)
                     }
-                    else -> console.logger.warning("Websocket连接出错, 未知错误, 放弃重试连接, 请检查配置正确后重启mirai  " + e.message + e.cause)
+                    is CancellationException -> console.logger.info("Websocket连接关闭中")
+                    else -> console.logger.warning("Websocket连接出错, 未知错误, 放弃重试连接, 请检查配置正确后重启mirai  " + e.message + e.javaClass.name)
                 }
             }
         }

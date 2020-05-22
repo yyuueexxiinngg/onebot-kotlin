@@ -6,6 +6,7 @@ import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.contact.PermissionDeniedException
 import tech.mihoyo.mirai.MiraiApi
+import tech.mihoyo.mirai.PluginBase
 import tech.mihoyo.mirai.data.common.CQResponseDTO
 import tech.mihoyo.mirai.util.toJson
 
@@ -15,7 +16,6 @@ suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi
         val json = Json.parseJson(cqActionText).jsonObject
         val echo = json["echo"]
         lateinit var responseDTO: CQResponseDTO
-        var textToSend = ""
         try {
             when (json["action"]?.content) {
                 "send_msg" -> responseDTO = mirai.cqSendMessage(json["params"]!!.jsonObject)
@@ -60,12 +60,12 @@ suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi
         } catch (e: PermissionDeniedException) {
             responseDTO = CQResponseDTO.CQMiraiFailure
         } catch (e: Exception) {
-            println(e)
+            PluginBase.logger.error(e)
             responseDTO = CQResponseDTO.CQPluginFailure
         }
         responseDTO.echo = echo
         outgoing.send(Frame.Text(responseDTO.toJson()))
     } catch (e: Exception) {
-        println(e)
+        PluginBase.logger.error(e)
     }
 }

@@ -68,6 +68,16 @@ suspend fun cqMessageToMessageChains(
                     continue
                 }
             }
+        } else if (cqMessage is JsonObject) {
+            try {
+                val data = cqMessage.jsonObject["data"]
+                messageChain = when (cqMessage.jsonObject["type"]?.content) {
+                    "text" -> PlainText(data!!.jsonObject["text"]!!.content).asMessageChain()
+                    else -> cqTextToMessageInternal(bot, contact, cqMessage).asMessageChain()
+                }
+            } catch (e: NullPointerException) {
+                bot.logger.warning("Got null when parsing CQ message object")
+            }
         }
         return messageChain
     }

@@ -102,15 +102,6 @@ data class CQMemberInfoData(
 }
 
 @Serializable
-data class CQMemberInfoData2(
-    override val id: Long,
-    val nickname: String,
-    val remark: String
-) : ContactDTO() {
-    constructor(qq: Friend) : this(qq.id, qq.nick, "")
-}
-
-@Serializable
 @SerialName("CanSendImageData")
 data class CQCanSendImageData(val yes: Boolean = true) : CQResponseDataDTO()
 
