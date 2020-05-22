@@ -53,7 +53,6 @@ __CQHTTP runs on Mirai__
 
 #### 特别注意, 很多信息Mirai不支持获取, 如群成员的年龄、性别等, 为保证兼容性, 这些项已用`Unknown`, `0`之类的信息填充占位
 
-<list>
 - SendMessage (不包含讨论组消息)
 - SendGroupMessage
 - SendPrivateMessage
@@ -73,7 +72,6 @@ __CQHTTP runs on Mirai__
 - CanSendImage (恒为true)
 - GetStatus (不完全支持, 仅返回`online`和`good`两项)
 - GetVersionInfo
-</list>
 
 ## 尚未支持的CQHTTP API
 
