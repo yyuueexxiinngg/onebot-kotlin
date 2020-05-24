@@ -84,8 +84,6 @@ class ReportService(
                 append("User-Agent", "MiraiHttp/0.1.0")
                 append("X-Self-ID", botId.toString())
                 secret.takeIf { it != "" }?.apply {
-                    println("Triggered")
-                    println(this)
                     append("X-Signature", getSha1Hash(botId, json))
                 }
             }

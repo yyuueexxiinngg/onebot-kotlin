@@ -33,7 +33,7 @@ __CQHTTP runs on Mirai__
         reversePort: 8080
         # 反向Websocket路径
         reversePath: /ws
-        # 访问T口令, 默认为null, 即不设置Token
+        # 访问口令, 默认为null, 即不设置Token
         accessToken: null
         # 反向Websocket Api路径 尚未实现
         #  reverseApiPath: /ws/

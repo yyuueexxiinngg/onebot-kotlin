@@ -16,7 +16,7 @@ class MiraiApi(val bot: Bot) {
     val cachedTempContact: MutableMap<Long, Long> = mutableMapOf()
     private val cachedSourceQueue = CacheSourceQueue()
 
-    suspend fun cqSendMessage(params: JsonObject): CQResponseDTO {
+    suspend fun cqSendMessage(params: Map<String, JsonElement>): CQResponseDTO {
         if (params.contains("message_type")) {
             when (params["message_type"]?.content) {
                 "private" -> return cqSendPrivateMessage(params)
@@ -32,7 +32,7 @@ class MiraiApi(val bot: Bot) {
         return CQResponseDTO.CQInvalidRequest
     }
 
-    suspend fun cqSendGroupMessage(params: JsonObject): CQResponseDTO {
+    suspend fun cqSendGroupMessage(params: Map<String, JsonElement>): CQResponseDTO {
         val targetGroupId = params["group_id"]!!.long
         val raw = params["auto_escape"]?.booleanOrNull ?: false
         val messages = try {
@@ -53,7 +53,7 @@ class MiraiApi(val bot: Bot) {
         return CQResponseDTO.CQInvalidRequest
     }
 
-    suspend fun cqSendPrivateMessage(params: JsonObject): CQResponseDTO {
+    suspend fun cqSendPrivateMessage(params: Map<String, JsonElement>): CQResponseDTO {
         val targetQQId = params["user_id"]!!.long
         val raw = params["auto_escape"]?.booleanOrNull ?: false
         val messages = try {
@@ -166,7 +166,7 @@ class MiraiApi(val bot: Bot) {
         }
     }
 
-    suspend fun cqSetFriendAddRequest(params: JsonObject): CQResponseDTO {
+    suspend fun cqSetFriendAddRequest(params: Map<String, JsonElement>): CQResponseDTO {
         val flag = params["flag"]?.contentOrNull
         val approve = params["approve"]?.booleanOrNull ?: true
         val remark = params["remark"]?.contentOrNull
@@ -186,7 +186,7 @@ class MiraiApi(val bot: Bot) {
         }
     }
 
-    suspend fun cqSetGroupAddRequest(params: JsonObject): CQResponseDTO {
+    suspend fun cqSetGroupAddRequest(params: Map<String, JsonElement>): CQResponseDTO {
         val flag = params["flag"]?.contentOrNull
         val type = params["type"]?.contentOrNull
         val subType = params["sub_type"]?.contentOrNull
@@ -267,6 +267,65 @@ class MiraiApi(val bot: Bot) {
             CQResponseDTO.CQMemberList(cqGroupList)
         } else {
             CQResponseDTO.CQInvalidRequest
+        }
+    }
+
+    // https://github.com/richardchien/coolq-http-api/blob/master/src/cqhttp/plugins/web/http.cpp#L375
+    suspend fun cqHandleQuickOperation(params: JsonObject): CQResponseDTO {
+        try {
+            val context = params["context"]?.jsonObject
+            val operation = params["operation"]?.jsonObject
+            val postType = context?.get("post_type")?.content
+
+            if (postType == "message") {
+                val messageType = context["message_type"]?.content
+
+                var reply = operation?.get("reply")?.content
+                if (reply != null) {
+                    if (messageType == "group" && operation?.get("at_sender")?.booleanOrNull == true) {
+                        context["user_id"]?.longOrNull?.apply {
+                            reply = "[CQ:at,qq=$this] $reply"
+                        }
+                    }
+                    val nextCallParams = context.toMutableMap()
+                    nextCallParams["message"] = JsonPrimitive(reply)
+                    return cqSendMessage(nextCallParams)
+                }
+
+                if (messageType == "group") {
+                    // TODO: 备忘, 暂未支持
+                    val isAnonymous = false
+                    if (operation?.get("delete")?.booleanOrNull == true) {
+                        return cqDeleteMessage(context)
+                    }
+                    if (operation?.get("kick")?.booleanOrNull == true) {
+                        return cqSetGroupKick(context)
+                    }
+                    if (operation?.get("ban")?.booleanOrNull == true) {
+                        @Suppress("ConstantConditionIf")
+                        (return if (isAnonymous) {
+                            cqSetAnonymousBan(context)
+                        } else {
+                            cqSetGroupBan(context)
+                        })
+                    }
+                }
+            } else if (postType == "request") {
+                val requestType = context["request_type"]?.content
+                val approveOpt = operation?.get("approve")?.booleanOrNull ?: false
+                val nextCallParams = context.toMutableMap()
+                nextCallParams["approve"] = JsonPrimitive(approveOpt)
+                nextCallParams["remark"] = JsonPrimitive(operation?.get("remark")?.contentOrNull)
+                nextCallParams["reason"] = JsonPrimitive(operation?.get("reason")?.contentOrNull)
+                if (requestType == "friend") {
+                    return cqSetFriendAddRequest(nextCallParams)
+                } else if (requestType == "group") {
+                    return cqSetGroupAddRequest(nextCallParams)
+                }
+            }
+            return CQResponseDTO.CQInvalidRequest
+        } catch (e: Exception) {
+            return CQResponseDTO.CQPluginFailure
         }
     }
 

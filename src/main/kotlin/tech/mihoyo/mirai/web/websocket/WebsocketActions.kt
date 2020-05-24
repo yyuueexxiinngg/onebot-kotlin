@@ -6,16 +6,18 @@ import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.contact.PermissionDeniedException
 import tech.mihoyo.mirai.MiraiApi
-import tech.mihoyo.mirai.PluginBase
 import tech.mihoyo.mirai.data.common.CQResponseDTO
+import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
 
 @OptIn(UnstableDefault::class)
 suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi, cqActionText: String) {
     try {
+        logger.debug(cqActionText)
         val json = Json.parseJson(cqActionText).jsonObject
         val echo = json["echo"]
-        lateinit var responseDTO: CQResponseDTO
+        // Same exceptions are not catchable ...?
+        var responseDTO: CQResponseDTO = CQResponseDTO.CQPluginFailure
         try {
             when (json["action"]?.content) {
                 "send_msg" -> responseDTO = mirai.cqSendMessage(json["params"]!!.jsonObject)
@@ -55,17 +57,23 @@ suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi
                 "set_restart_plugin" -> responseDTO = mirai.cqSetRestartPlugin(json["params"]!!.jsonObject)
                 "clean_data_dir" -> responseDTO = mirai.cqCleanDataDir(json["params"]!!.jsonObject)
                 "clean_plugin_log" -> responseDTO = mirai.cqCleanPluginLog(json["params"]!!.jsonObject)
-                else -> println(json["action"]?.content)
+                ".handle_quick_operation_async" -> responseDTO = mirai.cqHandleQuickOperation(json["params"]!!.jsonObject)
+                ".handle_quick_operation" -> responseDTO = mirai.cqHandleQuickOperation(json["params"]!!.jsonObject)
+                else -> {
+                    logger.error("未知CQHTTP API: ${json["action"]?.content}")
+                }
             }
         } catch (e: PermissionDeniedException) {
             responseDTO = CQResponseDTO.CQMiraiFailure
         } catch (e: Exception) {
-            PluginBase.logger.error(e)
+            logger.error(e)
             responseDTO = CQResponseDTO.CQPluginFailure
         }
         responseDTO.echo = echo
-        outgoing.send(Frame.Text(responseDTO.toJson()))
+        val jsonToSend = responseDTO.toJson()
+        logger.debug(jsonToSend)
+        outgoing.send(Frame.Text(jsonToSend))
     } catch (e: Exception) {
-        PluginBase.logger.error(e)
+        logger.error(e)
     }
 }

@@ -9,7 +9,6 @@ import io.ktor.http.cio.websocket.Frame
 import io.ktor.client.features.websocket.WebSockets
 import io.ktor.http.cio.websocket.readText
 import io.ktor.util.KtorExperimentalAPI
-import io.ktor.util.rootCause
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.Bot
@@ -23,6 +22,7 @@ import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.MiraiApi
 import tech.mihoyo.mirai.data.common.*
+import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.HttpApiService
 import tech.mihoyo.mirai.util.toJson
 import java.io.EOFException
@@ -74,7 +74,7 @@ class WebSocketReverseClient(
                         // 获取当前Bot对应Config
                         val config = WebSocketReverseClientConfig(console.loadConfig("setting.yml"), bot)
                         configByBots[bot.id] = config
-                        console.logger.info("Bot:${bot.id} 反向Websocket模块启用状态: ${config.enable}")
+                        logger.info("Bot:${bot.id} 反向Websocket模块启用状态: ${config.enable}")
                         if (config.enable) {
                             httpClientByBots[bot.id] = HttpClient {
                                 install(WebSockets)
@@ -134,7 +134,7 @@ class WebSocketReverseClient(
                                 is Frame.Text -> {
                                     handleWebSocketActions(outgoing, mirai, it.readText())
                                 }
-                                else -> console.logger.warning("Unsupported incomeing frame")
+                                else -> logger.warning("Unsupported incomeing frame")
                             }
                         }
 
@@ -143,22 +143,22 @@ class WebSocketReverseClient(
             } catch (e: Exception) {
                 when (e) {
                     is ConnectException -> {
-                        console.logger.warning("Websocket连接出错, 请检查服务器是否开启并确认正确监听端口, 将在${config.reconnectInterval / 1000}秒后重试连接")
+                        logger.warning("Websocket连接出错, 请检查服务器是否开启并确认正确监听端口, 将在${config.reconnectInterval / 1000}秒后重试连接")
                         delay(config.reconnectInterval)
                         startWebsocketClient(bot)
                     }
                     is EOFException -> {
-                        console.logger.warning("Websocket连接出错, 服务器返回数据不正确, 请检查Websocket服务器是否配置正确, 将在${config.reconnectInterval / 1000}秒后重试连接")
+                        logger.warning("Websocket连接出错, 服务器返回数据不正确, 请检查Websocket服务器是否配置正确, 将在${config.reconnectInterval / 1000}秒后重试连接")
                         delay(config.reconnectInterval)
                         startWebsocketClient(bot)
                     }
                     is IOException -> {
-                        console.logger.warning("Websocket连接出错, 可能被服务器关闭, 将在${config.reconnectInterval / 1000}秒后重试连接")
+                        logger.warning("Websocket连接出错, 可能被服务器关闭, 将在${config.reconnectInterval / 1000}秒后重试连接")
                         delay(config.reconnectInterval)
                         startWebsocketClient(bot)
                     }
-                    is CancellationException -> console.logger.info("Websocket连接关闭中")
-                    else -> console.logger.warning("Websocket连接出错, 未知错误, 放弃重试连接, 请检查配置正确后重启mirai  " + e.message + e.javaClass.name)
+                    is CancellationException -> logger.info("Websocket连接关闭中")
+                    else -> logger.warning("Websocket连接出错, 未知错误, 放弃重试连接, 请检查配置正确后重启mirai  " + e.message + e.javaClass.name)
                 }
             }
         }
@@ -188,7 +188,7 @@ class WebSocketReverseClient(
                         httpClientByBots[bot.id].apply {
                             this!!.close()
                         }
-                        console.logger.warning("Websocket连接已断开, 将在${config.reconnectInterval / 1000}秒后重试连接")
+                        logger.warning("Websocket连接已断开, 将在${config.reconnectInterval / 1000}秒后重试连接")
                         delay(config.reconnectInterval)
                         httpClientByBots[bot.id] = HttpClient {
                             install(WebSockets)
@@ -211,6 +211,6 @@ class WebSocketReverseClient(
         subscriptionByBots.clear()
         httpClientByBots.forEach { it.value.close() }
         httpClientByBots.clear()
-        console.logger.info("反向Websocket模块已禁用")
+        logger.info("反向Websocket模块已禁用")
     }
 }

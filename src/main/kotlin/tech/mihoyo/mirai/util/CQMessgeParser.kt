@@ -46,16 +46,16 @@ suspend fun cqMessageToMessageChains(
     cqMessage: Any?,
     raw: Boolean = false
 ): MessageChain? {
-    if (cqMessage != null) {
-        var messageChain: MessageChain? = null
-        if (cqMessage is String) {
-            messageChain = if (raw) {
+    return when (cqMessage) {
+        is String -> {
+            return if (raw) {
                 PlainText(cqMessage).asMessageChain()
             } else {
                 codeToChain(bot, cqMessage, contact)
             }
-        } else if (cqMessage is JsonArray) {
-            messageChain = buildMessageChain { }
+        }
+        is JsonArray -> {
+            var messageChain = buildMessageChain { }
             for (msg in cqMessage) {
                 try {
                     val data = msg.jsonObject["data"]
@@ -64,49 +64,53 @@ suspend fun cqMessageToMessageChains(
                         else -> messageChain += cqTextToMessageInternal(bot, contact, msg)
                     }
                 } catch (e: NullPointerException) {
-                    bot.logger.warning("Got null when parsing CQ message array")
+                    logger.warning("Got null when parsing CQ message array")
                     continue
                 }
             }
-        } else if (cqMessage is JsonObject) {
-            try {
+            return messageChain
+        }
+        is JsonObject -> {
+            return try {
                 val data = cqMessage.jsonObject["data"]
-                messageChain = when (cqMessage.jsonObject["type"]?.content) {
+                when (cqMessage.jsonObject["type"]?.content) {
                     "text" -> PlainText(data!!.jsonObject["text"]!!.content).asMessageChain()
                     else -> cqTextToMessageInternal(bot, contact, cqMessage).asMessageChain()
                 }
             } catch (e: NullPointerException) {
-                bot.logger.warning("Got null when parsing CQ message object")
+                logger.warning("Got null when parsing CQ message object")
+                null
             }
         }
-        return messageChain
+        else -> null
     }
-    return null
 }
 
 
 private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message: Any): Message {
-    if (message is String) {
-        if (message.startsWith("[CQ:") && message.endsWith("]")) {
-            val parts = message.substring(4, message.length - 1).split(delimiters = *arrayOf(","), limit = 2)
+    return when (message) {
+        is String -> {
+            if (message.startsWith("[CQ:") && message.endsWith("]")) {
+                val parts = message.substring(4, message.length - 1).split(delimiters = *arrayOf(","), limit = 2)
 
-            lateinit var args: HashMap<String, String>
-            args = if (parts.size == 2) {
-                parts[1].toMap()
-            } else {
-                HashMap()
+                lateinit var args: HashMap<String, String>
+                args = if (parts.size == 2) {
+                    parts[1].toMap()
+                } else {
+                    HashMap()
+                }
+                return convertToMiraiMessage(bot, contact, parts[0], args)
             }
-
-            return convertToMiraiMessage(bot, contact, parts[0], args)
+            return PlainText(message.unescape())
         }
-        return PlainText(message.unescape())
-    } else if (message is JsonObject) {
-        val type = message.jsonObject["type"]!!.content
-        val data = message.jsonObject["data"] ?: return MSG_EMPTY
-        val args = data.jsonObject.keys.map { it to data.jsonObject[it]!!.content }.toMap()
-        return convertToMiraiMessage(bot, contact, type, args)
+        is JsonObject -> {
+            val type = message.jsonObject["type"]!!.content
+            val data = message.jsonObject["data"] ?: return MSG_EMPTY
+            val args = data.jsonObject.keys.map { it to data.jsonObject[it]!!.content }.toMap()
+            return convertToMiraiMessage(bot, contact, type, args)
+        }
+        else -> MSG_EMPTY
     }
-    return MSG_EMPTY
 }
 
 private suspend fun convertToMiraiMessage(
@@ -206,7 +210,7 @@ private suspend fun convertToMiraiMessage(
             return PokeMessage.Poke
         }
         else -> {
-            bot.logger.debug("不支持的 CQ码：${type}")
+            logger.debug("不支持的 CQ码：${type}")
         }
     }
     return MSG_EMPTY
@@ -249,7 +253,7 @@ suspend fun codeToChain(bot: Bot, message: String, contact: Contact?): MessageCh
             message.forEach { c: Char ->
                 if (c == '[') {
                     if (interpreting) {
-                        bot.logger.error("CQ消息解析失败：$message，索引：$index")
+                        logger.error("CQ消息解析失败：$message，索引：$index")
                         return@forEach
                     } else {
                         interpreting = true
@@ -262,7 +266,7 @@ suspend fun codeToChain(bot: Bot, message: String, contact: Contact?): MessageCh
                     }
                 } else if (c == ']') {
                     if (!interpreting) {
-                        bot.logger.error("CQ消息解析失败：$message，索引：$index")
+                        logger.error("CQ消息解析失败：$message，索引：$index")
                         return@forEach
                     } else {
                         interpreting = false
