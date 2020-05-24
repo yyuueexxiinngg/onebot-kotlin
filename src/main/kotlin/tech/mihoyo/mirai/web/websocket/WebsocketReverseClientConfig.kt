@@ -19,7 +19,7 @@ class WebSocketReverseClientConfig(config: Config, bot: Bot) {
     /**
      * 是否开启
      */
-    val enable: Boolean by serviceConfig.withDefault { true }
+    val enable: Boolean by serviceConfig.withDefault { false }
 
     /**
      * 上报消息格式
