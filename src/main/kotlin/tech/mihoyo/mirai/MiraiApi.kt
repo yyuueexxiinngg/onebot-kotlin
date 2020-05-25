@@ -271,7 +271,7 @@ class MiraiApi(val bot: Bot) {
     }
 
     // https://github.com/richardchien/coolq-http-api/blob/master/src/cqhttp/plugins/web/http.cpp#L375
-    suspend fun cqHandleQuickOperation(params: JsonObject): CQResponseDTO {
+    suspend fun cqHandleQuickOperation(params: Map<String, JsonElement>): CQResponseDTO {
         try {
             val context = params["context"]?.jsonObject
             val operation = params["operation"]?.jsonObject
