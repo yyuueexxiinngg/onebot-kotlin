@@ -158,12 +158,18 @@ private suspend fun convertToMiraiMessage(
                             var fileIdOrPath = args["file"]!!
                             if (fileIdOrPath.startsWith("file:///")) {
                                 fileIdOrPath = fileIdOrPath.replace("file:///", "")
-                            } else if (fileIdOrPath.endsWith(".mnimg")) {
-                                image = Image(fileIdOrPath.replace(".mnimg", ""))
-                            }
-                            val file = getDataFile("image", fileIdOrPath)
-                            if (file != null) {
-                                image = contact!!.uploadImage(file)
+                                val file = File(fileIdOrPath).absoluteFile
+                                if (file.exists()) {
+                                    image = contact!!.uploadImage(file)
+                                }
+                            } else {
+                                if (fileIdOrPath.endsWith(".mnimg")) {
+                                    image = Image(fileIdOrPath.replace(".mnimg", ""))
+                                }
+                                val file = getDataFile("image", fileIdOrPath)
+                                if (file != null) {
+                                    image = contact!!.uploadImage(file)
+                                }
                             }
                         }
                     }
