@@ -1,9 +1,8 @@
 package tech.mihoyo.mirai.data.common
 
-import kotlinx.serialization.ContextualSerialization
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import net.mamoe.mirai.contact.Friend
+import kotlinx.serialization.*
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
 
@@ -14,30 +13,50 @@ sealed class CQResponseDataDTO
 open class CQResponseDTO(
     val status: String,
     val retcode: Int,
-    val data: @ContextualSerialization Any?,
+    val data: @Serializable(with = ResponseDataSerializer::class) Any?,
     var echo: @ContextualSerialization Any? = null
 ) {
-    @Serializable
-    object CQGeneralSuccess : CQResponseDTO( "ok", 0, null)
-    @Serializable
-    object CQMiraiFailure : CQResponseDTO( "failed", 102, null)
-    @Serializable
-    object CQPluginFailure : CQResponseDTO( "failed", 103, null)
-    @Serializable
-    object CQInvalidRequest : CQResponseDTO( "failed", 100, null)
-    class CQMessageResponse(message_id: Int) : CQResponseDTO( "ok", 0, CQMessageData(message_id))
-    class CQLoginInfo(user_id: Long, nickname: String) : CQResponseDTO( "ok", 0, CQLoginInfoData(user_id, nickname))
-    class CQFriendList(friendList: List<CQFriendData>) : CQResponseDTO( "ok", 0, friendList)
-    class CQGroupList(groupList: List<CQGroupData>) : CQResponseDTO( "ok", 0, groupList)
-    class CQGroupInfo(group_id: Long, group_name: String, member_count: Int, max_member_count: Int) :
-        CQResponseDTO( "ok", 0, CQGroupInfoData(group_id, group_name, member_count, max_member_count))
+    class CQGeneralSuccess : CQResponseDTO("ok", 0, null)
+    class CQAsyncStarted : CQResponseDTO("async", 1, null)
+    class CQMiraiFailure : CQResponseDTO("failed", 102, null)
+    class CQPluginFailure : CQResponseDTO("failed", 103, null)
+    class CQInvalidRequest : CQResponseDTO("failed", 100, null)
+    class CQMessageResponse(message_id: Int) : CQResponseDTO("ok", 0, CQMessageData(message_id))
+    class CQLoginInfo(user_id: Long, nickname: String) : CQResponseDTO("ok", 0, CQLoginInfoData(user_id, nickname))
+    class CQFriendList(friendList: List<CQFriendData>) : CQResponseDTO("ok", 0, friendList)
 
-    class CQMemberInfo(member: CQMemberInfoData) : CQResponseDTO( "ok", 0, member)
-    class CQMemberList(memberList: List<CQMemberDTO>) : CQResponseDTO( "ok", 0, memberList)
-    object CQCanSendImage : CQResponseDTO( "ok", 0, CQCanSendImageData)
-    object CQCanSendRecord : CQResponseDTO( "ok", 0, CQCanSendRecordData)
-    class CQPluginStatus(status: CQPluginStatusData) : CQResponseDTO( "ok", 0, status)
-    class CQVersionInfo(versionInfo: CQVersionInfoData) : CQResponseDTO( "ok", 0, versionInfo)
+    class CQGroupList(groupList: List<CQGroupData>?) : CQResponseDTO("ok", 0, groupList)
+    class CQGroupInfo(group_id: Long, group_name: String, member_count: Int, max_member_count: Int) :
+        CQResponseDTO("ok", 0, CQGroupInfoData(group_id, group_name, member_count, max_member_count))
+
+    class CQMemberInfo(member: CQMemberInfoData) : CQResponseDTO("ok", 0, member)
+    class CQMemberList(memberList: List<CQMemberDTO>) : CQResponseDTO("ok", 0, memberList)
+    class CQCanSendImage(data: CQCanSendImageData = CQCanSendImageData()) : CQResponseDTO("ok", 0, data)
+    class CQCanSendRecord(data: CQCanSendRecordData = CQCanSendRecordData()) : CQResponseDTO("ok", 0, data)
+    class CQPluginStatus(status: CQPluginStatusData) : CQResponseDTO("ok", 0, status)
+    class CQVersionInfo(versionInfo: CQVersionInfoData) : CQResponseDTO("ok", 0, versionInfo)
+
+    object ResponseDataSerializer : KSerializer<Any?> {
+        override val descriptor: SerialDescriptor
+            get() = String.serializer().descriptor
+
+        override fun deserialize(decoder: Decoder): Any? {
+            error("Not implemented")
+        }
+
+        override fun serialize(encoder: Encoder, value: Any?) {
+            return when (value) {
+                is List<*> -> encoder.encodeSerializableValue(
+                    ListSerializer(CQResponseDataDTO.serializer()),
+                    value as List<CQResponseDataDTO>
+                )
+                else -> encoder.encodeSerializableValue(
+                    CQResponseDataDTO.serializer(),
+                    value as CQResponseDataDTO
+                )
+            }
+        }
+    }
 }
 
 @Serializable

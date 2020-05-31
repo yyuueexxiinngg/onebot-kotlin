@@ -29,7 +29,7 @@ class MiraiApi(val bot: Bot) {
                 params["discuss_id"] != null -> return cqSendGroupMessage(params)
             }
         }
-        return CQResponseDTO.CQInvalidRequest
+        return CQResponseDTO.CQInvalidRequest()
     }
 
     suspend fun cqSendGroupMessage(params: Map<String, JsonElement>): CQResponseDTO {
@@ -50,7 +50,7 @@ class MiraiApi(val bot: Bot) {
             cachedSourceQueue.add(receipt.source)
             return CQResponseDTO.CQMessageResponse(receipt.source.id)
         }
-        return CQResponseDTO.CQInvalidRequest
+        return CQResponseDTO.CQInvalidRequest()
     }
 
     suspend fun cqSendPrivateMessage(params: Map<String, JsonElement>): CQResponseDTO {
@@ -79,90 +79,90 @@ class MiraiApi(val bot: Bot) {
             cachedSourceQueue.add(receipt.source)
             return CQResponseDTO.CQMessageResponse(receipt.source.id)
         }
-        return CQResponseDTO.CQInvalidRequest
+        return CQResponseDTO.CQInvalidRequest()
     }
 
-    suspend fun cqDeleteMessage(params: JsonObject): CQResponseDTO {
+    suspend fun cqDeleteMessage(params: Map<String, JsonElement>): CQResponseDTO {
         val messageId = params["message_id"]?.intOrNull
         messageId?.let {
             cachedSourceQueue[it].recall()
-            CQResponseDTO.CQGeneralSuccess
+            CQResponseDTO.CQGeneralSuccess()
         }
-        return CQResponseDTO.CQInvalidRequest
+        return CQResponseDTO.CQInvalidRequest()
     }
 
 
-    suspend fun cqSetGroupKick(params: JsonObject): CQResponseDTO {
+    suspend fun cqSetGroupKick(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val memberId = params["user_id"]?.long
         return if (groupId != null && memberId != null) {
             bot.getGroup(groupId)[memberId].kick()
-            CQResponseDTO.CQGeneralSuccess
+            CQResponseDTO.CQGeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    suspend fun cqSetGroupBan(params: JsonObject): CQResponseDTO {
+    suspend fun cqSetGroupBan(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val memberId = params["user_id"]?.long
         val duration = params["duration"]?.int ?: 30 * 60
         return if (groupId != null && memberId != null) {
             bot.getGroup(groupId)[memberId].mute(duration)
-            CQResponseDTO.CQGeneralSuccess
+            CQResponseDTO.CQGeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    fun cqSetWholeGroupBan(params: JsonObject): CQResponseDTO {
+    fun cqSetWholeGroupBan(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val enable = params["enable"]?.booleanOrNull ?: true
         return if (groupId != null) {
             bot.getGroup(groupId).settings.isMuteAll = enable
-            CQResponseDTO.CQGeneralSuccess
+            CQResponseDTO.CQGeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    fun cqSetGroupCard(params: JsonObject): CQResponseDTO {
+    fun cqSetGroupCard(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val memberId = params["user_id"]?.long
         val card = params["card"]?.contentOrNull ?: ""
         val enable = params["enable"]?.booleanOrNull ?: true
         return if (groupId != null && memberId != null) {
             bot.getGroup(groupId)[memberId].nameCard = card
-            CQResponseDTO.CQGeneralSuccess
+            CQResponseDTO.CQGeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    suspend fun cqSetGroupLeave(params: JsonObject): CQResponseDTO {
+    suspend fun cqSetGroupLeave(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val dismiss = params["enable"]?.booleanOrNull ?: false
         return if (groupId != null) {
             // Not supported
-            if (dismiss) return CQResponseDTO.CQMiraiFailure
+            if (dismiss) return CQResponseDTO.CQMiraiFailure()
 
             bot.getGroup(groupId).quit()
-            CQResponseDTO.CQGeneralSuccess
+            CQResponseDTO.CQGeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    fun cqSetGroupSpecialTitle(params: JsonObject): CQResponseDTO {
+    fun cqSetGroupSpecialTitle(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val memberId = params["user_id"]?.long
         val specialTitle = params["special_title"]?.contentOrNull ?: ""
         val duration = params["duration"]?.int ?: -1  // Not supported
         return if (groupId != null && memberId != null) {
             bot.getGroup(groupId)[memberId].specialTitle = specialTitle
-            CQResponseDTO.CQMiraiFailure
+            CQResponseDTO.CQMiraiFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
@@ -180,9 +180,9 @@ class MiraiApi(val bot: Bot) {
                 ""
             )
             if (approve) event.accept() else event.reject()
-            CQResponseDTO.CQMiraiFailure
+            CQResponseDTO.CQMiraiFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
@@ -203,17 +203,17 @@ class MiraiApi(val bot: Bot) {
                 ""
             )
             if (approve) event.accept() else event.reject()
-            CQResponseDTO.CQMiraiFailure
+            CQResponseDTO.CQMiraiFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    fun cqGetLoginInfo(params: JsonObject): CQResponseDTO {
+    fun cqGetLoginInfo(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQLoginInfo(bot.id, bot.nick)
     }
 
-    fun cqGetFriendList(params: JsonObject): CQResponseDTO {
+    fun cqGetFriendList(params: Map<String, JsonElement>): CQResponseDTO {
         val cqFriendList = mutableListOf<CQFriendData>()
         bot.friends.forEach { friend ->
             cqFriendList.add(CQFriendData(friend.id, friend.nick, ""))
@@ -221,7 +221,7 @@ class MiraiApi(val bot: Bot) {
         return CQResponseDTO.CQFriendList(cqFriendList)
     }
 
-    fun cqGetGroupList(params: JsonObject): CQResponseDTO {
+    fun cqGetGroupList(params: Map<String, JsonElement>): CQResponseDTO {
         val cqGroupList = mutableListOf<CQGroupData>()
         bot.groups.forEach { group ->
             cqGroupList.add(CQGroupData(group.id, group.name))
@@ -233,7 +233,7 @@ class MiraiApi(val bot: Bot) {
      * 获取群信息
      * 不支持获取群容量, 返回0
      */
-    fun cqGetGroupInfo(params: JsonObject): CQResponseDTO {
+    fun cqGetGroupInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val noCache = params["no_cache"]?.booleanOrNull ?: false
 
@@ -241,11 +241,11 @@ class MiraiApi(val bot: Bot) {
             val group = bot.getGroup(groupId)
             CQResponseDTO.CQGroupInfo(group.id, group.name, group.members.size + 1, 0)
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    fun cqGetGroupMemberInfo(params: JsonObject): CQResponseDTO {
+    fun cqGetGroupMemberInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val memberId = params["user_id"]?.long
         val noCache = params["no_cache"]?.booleanOrNull ?: false
@@ -254,11 +254,11 @@ class MiraiApi(val bot: Bot) {
             val member = bot.getGroup(groupId)[memberId]
             CQResponseDTO.CQMemberInfo(CQMemberInfoData(member))
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    fun cqGetGroupMemberList(params: JsonObject): CQResponseDTO {
+    fun cqGetGroupMemberList(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val cqGroupList = mutableListOf<CQMemberDTO>()
         return if (groupId != null) {
@@ -266,7 +266,7 @@ class MiraiApi(val bot: Bot) {
             members.forEach { member -> cqGroupList.add(CQMemberDTO(member)) }
             CQResponseDTO.CQMemberList(cqGroupList)
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
@@ -323,32 +323,32 @@ class MiraiApi(val bot: Bot) {
                     return cqSetGroupAddRequest(nextCallParams)
                 }
             }
-            return CQResponseDTO.CQInvalidRequest
+            return CQResponseDTO.CQInvalidRequest()
         } catch (e: Exception) {
-            return CQResponseDTO.CQPluginFailure
+            return CQResponseDTO.CQPluginFailure()
         }
     }
 
     /**
      * Getting image path, not supported for now
      */
-    fun cqGetImage(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQPluginFailure
+    fun cqGetImage(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQPluginFailure()
     }
 
-    fun cqCanSendImage(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQCanSendImage
+    fun cqCanSendImage(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQCanSendImage()
     }
 
-    fun cqCanSendRecord(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQCanSendRecord
+    fun cqCanSendRecord(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQCanSendRecord()
     }
 
-    fun cqGetStatus(params: JsonObject): CQResponseDTO {
+    fun cqGetStatus(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQPluginStatus(CQPluginStatusData(online = bot.isActive, good = bot.isActive))
     }
 
-    fun cqGetVersionInfo(params: JsonObject): CQResponseDTO {
+    fun cqGetVersionInfo(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQVersionInfo(
             CQVersionInfoData(
                 coolq_directory = PluginBase.dataFolder.absolutePath,
@@ -358,78 +358,78 @@ class MiraiApi(val bot: Bot) {
         )
     }
 
-    fun cqSetRestartPlugin(params: JsonObject): CQResponseDTO {
+    fun cqSetRestartPlugin(params: Map<String, JsonElement>): CQResponseDTO {
         val delay = params["delay"]?.int ?: 0
-        return CQResponseDTO.CQGeneralSuccess
+        return CQResponseDTO.CQGeneralSuccess()
     }
 
-    fun cqCleanDataDir(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQGeneralSuccess
+    fun cqCleanDataDir(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQGeneralSuccess()
     }
 
-    fun cqCleanPluginLog(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQGeneralSuccess
+    fun cqCleanPluginLog(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQGeneralSuccess()
     }
 
-    fun cqGetCookies(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqGetCookies(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqGetCSRFToken(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqGetCSRFToken(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqGetRecord(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqGetRecord(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqGetCredentials(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqGetCredentials(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqGetStrangerInfo(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqGetStrangerInfo(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqSendDiscussMessage(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqSendDiscussMessage(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqSetGroupAnonymous(params: JsonObject): CQResponseDTO {
+    fun cqSetGroupAnonymous(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val enable = params["enable"]?.booleanOrNull ?: true
         return if (groupId != null) {
             // Not supported
             // bot.getGroup(groupId).settings.isAnonymousChatEnabled = enable
-            CQResponseDTO.CQMiraiFailure
+            CQResponseDTO.CQMiraiFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    fun cqSetGroupAdmin(params: JsonObject): CQResponseDTO {
+    fun cqSetGroupAdmin(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
         val memberId = params["user_id"]?.long
         val enable = params["enable"]?.booleanOrNull ?: true
         return if (groupId != null && memberId != null) {
             // Not supported
             // bot.getGroup(groupId)[memberId].permission = if (enable) MemberPermission.ADMINISTRATOR else MemberPermission.MEMBER
-            CQResponseDTO.CQMiraiFailure
+            CQResponseDTO.CQMiraiFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest
+            CQResponseDTO.CQInvalidRequest()
         }
     }
 
 
-    fun cqSetDiscussLeave(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqSetDiscussLeave(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqSendLike(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqSendLike(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqSetAnonymousBan(params: JsonObject): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure
+    fun cqSetAnonymousBan(params: Map<String, JsonElement>): CQResponseDTO {
+        return CQResponseDTO.CQMiraiFailure()
     }
 }
