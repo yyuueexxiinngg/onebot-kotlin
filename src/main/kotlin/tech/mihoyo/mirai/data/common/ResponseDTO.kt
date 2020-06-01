@@ -105,7 +105,7 @@ data class CQMemberInfoData(
     constructor(member: Member) : this(
         member.group.id,
         member.id,
-        member.nameCard,
+        member.nick,
         member.nameCard,
         "unknown",
         0,

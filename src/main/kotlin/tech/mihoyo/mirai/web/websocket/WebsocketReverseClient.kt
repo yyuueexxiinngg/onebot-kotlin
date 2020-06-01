@@ -17,6 +17,8 @@ import net.mamoe.mirai.console.plugins.PluginBase
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.events.BotOnlineEvent
+import net.mamoe.mirai.event.events.MemberJoinRequestEvent
+import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.utils.currentTimeMillis
@@ -120,8 +122,11 @@ class WebSocketReverseClient(
                         subscriptionByBots[bot.id] = console.subscribeAlways {
                             // 保存Event以便在WebsocketSession Block中使用
                             val event = this
-                            if (event is TempMessageEvent) mirai.cachedTempContact[event.sender.id] =
-                                event.group.id
+                            when (event) {
+                                is TempMessageEvent -> mirai.cachedTempContact[event.sender.id] = event.group.id
+                                is NewFriendRequestEvent -> mirai.cacheRequestQueue.add(event)
+                                is MemberJoinRequestEvent -> mirai.cacheRequestQueue.add(event)
+                            }
                             event.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
                                 send(Frame.Text(this.toJson()))
                             }

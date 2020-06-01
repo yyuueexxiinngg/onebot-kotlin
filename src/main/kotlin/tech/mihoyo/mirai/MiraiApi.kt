@@ -3,17 +3,20 @@ package tech.mihoyo.mirai
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.data.recall
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.web.queue.CacheSourceQueue
 import tech.mihoyo.mirai.util.cqMessageToMessageChains
+import tech.mihoyo.mirai.web.queue.CacheRequestQueue
 
 @Suppress("UNUSED_VARIABLE", "UNUSED_PARAMETER")
 class MiraiApi(val bot: Bot) {
     // Store temp contact information for sending messages
     // QQ : GroupId
     val cachedTempContact: MutableMap<Long, Long> = mutableMapOf()
+    val cacheRequestQueue = CacheRequestQueue()
     private val cachedSourceQueue = CacheSourceQueue()
 
     suspend fun cqSendMessage(params: Map<String, JsonElement>): CQResponseDTO {
@@ -171,16 +174,10 @@ class MiraiApi(val bot: Bot) {
         val approve = params["approve"]?.booleanOrNull ?: true
         val remark = params["remark"]?.contentOrNull
         return if (flag != null) {
-            val event = NewFriendRequestEvent(
-                bot,
-                flag.toLong(),
-                "",
-                0,
-                0,
-                ""
-            )
-            if (approve) event.accept() else event.reject()
-            CQResponseDTO.CQMiraiFailure()
+            val event = cacheRequestQueue[flag.toLongOrNull()]
+            if (event is NewFriendRequestEvent)
+                if (approve) event.accept() else event.reject()
+            CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
         }
@@ -194,16 +191,10 @@ class MiraiApi(val bot: Bot) {
         val reason = params["reason"]?.contentOrNull
 
         return if (flag != null) {
-            val event = NewFriendRequestEvent(
-                bot,
-                flag.toLong(),
-                "",
-                0,
-                0,
-                ""
-            )
-            if (approve) event.accept() else event.reject()
-            CQResponseDTO.CQMiraiFailure()
+            val event = cacheRequestQueue[flag.toLongOrNull()]
+            if (event is MemberJoinRequestEvent)
+                if (approve) event.accept() else event.reject()
+            CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
         }
