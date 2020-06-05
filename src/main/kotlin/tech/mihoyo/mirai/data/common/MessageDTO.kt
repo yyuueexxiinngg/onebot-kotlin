@@ -75,6 +75,7 @@ suspend fun Message.toCQString(): String {
         }
         is RichMessage -> "[CQ:rich,data=${content}]"
         is MessageSource -> ""
+        is QuoteReply -> ""
         else -> "此处消息的转义尚未被插件支持"
     }
 }

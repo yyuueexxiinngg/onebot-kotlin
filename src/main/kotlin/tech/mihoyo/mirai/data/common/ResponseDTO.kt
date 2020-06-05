@@ -30,7 +30,7 @@ open class CQResponseDTO(
         CQResponseDTO("ok", 0, CQGroupInfoData(group_id, group_name, member_count, max_member_count))
 
     class CQMemberInfo(member: CQMemberInfoData) : CQResponseDTO("ok", 0, member)
-    class CQMemberList(memberList: List<CQMemberDTO>) : CQResponseDTO("ok", 0, memberList)
+    class CQMemberList(memberList: List<CQMemberInfoData>) : CQResponseDTO("ok", 0, memberList)
     class CQCanSendImage(data: CQCanSendImageData = CQCanSendImageData()) : CQResponseDTO("ok", 0, data)
     class CQCanSendRecord(data: CQCanSendRecordData = CQCanSendRecordData()) : CQResponseDTO("ok", 0, data)
     class CQPluginStatus(status: CQPluginStatusData) : CQResponseDTO("ok", 0, status)
