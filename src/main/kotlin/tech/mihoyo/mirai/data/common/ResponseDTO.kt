@@ -112,7 +112,7 @@ data class CQMemberInfoData(
         0,
         0,
         "unknown",
-        member.permission.name.toLowerCase(),
+        if (member.permission == MemberPermission.ADMINISTRATOR) "admin" else member.permission.name.toLowerCase(),
         false,
         member.specialTitle,
         0,
