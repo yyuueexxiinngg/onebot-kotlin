@@ -9,16 +9,16 @@
 
 package tech.mihoyo.mirai.data.common
 
+import java.net.URL
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.list
 import kotlinx.serialization.builtins.serializer
-import tech.mihoyo.mirai.coolq.api.http.util.PokeMap
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.currentTimeMillis
-import java.net.URL
+import tech.mihoyo.mirai.coolq.api.http.util.PokeMap
 
 /*
 *   DTO data class
@@ -34,7 +34,7 @@ data class CQGroupMessagePacketDTO(
     val group_id: Long,
     val user_id: Long,
     val anonymous: CQAnonymousMemberDTO?,
-    var message: CQMessageChainOrStringDTO,  // Can be messageChainDTO or string depending on config
+    var message: CQMessageChainOrStringDTO, // Can be messageChainDTO or string depending on config
     val raw_message: String,
     val font: Int,
     val sender: CQMemberDTO,
@@ -61,7 +61,6 @@ data class CQPrivateMessagePacketDTO(
     val message_type: String = "private"
 }
 
-
 // Message toCQString
 suspend fun Message.toCQString(): String {
     return when (this) {
@@ -73,13 +72,13 @@ suspend fun Message.toCQString(): String {
         is Image -> {
             "[CQ:image,file=$imageId,url=${queryUrl()}]"
         }
-        is RichMessage -> "[CQ:rich,data=${content}]"
+        is RichMessage -> "[CQ:rich,data=$content]"
         is MessageSource -> ""
         is QuoteReply -> ""
+        is Voice -> "[CQ:record,file=$fileName,url=$url]"
         else -> "此处消息的转义尚未被插件支持"
     }
 }
-
 
 // Message DTO
 @Serializable
@@ -89,14 +88,12 @@ data class CQPlainDTO(val data: CQPlainData) : MessageDTO()
 @Serializable
 data class CQPlainData(val text: String)
 
-
 @Serializable
 @SerialName("at")
 data class CQAtDTO(val data: CQAtData) : MessageDTO()
 
 @Serializable
 data class CQAtData(val qq: Long)
-
 
 @Serializable
 @SerialName("face")
@@ -139,7 +136,6 @@ data class XmlDTO(val xml: String) : MessageDTO()
 @SerialName("App")
 data class AppDTO(val content: String) : MessageDTO()
 
-
 @Serializable
 @SerialName("Json")
 data class JsonDTO(val json: String) : MessageDTO()
@@ -157,7 +153,6 @@ data class QuoteDTO(
     val groupId: Long,
     val origin: MessageChainDTO
 ) : MessageDTO()*/
-
 
 /**
  * Hacky way to get message chain can be both String or List<MessageDTO>
