@@ -122,7 +122,7 @@ class ReportService(
         val res = http.request<String?> {
             url(url)
             headers {
-                append("User-Agent", "MiraiHttp/0.1.0")
+                append("User-Agent", "CQHttp/4.15.0")
                 append("X-Self-ID", botId.toString())
                 secret.takeIf { it != "" }?.apply {
                     append("X-Signature", getSha1Hash(botId, json))

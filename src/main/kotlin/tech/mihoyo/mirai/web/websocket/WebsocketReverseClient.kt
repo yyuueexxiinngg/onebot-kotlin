@@ -72,7 +72,7 @@ class WebSocketReverseClient(
                 port = config.reversePort,
                 path = config.reversePath,
                 request = {
-                    header("User-Agent", "MiraiHttp/${PluginBase.description.version}")
+                    header("User-Agent", "CQHttp/4.15.0")
                     header("X-Self-ID", bot.id.toString())
                     header("X-Client-Role", "Universal")
                     config.accessToken?.let {
