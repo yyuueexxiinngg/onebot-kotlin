@@ -11,36 +11,50 @@ __CQHTTP runs on Mirai__
 ## 配置相关
 
 ```yaml
+# Debug日志输出选项
+debug: false
 # 要进行配置的QQ号 (Mirai支持多帐号登录, 故需要对每个帐号进行单独设置)
 '1234567890':
-    # HTTP 相关配置
-    http:
-        # 可选，事件及数据上报URL, 默认为空, 即不上报
-        postUrl: ""
-        # 可选，上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
-        postMessageFormat: string
-        # 可选，上报数据签名密钥, 默认为空
-        secret: ""
-    # 可选，反向客户端服务
-    ws_reverse:
-        # 可选，是否启用反向客户端，默认不启用
-        enable: true
-        # 上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
-        postMessageFormat: string
-        # 反向Websocket主机
-        reverseHost: 127.0.0.1
-        # 反向Websocket端口
-        reversePort: 8080
-        # 反向Websocket路径
-        reversePath: /ws
-        # 访问口令, 默认为null, 即不设置Token
-        accessToken: null
-        # 反向Websocket Api路径 尚未实现
-        #  reverseApiPath: /ws/
-        # 反向Websocket Event路径 尚未实现
-        #  reverseEventPath: /ws/
-        # 反向 WebSocket 客户端断线重连间隔，单位毫秒
-        reconnectInterval: 3000
+  # HTTP 相关配置
+  http:
+    # 可选，事件及数据上报URL, 默认为空, 即不上报
+    postUrl: ""
+    # 可选，上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
+    postMessageFormat: string
+    # 可选，上报数据签名密钥, 默认为空
+    secret: ""
+  # 可选，反向客户端服务
+  ws_reverse:
+    # 可选，是否启用反向客户端，默认不启用
+    - enable: true
+      # 上报消息格式，string 为字符串格式，array 为数组格式
+      postMessageFormat: string
+      # 反向Websocket主机
+      reverseHost: 127.0.0.1
+      # 反向Websocket端口
+      reversePort: 8080
+      # 反向Websocket路径
+      reversePath: /ws
+      # 反向Websocket Api路径 尚未实现
+      #  reverseApiPath: /ws/
+      # 反向Websocket Event路径 尚未实现
+      #  reverseEventPath: /ws/
+      # 反向 WebSocket 客户端断线重连间隔，单位毫秒
+      reconnectInterval: 3000
+    - enable: true # 这里是第二个连接, 相当于CQHTTP分身版
+      postMessageFormat: string
+      reverseHost: 127.0.0.1
+      reversePort: 9222
+      reversePath: /ws
+      reconnectInterval: 3000
+'0987654321': # 这里是第二个QQ Bot的配置
+  ws_reverse:
+    - enable: true
+      postMessageFormat: string
+      reverseHost: 
+      reversePort: 
+      reversePath: /ws
+      reconnectInterval: 3000
 ```
 
 ## 计划

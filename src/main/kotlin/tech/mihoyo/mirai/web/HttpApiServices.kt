@@ -6,7 +6,6 @@ import tech.mihoyo.mirai.web.websocket.WebSocketReverseClient
 
 class HttpApiServices(override val console: PluginBase) : HttpApiService {
     private val services: List<HttpApiService> = listOf(
-        WebSocketReverseClient(console),
         ReportService(console)
     )
 

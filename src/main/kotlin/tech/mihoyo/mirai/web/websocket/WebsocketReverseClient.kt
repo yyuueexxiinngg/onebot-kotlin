@@ -12,172 +12,147 @@ import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.console.plugins.description
 
-import net.mamoe.mirai.console.plugins.PluginBase
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
-import net.mamoe.mirai.event.events.BotOnlineEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.utils.currentTimeMillis
-import tech.mihoyo.mirai.MiraiApi
+import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.PluginBase
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.logger
-import tech.mihoyo.mirai.web.HttpApiService
 import tech.mihoyo.mirai.util.toJson
 import java.io.EOFException
 import java.io.IOException
 import java.net.ConnectException
 
+@KtorExperimentalAPI
 class WebSocketReverseClient(
-    /**
-     * 插件对象
-     */
-    override val console: PluginBase
-) : HttpApiService {
-    /**
-     * 反向Websocket配置, 一个Bot对应一个
-     */
-    private val configByBots: MutableMap<Long, WebSocketReverseClientConfig> = mutableMapOf()
+    val session: BotSession
+) {
+    private val httpClients: MutableMap<String, HttpClient> = mutableMapOf()
+    private var serviceConfig: List<WebSocketReverseServiceConfig> = mutableListOf()
+    private var subscriptionByHost: MutableMap<String, Listener<BotEvent>?> = mutableMapOf()
+    private var websocketSessionByHost: MutableMap<String, DefaultClientWebSocketSession> = mutableMapOf()
 
-    /**
-     * Bot上线下线事件监听器
-     */
-    private var initialSubscription: Listener<BotEvent>? = null
-
-    /**
-     * 事件监听器, 一个Bot对应一个
-     */
-    private var subscriptionByBots: MutableMap<Long, Listener<BotEvent>?> = mutableMapOf()
-
-    /**
-     * Http 客户端, 一个Bot对应一个, 用以重连Websocket
-     */
-    private var httpClientByBots: MutableMap<Long, HttpClient> = mutableMapOf()
-
-    /**
-     * Websocket 会话, 一个Bot对应一个, 用以重连Websocket
-     */
-    private var websocketSessionByBots: MutableMap<Long, DefaultClientWebSocketSession> = mutableMapOf()
-
-    override fun onLoad() {
-    }
-
-    @ExperimentalCoroutinesApi
-    @KtorExperimentalAPI
-    override fun onEnable() {
-        initialSubscription = console.subscribeAlways {
-            when (this) {
-                is BotOnlineEvent -> {
-                    // 初始化WebsocketSession并保存至Map
-                    if (!configByBots.containsKey(bot.id)) {
-                        // 获取当前Bot对应Config
-                        val config = WebSocketReverseClientConfig(console.loadConfig("setting.yml"), bot)
-                        configByBots[bot.id] = config
-                        logger.info("Bot:${bot.id} 反向Websocket模块启用状态: ${config.enable}")
-                        if (config.enable) {
-                            httpClientByBots[bot.id] = HttpClient {
-                                install(WebSockets)
-                            }
-                            GlobalScope.launch {
-                                startWebsocketClient(bot)
-                            }
-                        }
+    init {
+        serviceConfig = session.config.getConfigSectionList("ws_reverse").map { WebSocketReverseServiceConfig(it) }
+        serviceConfig.forEach {
+            logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}")
+            if (it.enable) {
+                val httpClientKey = "${it.reverseHost}:${it.reversePort}"
+                if (!httpClients.containsKey(httpClientKey)) {
+                    httpClients[httpClientKey] = HttpClient {
+                        install(WebSockets)
                     }
+                    GlobalScope.launch {
+                        startWebsocketClient(session.bot, it)
+                    }
+                } else {
+                    logger.error("已有相同主机及端口的实例存在. Host: ${it.reverseHost}, Port: ${it.reversePort}")
                 }
             }
         }
-
     }
 
     @KtorExperimentalAPI
     @ExperimentalCoroutinesApi
-    private suspend fun startWebsocketClient(bot: Bot) {
-        httpClientByBots[bot.id]?.apply {
-            val config = configByBots[bot.id]!!
-            val isRawMessage = config.postMessageFormat != "array"
-            // 为Bot创建Adapter Api
-            val mirai = MiraiApi(bot)
-            try {
-                val client = this
-                client.ws(
-                    host = config.reverseHost,
-                    port = config.reversePort,
-                    path = config.reversePath,
-                    request = {
-                        header("User-Agent", "MiraiHttp/0.1.0")
-                        header("X-Self-ID", bot.id.toString())
-                        header("X-Client-Role", "Universal")
-                        config.accessToken?.let { header("Authorization", "Token ${config.accessToken}") }
+    private suspend fun startWebsocketClient(bot: Bot, config: WebSocketReverseServiceConfig) {
+        val httpClientKey = "${config.reverseHost}:${config.reversePort}"
+        val isRawMessage = config.postMessageFormat != "array"
+
+        try {
+            logger.debug("$httpClientKey 开始启动")
+            httpClients[httpClientKey]!!.ws(
+                host = config.reverseHost,
+                port = config.reversePort,
+                path = config.reversePath,
+                request = {
+                    header("User-Agent", "MiraiHttp/${PluginBase.description.version}")
+                    header("X-Self-ID", bot.id.toString())
+                    header("X-Client-Role", "Universal")
+                    config.accessToken?.let {
+                        header(
+                            "Authorization",
+                            "Token ${config.accessToken}"
+                        )
                     }
-                ) {
-                    // 用来检测Websocket连接是否关闭
-                    websocketSessionByBots[bot.id] = this
-                    // 构建事件监听器
-                    if (!subscriptionByBots.containsKey(bot.id)) {
-                        // 通知服务方链接建立
-                        send(Frame.Text(CQMetaEventDTO(bot.id, "connect", currentTimeMillis).toJson()))
-                        subscriptionByBots[bot.id] = console.subscribeAlways {
-                            // 保存Event以便在WebsocketSession Block中使用
+                }
+            ) {
+                // 用来检测Websocket连接是否关闭
+                websocketSessionByHost[httpClientKey] = this
+                // 构建事件监听器
+                if (!subscriptionByHost.containsKey(httpClientKey)) {
+                    // 通知服务方链接建立
+                    send(Frame.Text(CQMetaEventDTO(bot.id, "connect", currentTimeMillis).toJson()))
+                    subscriptionByHost[httpClientKey] = bot.subscribeAlways {
+                        // 保存Event以便在WebsocketSession Block中使用
+                        if (this.bot.id == session.botId) {
                             val event = this
                             when (event) {
-                                is TempMessageEvent -> mirai.cachedTempContact[event.sender.id] = event.group.id
-                                is NewFriendRequestEvent -> mirai.cacheRequestQueue.add(event)
-                                is MemberJoinRequestEvent -> mirai.cacheRequestQueue.add(event)
+                                is TempMessageEvent -> session.cqApiImpl.cachedTempContact[event.sender.id] =
+                                    event.group.id
+                                is NewFriendRequestEvent -> session.cqApiImpl.cacheRequestQueue.add(event)
+                                is MemberJoinRequestEvent -> session.cqApiImpl.cacheRequestQueue.add(event)
                             }
                             event.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
                                 send(Frame.Text(this.toJson()))
                             }
                         }
+                    }
 
-                        startWebsocketConnectivityCheck(bot)
+                    logger.debug("$httpClientKey Websocket Client启动完毕")
+                    startWebsocketConnectivityCheck(bot, config)
 
-                        incoming.consumeEach {
-                            when (it) {
-                                is Frame.Text -> {
-                                    handleWebSocketActions(outgoing, mirai, it.readText())
-                                }
-                                else -> logger.warning("Unsupported incomeing frame")
+                    incoming.consumeEach {
+                        when (it) {
+                            is Frame.Text -> {
+                                handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
                             }
+                            else -> logger.warning("Unsupported incomeing frame")
                         }
+                    }
 
-                    }
+                } else {
+                    logger.warning("Websocket session alredy exist, $httpClientKey")
                 }
-            } catch (e: Exception) {
-                when (e) {
-                    is ConnectException -> {
-                        logger.warning("Websocket连接出错, 请检查服务器是否开启并确认正确监听端口, 将在${config.reconnectInterval / 1000}秒后重试连接")
-                        delay(config.reconnectInterval)
-                        startWebsocketClient(bot)
-                    }
-                    is EOFException -> {
-                        logger.warning("Websocket连接出错, 服务器返回数据不正确, 请检查Websocket服务器是否配置正确, 将在${config.reconnectInterval / 1000}秒后重试连接")
-                        delay(config.reconnectInterval)
-                        startWebsocketClient(bot)
-                    }
-                    is IOException -> {
-                        logger.warning("Websocket连接出错, 可能被服务器关闭, 将在${config.reconnectInterval / 1000}秒后重试连接")
-                        delay(config.reconnectInterval)
-                        startWebsocketClient(bot)
-                    }
-                    is CancellationException -> logger.info("Websocket连接关闭中")
-                    else -> logger.warning("Websocket连接出错, 未知错误, 放弃重试连接, 请检查配置正确后重启mirai  " + e.message + e.javaClass.name)
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is ConnectException -> {
+                    logger.warning("Websocket连接出错, 请检查服务器是否开启并确认正确监听端口, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
+                    delay(config.reconnectInterval)
+                    startWebsocketClient(bot, config)
                 }
+                is EOFException -> {
+                    logger.warning("Websocket连接出错, 服务器返回数据不正确, 请检查Websocket服务器是否配置正确, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
+                    delay(config.reconnectInterval)
+                    startWebsocketClient(bot, config)
+                }
+                is IOException -> {
+                    logger.warning("Websocket连接出错, 可能被服务器关闭, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
+                    delay(config.reconnectInterval)
+                    startWebsocketClient(bot, config)
+                }
+                is CancellationException -> logger.info("Websocket连接关闭中, Host: $httpClientKey")
+                else -> logger.warning("Websocket连接出错, 未知错误, 放弃重试连接, 请检查配置正确后重启mirai  " + e.message + e.javaClass.name)
             }
         }
     }
 
     @KtorExperimentalAPI
     @ExperimentalCoroutinesApi
-    private fun startWebsocketConnectivityCheck(bot: Bot) {
+    private fun startWebsocketConnectivityCheck(bot: Bot, config: WebSocketReverseServiceConfig) {
         GlobalScope.launch {
-            if (httpClientByBots.containsKey(bot.id)) {
-                val config = configByBots[bot.id]!!
+            val httpClientKey = "${config.reverseHost}:${config.reversePort}"
+            if (httpClients.containsKey(httpClientKey)) {
                 var stillActive = true
                 while (true) {
-                    websocketSessionByBots[bot.id]?.apply {
+                    websocketSessionByHost[httpClientKey]?.apply {
                         if (!this.isActive) {
                             stillActive = false
                             this.cancel()
@@ -185,37 +160,36 @@ class WebSocketReverseClient(
                     }
 
                     if (!stillActive) {
-                        websocketSessionByBots.remove(bot.id)
-                        subscriptionByBots[bot.id]?.apply {
+                        websocketSessionByHost.remove(httpClientKey)
+                        subscriptionByHost[httpClientKey]?.apply {
                             this.complete()
                         }
-                        subscriptionByBots.remove(bot.id)
-                        httpClientByBots[bot.id].apply {
+                        subscriptionByHost.remove(httpClientKey)
+                        httpClients[httpClientKey].apply {
                             this!!.close()
                         }
                         logger.warning("Websocket连接已断开, 将在${config.reconnectInterval / 1000}秒后重试连接")
                         delay(config.reconnectInterval)
-                        httpClientByBots[bot.id] = HttpClient {
+                        httpClients[httpClientKey] = HttpClient {
                             install(WebSockets)
                         }
-                        startWebsocketClient(bot)
+                        startWebsocketClient(bot, config)
                         break
                     }
                     delay(5000)
                 }
-                startWebsocketConnectivityCheck(bot)
+                startWebsocketConnectivityCheck(bot, config)
             }
         }
     }
 
-    override fun onDisable() {
-        initialSubscription?.complete()
-        websocketSessionByBots.forEach { it.value.cancel() }
-        websocketSessionByBots.clear()
-        subscriptionByBots.forEach { it.value?.complete() }
-        subscriptionByBots.clear()
-        httpClientByBots.forEach { it.value.close() }
-        httpClientByBots.clear()
+    fun close() {
+        websocketSessionByHost.forEach { it.value.cancel() }
+        websocketSessionByHost.clear()
+        subscriptionByHost.forEach { it.value?.complete() }
+        subscriptionByHost.clear()
+        httpClients.forEach { it.value.close() }
+        httpClients.clear()
         logger.info("反向Websocket模块已禁用")
     }
 }

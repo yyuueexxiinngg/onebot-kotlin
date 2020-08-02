@@ -1,21 +1,8 @@
 package tech.mihoyo.mirai.web.websocket
 
-import net.mamoe.mirai.Bot
-import net.mamoe.mirai.console.plugins.Config
+import net.mamoe.mirai.console.plugins.ConfigSection
 
-class WebSocketReverseClientConfig(config: Config, bot: Bot) {
-    /**
-     * 当前Bot的总配置
-     */
-    @Suppress("UNCHECKED_CAST")
-    private val  botConfig = config[bot.id.toString()] as? Map<String, Any> ?: emptyMap()
-
-    /**
-     * Bot对应反向Websocket配置
-     */
-    @Suppress("UNCHECKED_CAST")
-    private val serviceConfig = botConfig["ws_reverse"] as? Map<String, Any> ?: emptyMap()
-
+class WebSocketReverseServiceConfig(serviceConfig: ConfigSection) {
     /**
      * 是否开启
      */
@@ -34,7 +21,7 @@ class WebSocketReverseClientConfig(config: Config, bot: Bot) {
     /**
      * 反向Websocket口令
      */
-    val accessToken: String? by serviceConfig.withDefault { null }
+    val accessToken: String? by serviceConfig.withDefault { "" }
 
     /**
      * 反向Websocket端口
@@ -47,11 +34,6 @@ class WebSocketReverseClientConfig(config: Config, bot: Bot) {
     val reversePath: String by serviceConfig.withDefault { "/ws" }
 
     /**
-     * 反向 WebSocket 客户端断线重连间隔
-     */
-    val reconnectInterval: Long by serviceConfig.withDefault { 3000 }
-
-    /**
      * 反向Websocket Api路径  尚未实现
      */
 //    val reverseApiPath: String by botConfig.withDefault { "/ws" }
@@ -60,5 +42,10 @@ class WebSocketReverseClientConfig(config: Config, bot: Bot) {
      * 反向Websocket Event路径 尚未实现
      */
 //    val reverseEventPath: String by botConfig.withDefault { "/ws" }
+
+    /**
+     * 反向 WebSocket 客户端断线重连间隔
+     */
+    val reconnectInterval: Long by serviceConfig.withDefault { 3000 }
 
 }
