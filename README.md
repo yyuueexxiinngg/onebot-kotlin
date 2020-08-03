@@ -1,5 +1,7 @@
 # CQHTTP Mirai
 
+![Gradle CI](https://github.com/mnixry/cqhttp-mirai/workflows/Gradle%20CI/badge.svg)
+
 __CQHTTP runs on Mirai__
 
 ## 开始使用
