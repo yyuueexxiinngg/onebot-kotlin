@@ -69,7 +69,7 @@ data class CQMemberDTO(
         0,
         "unknown",
         "unknown",
-        member.permission.name.toLowerCase(),
+        if (member.permission == MemberPermission.ADMINISTRATOR) "admin" else member.permission.name.toLowerCase(),
         "unknown"
     )
 }
