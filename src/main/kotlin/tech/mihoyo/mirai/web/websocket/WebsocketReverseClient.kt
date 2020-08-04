@@ -10,9 +10,10 @@ import io.ktor.client.features.websocket.WebSockets
 import io.ktor.http.cio.websocket.readText
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.console.plugins.description
 
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
@@ -22,7 +23,6 @@ import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.BotSession
-import tech.mihoyo.mirai.PluginBase
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
@@ -30,6 +30,7 @@ import java.io.EOFException
 import java.io.IOException
 import java.net.ConnectException
 
+@ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 class WebSocketReverseClient(
     val session: BotSession
@@ -42,81 +43,74 @@ class WebSocketReverseClient(
     init {
         serviceConfig = session.config.getConfigSectionList("ws_reverse").map { WebSocketReverseServiceConfig(it) }
         serviceConfig.forEach {
-            logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}")
+            logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}, Use Universal: ${it.useUniversal}")
             if (it.enable) {
-                val httpClientKey = "${it.reverseHost}:${it.reversePort}"
-                if (!httpClients.containsKey(httpClientKey)) {
-                    httpClients[httpClientKey] = HttpClient {
-                        install(WebSockets)
+                GlobalScope.launch {
+                    if (it.useUniversal) {
+                        startGeneralWebsocketClient(session.bot, it, "Universal")
+                    } else {
+                        startGeneralWebsocketClient(session.bot, it, "Api")
+                        startGeneralWebsocketClient(session.bot, it, "Event")
                     }
-                    GlobalScope.launch {
-                        startWebsocketClient(session.bot, it)
-                    }
-                } else {
-                    logger.error("已有相同主机及端口的实例存在. Host: ${it.reverseHost}, Port: ${it.reversePort}")
                 }
             }
         }
     }
 
-    @KtorExperimentalAPI
-    @ExperimentalCoroutinesApi
-    private suspend fun startWebsocketClient(bot: Bot, config: WebSocketReverseServiceConfig) {
-        val httpClientKey = "${config.reverseHost}:${config.reversePort}"
-        val isRawMessage = config.postMessageFormat != "array"
+    private suspend fun startGeneralWebsocketClient(
+        bot: Bot,
+        config: WebSocketReverseServiceConfig,
+        clientType: String
+    ) {
+        val httpClientKey = "${config.reverseHost}:${config.reversePort}-Client-$clientType"
+
+        httpClients[httpClientKey] = HttpClient {
+            install(WebSockets)
+        }
+
+        logger.debug("$httpClientKey 开始启动")
+        val path = when (clientType) {
+            "Api" -> config.reverseApiPath
+            "Event" -> config.reverseEventPath
+            else -> config.reversePath
+        }
 
         try {
-            logger.debug("$httpClientKey 开始启动")
             httpClients[httpClientKey]!!.ws(
                 host = config.reverseHost,
                 port = config.reversePort,
-                path = config.reversePath,
+                path = path,
                 request = {
                     header("User-Agent", "CQHttp/4.15.0")
                     header("X-Self-ID", bot.id.toString())
-                    header("X-Client-Role", "Universal")
+                    header("X-Client-Role", clientType)
                     config.accessToken?.let {
-                        header(
-                            "Authorization",
-                            "Token ${config.accessToken}"
-                        )
+                        if (it != "") {
+                            header(
+                                "Authorization",
+                                "Token ${config.accessToken}"
+                            )
+                        }
                     }
                 }
             ) {
                 // 用来检测Websocket连接是否关闭
                 websocketSessionByHost[httpClientKey] = this
-                // 构建事件监听器
                 if (!subscriptionByHost.containsKey(httpClientKey)) {
                     // 通知服务方链接建立
                     send(Frame.Text(CQMetaEventDTO(bot.id, "connect", currentTimeMillis).toJson()))
-                    subscriptionByHost[httpClientKey] = bot.subscribeAlways {
-                        // 保存Event以便在WebsocketSession Block中使用
-                        if (this.bot.id == session.botId) {
-                            val event = this
-                            when (event) {
-                                is TempMessageEvent -> session.cqApiImpl.cachedTempContact[event.sender.id] =
-                                    event.group.id
-                                is NewFriendRequestEvent -> session.cqApiImpl.cacheRequestQueue.add(event)
-                                is MemberJoinRequestEvent -> session.cqApiImpl.cacheRequestQueue.add(event)
-                            }
-                            event.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
-                                send(Frame.Text(this.toJson()))
-                            }
+
+                    when (clientType) {
+                        "Api" -> listenApi(incoming, outgoing)
+                        "Event" -> listenEvent(httpClientKey, config, outgoing)
+                        "Universal" -> {
+                            listenEvent(httpClientKey, config, outgoing)
+                            listenApi(incoming, outgoing)
                         }
                     }
 
                     logger.debug("$httpClientKey Websocket Client启动完毕")
-                    startWebsocketConnectivityCheck(bot, config)
-
-                    incoming.consumeEach {
-                        when (it) {
-                            is Frame.Text -> {
-                                handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
-                            }
-                            else -> logger.warning("Unsupported incomeing frame")
-                        }
-                    }
-
+                    startWebsocketConnectivityCheck(bot, config, clientType)
                 } else {
                     logger.warning("Websocket session alredy exist, $httpClientKey")
                 }
@@ -124,29 +118,63 @@ class WebSocketReverseClient(
         } catch (e: Exception) {
             when (e) {
                 is ConnectException -> {
-                    logger.warning("Websocket连接出错, 请检查服务器是否开启并确认正确监听端口, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
+                    logger.warning("Websocket连接出错, 请检查服务器是否开启并确认正确监听端口, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey Path: $path")
                     delay(config.reconnectInterval)
-                    startWebsocketClient(bot, config)
+                    startGeneralWebsocketClient(session.bot, config, clientType)
                 }
                 is EOFException -> {
-                    logger.warning("Websocket连接出错, 服务器返回数据不正确, 请检查Websocket服务器是否配置正确, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
+                    logger.warning("Websocket连接出错, 服务器返回数据不正确, 请检查Websocket服务器是否配置正确, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey Path: $path")
                     delay(config.reconnectInterval)
-                    startWebsocketClient(bot, config)
+                    startGeneralWebsocketClient(session.bot, config, clientType)
                 }
                 is IOException -> {
-                    logger.warning("Websocket连接出错, 可能被服务器关闭, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
+                    logger.warning("Websocket连接出错, 可能被服务器关闭, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey Path: $path")
                     delay(config.reconnectInterval)
-                    startWebsocketClient(bot, config)
+                    startGeneralWebsocketClient(session.bot, config, clientType)
                 }
-                is CancellationException -> logger.info("Websocket连接关闭中, Host: $httpClientKey")
+                is CancellationException -> logger.info("Websocket连接关闭中, Host: $httpClientKey Path: $path")
                 else -> logger.warning("Websocket连接出错, 未知错误, 放弃重试连接, 请检查配置正确后重启mirai  " + e.message + e.javaClass.name)
+            }
+        }
+    }
+
+    private suspend fun listenApi(incoming: ReceiveChannel<Frame>, outgoing: SendChannel<Frame>) {
+        incoming.consumeEach {
+            when (it) {
+                is Frame.Text -> {
+                    handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                }
+                else -> logger.warning("Unsupported incomeing frame")
+            }
+        }
+    }
+
+    private suspend fun listenEvent(
+        httpClientKey: String,
+        config: WebSocketReverseServiceConfig,
+        outgoing: SendChannel<Frame>
+    ) {
+        val isRawMessage = config.postMessageFormat != "array"
+        subscriptionByHost[httpClientKey] = session.bot.subscribeAlways {
+            // 保存Event以便在WebsocketSession Block中使用
+            if (this.bot.id == session.botId) {
+                val event = this
+                when (event) {
+                    is TempMessageEvent -> session.cqApiImpl.cachedTempContact[event.sender.id] =
+                        event.group.id
+                    is NewFriendRequestEvent -> session.cqApiImpl.cacheRequestQueue.add(event)
+                    is MemberJoinRequestEvent -> session.cqApiImpl.cacheRequestQueue.add(event)
+                }
+                event.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
+                    outgoing.send(Frame.Text(this.toJson()))
+                }
             }
         }
     }
 
     @KtorExperimentalAPI
     @ExperimentalCoroutinesApi
-    private fun startWebsocketConnectivityCheck(bot: Bot, config: WebSocketReverseServiceConfig) {
+    private fun startWebsocketConnectivityCheck(bot: Bot, config: WebSocketReverseServiceConfig, clientType: String) {
         GlobalScope.launch {
             val httpClientKey = "${config.reverseHost}:${config.reversePort}"
             if (httpClients.containsKey(httpClientKey)) {
@@ -173,12 +201,12 @@ class WebSocketReverseClient(
                         httpClients[httpClientKey] = HttpClient {
                             install(WebSockets)
                         }
-                        startWebsocketClient(bot, config)
+                        startGeneralWebsocketClient(bot, config, clientType)
                         break
                     }
                     delay(5000)
                 }
-                startWebsocketConnectivityCheck(bot, config)
+                startWebsocketConnectivityCheck(bot, config, clientType)
             }
         }
     }

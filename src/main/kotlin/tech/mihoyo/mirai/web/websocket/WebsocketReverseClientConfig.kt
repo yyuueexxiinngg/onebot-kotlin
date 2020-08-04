@@ -36,12 +36,17 @@ class WebSocketReverseServiceConfig(serviceConfig: ConfigSection) {
     /**
      * 反向Websocket Api路径  尚未实现
      */
-//    val reverseApiPath: String by botConfig.withDefault { "/ws" }
+    val reverseApiPath: String by serviceConfig.withDefault { reversePath }
 
     /**
      * 反向Websocket Event路径 尚未实现
      */
-//    val reverseEventPath: String by botConfig.withDefault { "/ws" }
+    val reverseEventPath: String by serviceConfig.withDefault { reversePath }
+
+    /**
+     * 是否使用Universal客户端
+     */
+    val useUniversal: Boolean by serviceConfig.withDefault { true }
 
     /**
      * 反向 WebSocket 客户端断线重连间隔

@@ -152,7 +152,11 @@ private suspend fun convertToMiraiMessage(
                             image = withContext(Dispatchers.IO) { contact!!.uploadImage(bis) }
                         }
                         startsWith("http") -> {
-                            image = withContext(Dispatchers.IO) { contact!!.uploadImage(URL(args["file"]!!)) }
+                            image = try {
+                                withContext(Dispatchers.IO) { contact!!.uploadImage(URL(args["file"]!!)) }
+                            } catch (e: Exception) {
+                                null
+                            }
                         }
                         else -> {
                             var fileIdOrPath = args["file"]!!
@@ -181,13 +185,20 @@ private suspend fun convertToMiraiMessage(
                     }
                 }
             } else if (args.containsKey("url")) {
-                image = withContext(Dispatchers.IO) { contact!!.uploadImage(URL(args["url"]!!)) }
+                image = withContext(Dispatchers.IO) { contact!!.uploadImage(URL(args["url"])) }
             }
             if (image != null) {
                 if (args["type"] == "flash") {
                     return image!!.flash()
                 }
                 return image as Image
+            } else {
+                val imageUrl = when {
+                    args.containsKey("file") && args["file"]!!.startsWith("http") -> args["file"]
+                    args.containsKey("url") -> args["url"]
+                    else -> null
+                }
+                return PlainText("Bot发了一张图片, 但是插件获取不到, 它心累了不想尝试" + if (imageUrl != null) ", 并给出了原图链接: $imageUrl" else "")
             }
         }
         "share" -> {

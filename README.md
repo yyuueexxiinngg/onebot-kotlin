@@ -35,12 +35,16 @@ debug: false
       reverseHost: 127.0.0.1
       # 反向Websocket端口
       reversePort: 8080
+      # 访问口令, 默认为空, 即不设置Token
+      accessToken: ""
       # 反向Websocket路径
       reversePath: /ws
-      # 反向Websocket Api路径 尚未实现
-      #  reverseApiPath: /ws/
-      # 反向Websocket Event路径 尚未实现
-      #  reverseEventPath: /ws/
+      # 可选, 反向Websocket Api路径, 默认为reversePath
+      reverseApiPath: /api
+      # 可选, 反向Websocket Event路径, 默认为reversePath
+      reverseEventPath: /event
+      # 是否使用Universal客户端 默认为true
+      useUniversal: true
       # 反向 WebSocket 客户端断线重连间隔，单位毫秒
       reconnectInterval: 3000
     - enable: true # 这里是第二个连接, 相当于CQHTTP分身版
@@ -48,7 +52,21 @@ debug: false
       reverseHost: 127.0.0.1
       reversePort: 9222
       reversePath: /ws
+      useUniversal: false
       reconnectInterval: 3000
+  # 可选，正向Websocket服务器
+  ws:
+    # 可选，是否启用正向Websocket服务器，默认不启用
+    enable: true
+    # 可选，上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
+    postMessageFormat: string
+    # 可选，访问口令, 默认为空, 即不设置Token
+    accessToken: ""
+    # 监听主机
+    wsHost: "0.0.0.0"
+    # 监听端口
+    wsPort: 8080
+
 '0987654321': # 这里是第二个QQ Bot的配置
   ws_reverse:
     - enable: true
@@ -63,8 +81,8 @@ debug: false
 
 - [x] 反向Websocket客户端
 - [x] HTTP上报服务
+- [x] Websocket服务端
 - [ ] HTTP API
-- [ ] Websocket服务端
 
 
 ## 已经支持的CQHTTP API
