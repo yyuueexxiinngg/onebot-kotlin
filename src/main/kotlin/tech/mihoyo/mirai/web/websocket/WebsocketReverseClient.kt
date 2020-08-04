@@ -133,7 +133,11 @@ class WebSocketReverseClient(
                     startGeneralWebsocketClient(session.bot, config, clientType)
                 }
                 is CancellationException -> logger.info("Websocket连接关闭中, Host: $httpClientKey Path: $path")
-                else -> logger.warning("Websocket连接出错, 未知错误, 放弃重试连接, 请检查配置正确后重启mirai  " + e.message + e.javaClass.name)
+                else -> {
+                    logger.warning("Websocket连接出错, 未知错误, 请检查配置, 如配置错误请修正后重启mirai " + e.message + e.javaClass.name)
+                    delay(config.reconnectInterval)
+                    startGeneralWebsocketClient(session.bot, config, clientType)
+                }
             }
         }
     }
