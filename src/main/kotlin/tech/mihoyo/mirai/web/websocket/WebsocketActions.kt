@@ -28,7 +28,7 @@ suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi
                 callMiraiApi(action, json["params"]!!.jsonObject, mirai)
             }
         } else {
-            responseDTO = callMiraiApi(action, json["params"]!!.jsonObject, mirai)
+            responseDTO = callMiraiApi(action, json["params"]?.jsonObject?: mapOf(), mirai)
         }
         responseDTO.echo = echo
         val jsonToSend = responseDTO.toJson()

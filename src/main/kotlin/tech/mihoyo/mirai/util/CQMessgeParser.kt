@@ -171,7 +171,13 @@ private suspend fun convertToMiraiMessage(
                                     image = contact!!.uploadImage(file)
                                 }
                             }
+                            if (image == null) {
+                                if (args.containsKey("url")) {
+                                    image = withContext(Dispatchers.IO) { contact!!.uploadImage(URL(args["url"]!!)) }
+                                }
+                            }
                         }
+
                     }
                 }
             } else if (args.containsKey("url")) {
