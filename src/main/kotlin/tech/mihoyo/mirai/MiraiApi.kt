@@ -148,7 +148,7 @@ class MiraiApi(val bot: Bot) {
         val duration = params["duration"]?.int ?: -1  // Not supported
         return if (groupId != null && memberId != null) {
             bot.getGroup(groupId)[memberId].specialTitle = specialTitle
-            CQResponseDTO.CQMiraiFailure()
+            CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
         }
