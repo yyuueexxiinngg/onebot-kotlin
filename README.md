@@ -20,7 +20,7 @@ debug: false
   # HTTP 相关配置
   http:
     # 可选，是否启用HTTP API服务器, 默认为不启用, 此项开始与否跟postUrl无关
-    enable: ""
+    enable: true
     # 可选，HTTP API服务器监听地址, 默认为0.0.0.0
     host: 0.0.0.0
     # 可选，HTTP API服务器监听端口, 5700
