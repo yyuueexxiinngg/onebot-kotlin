@@ -4,6 +4,7 @@ import io.ktor.util.*
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.plugins.ConfigSection
+import tech.mihoyo.mirai.web.http.HttpApiServer
 import tech.mihoyo.mirai.web.websocket.WebSocketReverseClient
 import tech.mihoyo.mirai.web.websocket.WebSocketServer
 import kotlin.coroutines.CoroutineContext
@@ -21,6 +22,8 @@ internal object SessionManager {
 
     fun closeSession(session: Session) = closeSession(session.botId)
 
+    @KtorExperimentalAPI
+    @ExperimentalCoroutinesApi
     fun createBotSession(bot: Bot, config: ConfigSection): BotSession =
         BotSession(bot, config, EmptyCoroutineContext).also { session -> allSession[bot.id] = session }
 }
@@ -49,12 +52,14 @@ abstract class Session internal constructor(
 class BotSession internal constructor(val bot: Bot, val config: ConfigSection, coroutineContext: CoroutineContext) :
     Session(coroutineContext, bot.id) {
     val cqApiImpl = MiraiApi(bot)
+    val httpApiServer = HttpApiServer(this)
     val websocketClient = WebSocketReverseClient(this)
     val websocketServer = WebSocketServer(this)
 
     override fun close() {
         websocketClient.close()
         websocketServer.close()
+        httpApiServer.close()
         super.close()
     }
 }

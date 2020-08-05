@@ -25,7 +25,7 @@ suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi
             responseDTO = CQResponseDTO.CQAsyncStarted()
             action = action.replace("_async", "")
             CoroutineScope(EmptyCoroutineContext).launch {
-                callMiraiApi(action, json["params"]!!.jsonObject, mirai)
+                callMiraiApi(action, json["params"]?.jsonObject?: mapOf(), mirai)
             }
         } else {
             responseDTO = callMiraiApi(action, json["params"]?.jsonObject?: mapOf(), mirai)

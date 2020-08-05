@@ -9,7 +9,7 @@ class WebSocketServerServiceConfig(serviceConfig: ConfigSection) {
 
     val wsHost: String by serviceConfig.withDefault { "0.0.0.0" }
 
-    val wsPort: Int by serviceConfig.withDefault { 8080 }
+    val wsPort: Int by serviceConfig.withDefault { 6700 }
 
     val accessToken: String? by serviceConfig.withDefault { "" }
 }

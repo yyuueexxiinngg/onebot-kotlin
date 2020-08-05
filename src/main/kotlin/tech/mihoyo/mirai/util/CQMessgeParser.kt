@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.content
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
@@ -82,7 +83,17 @@ suspend fun cqMessageToMessageChains(
                 null
             }
         }
-        else -> null
+        is JsonPrimitive -> {
+            return if (raw) {
+                PlainText(cqMessage.content).asMessageChain()
+            } else {
+                codeToChain(bot, cqMessage.content, contact)
+            }
+        }
+        else -> {
+            logger.warning("Cannot determine type of " + cqMessage.toString())
+            return null
+        }
     }
 }
 

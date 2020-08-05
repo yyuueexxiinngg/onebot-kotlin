@@ -19,6 +19,14 @@ debug: false
 '1234567890':
   # HTTP 相关配置
   http:
+    # 可选，是否启用HTTP API服务器, 默认为不启用, 此项开始与否跟postUrl无关
+    enable: ""
+    # 可选，HTTP API服务器监听地址, 默认为0.0.0.0
+    host: 0.0.0.0
+    # 可选，HTTP API服务器监听端口, 5700
+    port: 5700
+    # 可选，访问口令, 默认为空, 即不设置Token
+    accessToken: ""
     # 可选，事件及数据上报URL, 默认为空, 即不上报
     postUrl: ""
     # 可选，上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
@@ -82,7 +90,7 @@ debug: false
 - [x] 反向Websocket客户端
 - [x] HTTP上报服务
 - [x] Websocket服务端
-- [ ] HTTP API
+- [x] HTTP API
 
 
 ## 已经支持的CQHTTP API

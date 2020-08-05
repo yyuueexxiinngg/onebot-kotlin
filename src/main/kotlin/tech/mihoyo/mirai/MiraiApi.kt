@@ -38,15 +38,8 @@ class MiraiApi(val bot: Bot) {
     suspend fun cqSendGroupMessage(params: Map<String, JsonElement>): CQResponseDTO {
         val targetGroupId = params["group_id"]!!.long
         val raw = params["auto_escape"]?.booleanOrNull ?: false
-        val messages = try {
-            params["message"]?.jsonArray
-        } catch (e: JsonException) {
-            try {
-                params["message"]?.content
-            } catch (e: JsonException) {
-                params["message"]?.jsonObject
-            }
-        }
+        val messages = params["message"]
+
         val group = bot.getGroup(targetGroupId)
         cqMessageToMessageChains(bot, group, messages, raw)?.let {
             val receipt = group.sendMessage(it)
@@ -59,15 +52,7 @@ class MiraiApi(val bot: Bot) {
     suspend fun cqSendPrivateMessage(params: Map<String, JsonElement>): CQResponseDTO {
         val targetQQId = params["user_id"]!!.long
         val raw = params["auto_escape"]?.booleanOrNull ?: false
-        val messages = try {
-            params["message"]?.jsonArray
-        } catch (e: JsonException) {
-            try {
-                params["message"]?.content
-            } catch (e: JsonException) {
-                params["message"]?.jsonObject
-            }
-        }
+        val messages = params["message"]
 
         val contact = try {
             bot.getFriend(targetQQId)
