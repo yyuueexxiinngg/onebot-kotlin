@@ -99,7 +99,8 @@ class WebSocketReverseClient(
                 if (!subscriptionByHost.containsKey(httpClientKey)) {
                     // 通知服务方链接建立
                     send(Frame.Text(CQMetaEventDTO(bot.id, "connect", currentTimeMillis).toJson()))
-
+                    startWebsocketConnectivityCheck(bot, config, clientType)
+                    logger.debug("$httpClientKey Websocket Client启动完毕")
                     when (clientType) {
                         "Api" -> listenApi(incoming, outgoing)
                         "Event" -> listenEvent(httpClientKey, config, outgoing)
@@ -108,9 +109,6 @@ class WebSocketReverseClient(
                             listenApi(incoming, outgoing)
                         }
                     }
-
-                    logger.debug("$httpClientKey Websocket Client启动完毕")
-                    startWebsocketConnectivityCheck(bot, config, clientType)
                 } else {
                     logger.warning("Websocket session alredy exist, $httpClientKey")
                 }
@@ -180,7 +178,7 @@ class WebSocketReverseClient(
     @ExperimentalCoroutinesApi
     private fun startWebsocketConnectivityCheck(bot: Bot, config: WebSocketReverseServiceConfig, clientType: String) {
         GlobalScope.launch {
-            val httpClientKey = "${config.reverseHost}:${config.reversePort}"
+            val httpClientKey = "${config.reverseHost}:${config.reversePort}-Client-$clientType"
             if (httpClients.containsKey(httpClientKey)) {
                 var stillActive = true
                 while (true) {
@@ -200,7 +198,7 @@ class WebSocketReverseClient(
                         httpClients[httpClientKey].apply {
                             this!!.close()
                         }
-                        logger.warning("Websocket连接已断开, 将在${config.reconnectInterval / 1000}秒后重试连接")
+                        logger.warning("Websocket连接已断开, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
                         delay(config.reconnectInterval)
                         httpClients[httpClientKey] = HttpClient {
                             install(WebSockets)
