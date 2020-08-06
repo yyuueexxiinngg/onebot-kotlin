@@ -297,8 +297,16 @@ class MiraiApi(val bot: Bot) {
         val groupId = params["group_id"]?.long
         val cqGroupMemberListData = mutableListOf<CQMemberInfoData>()
         return if (groupId != null) {
-            val members = bot.getGroup(groupId).members
-            members.forEach { member -> cqGroupMemberListData.add(CQMemberInfoData(member)) }
+            var isBotIncluded = false
+            val group = bot.getGroup(groupId)
+            val members = group.members
+            members.forEach { member ->
+                run {
+                    if (member.id == bot.id) isBotIncluded = true
+                    cqGroupMemberListData.add(CQMemberInfoData(member))
+                }
+            }
+            if (!isBotIncluded) cqGroupMemberListData.add(CQMemberInfoData(group.botAsMember))
             CQResponseDTO.CQMemberList(cqGroupMemberListData)
         } else {
             CQResponseDTO.CQInvalidRequest()
