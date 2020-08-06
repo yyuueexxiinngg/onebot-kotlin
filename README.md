@@ -62,7 +62,7 @@ debug: false
       reversePath: /ws
       useUniversal: false
       reconnectInterval: 3000
-  # 可选，正向Websocket服务器
+  # 正向Websocket服务器
   ws:
     # 可选，是否启用正向Websocket服务器，默认不启用
     enable: true

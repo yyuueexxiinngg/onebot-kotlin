@@ -41,19 +41,23 @@ class WebSocketReverseClient(
     private var websocketSessionByHost: MutableMap<String, DefaultClientWebSocketSession> = mutableMapOf()
 
     init {
-        serviceConfig = session.config.getConfigSectionList("ws_reverse").map { WebSocketReverseServiceConfig(it) }
-        serviceConfig.forEach {
-            logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}, Use Universal: ${it.useUniversal}")
-            if (it.enable) {
-                GlobalScope.launch {
-                    if (it.useUniversal) {
-                        startGeneralWebsocketClient(session.bot, it, "Universal")
-                    } else {
-                        startGeneralWebsocketClient(session.bot, it, "Api")
-                        startGeneralWebsocketClient(session.bot, it, "Event")
+        if (session.config.exist("ws_reverse")) {
+            serviceConfig = session.config.getConfigSectionList("ws_reverse").map { WebSocketReverseServiceConfig(it) }
+            serviceConfig.forEach {
+                logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}, Use Universal: ${it.useUniversal}")
+                if (it.enable) {
+                    GlobalScope.launch {
+                        if (it.useUniversal) {
+                            startGeneralWebsocketClient(session.bot, it, "Universal")
+                        } else {
+                            startGeneralWebsocketClient(session.bot, it, "Api")
+                            startGeneralWebsocketClient(session.bot, it, "Event")
+                        }
                     }
                 }
             }
+        } else {
+            logger.debug("${session.bot.id}未对ws_reverse进行配置")
         }
     }
 

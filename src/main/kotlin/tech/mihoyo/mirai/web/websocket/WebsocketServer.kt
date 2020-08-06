@@ -31,23 +31,28 @@ class WebSocketServer(
     val session: BotSession
 ) {
     lateinit var server: ApplicationEngine
-    private var serviceConfig = WebSocketServerServiceConfig(session.config.getConfigSection("ws"))
+    private lateinit var serviceConfig: WebSocketServerServiceConfig
 
     init {
-        logger.info("Bot: ${session.bot.id} 正向Websocket服务端是否配置开启: ${serviceConfig.enable}")
-        if (serviceConfig.enable) {
-            try {
-                server = embeddedServer(CIO, environment = applicationEngineEnvironment {
-                    this.module { cqWebsocketServer(session, serviceConfig) }
-                    connector {
-                        this.host = serviceConfig.wsHost
-                        this.port = serviceConfig.wsPort
-                    }
-                })
-                server.start(false)
-            } catch (e: Exception) {
-                logger.error("Bot:${session.bot.id} Websocket服务端模块启用失败")
+        if (session.config.exist("ws")) {
+            serviceConfig = WebSocketServerServiceConfig(session.config.getConfigSection("ws"))
+            logger.info("Bot: ${session.bot.id} 正向Websocket服务端是否配置开启: ${serviceConfig.enable}")
+            if (serviceConfig.enable) {
+                try {
+                    server = embeddedServer(CIO, environment = applicationEngineEnvironment {
+                        this.module { cqWebsocketServer(session, serviceConfig) }
+                        connector {
+                            this.host = serviceConfig.wsHost
+                            this.port = serviceConfig.wsPort
+                        }
+                    })
+                    server.start(false)
+                } catch (e: Exception) {
+                    logger.error("Bot:${session.bot.id} Websocket服务端模块启用失败")
+                }
             }
+        } else {
+            logger.debug("${session.bot.id}未对ws进行配置")
         }
     }
 

@@ -22,7 +22,11 @@ object PluginBase : PluginBase() {
         logger.info("Plugin loaded! ${description.version}")
         subscribeAlways<BotOnlineEvent> {
             if (!allSession.containsKey(bot.id)) {
-                SessionManager.createBotSession(bot, config.getConfigSection(bot.id.toString()))
+                if (config.exist(bot.id.toString())) {
+                    SessionManager.createBotSession(bot, config.getConfigSection(bot.id.toString()))
+                } else {
+                    logger.debug("${bot.id}未对CQHTTPMirai进行配置")
+                }
             }
         }
         services.onEnable()
