@@ -144,7 +144,7 @@ class ReportService(
 
     private fun getSha1Hash(botId: Long, content: String): String {
         sha1UtilByBot[botId]?.apply {
-            return this.doFinal(content.toByteArray()).fold("", { str, it -> str + "%02x".format(it) })
+            return "sha1=" + this.doFinal(content.toByteArray()).fold("", { str, it -> str + "%02x".format(it) })
         }
         return ""
     }
