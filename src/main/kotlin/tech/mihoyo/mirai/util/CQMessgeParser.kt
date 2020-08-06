@@ -110,6 +110,9 @@ private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message
                 } else {
                     HashMap()
                 }
+                args.forEach {
+                    args[it.key] = it.value.unescape()
+                }
                 return convertToMiraiMessage(bot, contact, parts[0], args)
             }
             return PlainText(message.unescape())
@@ -243,6 +246,20 @@ private suspend fun convertToMiraiMessage(
         "shake" -> {
             return PokeMessage.Poke
         }
+        "poke" -> {
+            PokeMessage.values.forEach {
+                if (it.type == args["type"]!!.toInt() && it.id == args["id"]!!.toInt()) {
+                    return it
+                }
+            }
+            return MSG_EMPTY
+        }
+        "xml" -> {
+            return XmlMessage(args["data"]!!)
+        }
+        "json" -> {
+            return JsonMessage(args["data"]!!)
+        }
         else -> {
             logger.debug("不支持的 CQ码：${type}")
         }
@@ -253,27 +270,26 @@ private suspend fun convertToMiraiMessage(
 
 private val MSG_EMPTY = PlainText("")
 
-private fun String.escape(c: Boolean = false): String {
-    var s = replace("&", "&amp;")
+private fun String.escape(): String {
+    return replace("&", "&amp;")
         .replace("[", "&#91;")
         .replace("]", "&#93;")
-    if (c) {
-        s = s.replace(",", "&#44;")
-    }
-    return s
+        .replace(",", "&#44;")
 }
 
 private fun String.unescape(): String {
-    return replace("&amp;", "&")
+    return replace("&amp;amp;", "&")
+        .replace("&amp;", "&")
         .replace("&#91;", "[")
         .replace("&#93;", "]")
+        .replace("&#44;", ",")
 }
 
 private fun String.toMap(): HashMap<String, String> {
     val map = HashMap<String, String>()
     split(",").forEach {
         val parts = it.split(delimiters = *arrayOf("="), limit = 2)
-        map[parts[0]] = parts[1].escape(true)
+        map[parts[0]] = parts[1].escape()
     }
     return map
 }

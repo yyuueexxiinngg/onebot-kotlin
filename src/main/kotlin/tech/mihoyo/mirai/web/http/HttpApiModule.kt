@@ -24,10 +24,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
-import tech.mihoyo.mirai.web.websocket.callMiraiApi
 import kotlin.coroutines.EmptyCoroutineContext
 
 @ExperimentalCoroutinesApi

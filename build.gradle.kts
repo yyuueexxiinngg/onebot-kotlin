@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "yyuueexxiinngg"
-version = "0.1.8"
+version = "0.1.9"
 
 repositories {
     maven(url = "https://mirrors.huaweicloud.com/repository/maven")
