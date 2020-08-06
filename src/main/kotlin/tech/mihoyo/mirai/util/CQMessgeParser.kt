@@ -110,9 +110,6 @@ private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message
                 } else {
                     HashMap()
                 }
-                args.forEach {
-                    args[it.key] = it.value.unescape()
-                }
                 return convertToMiraiMessage(bot, contact, parts[0], args)
             }
             return PlainText(message.unescape())
@@ -278,8 +275,7 @@ private fun String.escape(): String {
 }
 
 private fun String.unescape(): String {
-    return replace("&amp;amp;", "&")
-        .replace("&amp;", "&")
+    return replace("&amp;", "&")
         .replace("&#91;", "[")
         .replace("&#93;", "]")
         .replace("&#44;", ",")
@@ -289,7 +285,7 @@ private fun String.toMap(): HashMap<String, String> {
     val map = HashMap<String, String>()
     split(",").forEach {
         val parts = it.split(delimiters = *arrayOf("="), limit = 2)
-        map[parts[0]] = parts[1].escape()
+        map[parts[0]] = parts[1].unescape()
     }
     return map
 }
