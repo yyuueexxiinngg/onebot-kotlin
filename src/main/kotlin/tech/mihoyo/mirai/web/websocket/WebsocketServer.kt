@@ -17,9 +17,10 @@ import io.ktor.websocket.*
 import io.ktor.websocket.WebSockets
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.consumeEach
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
-import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.web.BotSession
 import tech.mihoyo.mirai.data.common.CQIgnoreEventDTO
 import tech.mihoyo.mirai.data.common.toCQDTO
 import tech.mihoyo.mirai.util.logger
@@ -27,6 +28,7 @@ import tech.mihoyo.mirai.util.toJson
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
+@LowLevelAPI
 class WebSocketServer(
     val session: BotSession
 ) {
@@ -62,6 +64,7 @@ class WebSocketServer(
 
 }
 
+@LowLevelAPI
 @ExperimentalCoroutinesApi
 fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketServerServiceConfig) {
     logger.debug("Bot: ${session.bot.id} 尝试开启正向Websocket服务端于端口: ${serviceConfig.wsPort}")
@@ -121,6 +124,7 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
     }
 }
 
+@LowLevelAPI
 @ContextDsl
 private inline fun Route.cqWebsocket(
     path: String,

@@ -4,11 +4,13 @@ import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.util.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import tech.mihoyo.mirai.BotSession
+import net.mamoe.mirai.LowLevelAPI
+import tech.mihoyo.mirai.web.BotSession
 import tech.mihoyo.mirai.util.logger
 
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
+@LowLevelAPI
 class HttpApiServer(
     val session: BotSession
 ) {

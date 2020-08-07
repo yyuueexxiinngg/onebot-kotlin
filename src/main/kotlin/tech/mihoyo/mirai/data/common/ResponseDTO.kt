@@ -3,9 +3,11 @@ package tech.mihoyo.mirai.data.common
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
-
 @Serializable
 sealed class CQResponseDataDTO
 
@@ -14,7 +16,7 @@ open class CQResponseDTO(
     val status: String,
     val retcode: Int,
     val data: @Serializable(with = ResponseDataSerializer::class) Any?,
-    var echo: @ContextualSerialization Any? = null
+    var echo:  @Contextual Any? = null
 ) {
     class CQGeneralSuccess : CQResponseDTO("ok", 0, null)
     class CQAsyncStarted : CQResponseDTO("async", 1, null)

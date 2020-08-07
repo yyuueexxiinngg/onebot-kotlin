@@ -1,13 +1,15 @@
 package tech.mihoyo.mirai
 
 import kotlinx.coroutines.async
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.console.plugins.PluginBase
 import net.mamoe.mirai.console.plugins.description
 import net.mamoe.mirai.console.plugins.withDefault
 import net.mamoe.mirai.event.events.BotOnlineEvent
 import net.mamoe.mirai.event.subscribeAlways
-import tech.mihoyo.mirai.SessionManager.allSession
+import tech.mihoyo.mirai.web.SessionManager.allSession
 import tech.mihoyo.mirai.web.HttpApiServices
+import tech.mihoyo.mirai.web.SessionManager
 import java.io.File
 
 object PluginBase : PluginBase() {
@@ -18,6 +20,7 @@ object PluginBase : PluginBase() {
         services.onLoad()
     }
 
+    @LowLevelAPI
     override fun onEnable() {
         logger.info("Plugin loaded! ${description.version}")
         subscribeAlways<BotOnlineEvent> {

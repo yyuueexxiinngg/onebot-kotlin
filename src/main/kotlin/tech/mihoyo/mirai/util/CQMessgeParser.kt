@@ -25,10 +25,7 @@ package tech.mihoyo.mirai.util
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.content
+import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.getGroupOrNull
@@ -60,8 +57,8 @@ suspend fun cqMessageToMessageChains(
             for (msg in cqMessage) {
                 try {
                     val data = msg.jsonObject["data"]
-                    when (msg.jsonObject["type"]?.content) {
-                        "text" -> messageChain += PlainText(data!!.jsonObject["text"]!!.content)
+                    when (msg.jsonObject["type"]?.jsonPrimitive?.content) {
+                        "text" -> messageChain += PlainText(data!!.jsonObject["text"]!!.jsonPrimitive.content)
                         else -> messageChain += cqTextToMessageInternal(bot, contact, msg)
                     }
                 } catch (e: NullPointerException) {
@@ -74,8 +71,8 @@ suspend fun cqMessageToMessageChains(
         is JsonObject -> {
             return try {
                 val data = cqMessage.jsonObject["data"]
-                when (cqMessage.jsonObject["type"]?.content) {
-                    "text" -> PlainText(data!!.jsonObject["text"]!!.content).asMessageChain()
+                when (cqMessage.jsonObject["type"]?.jsonPrimitive?.content) {
+                    "text" -> PlainText(data!!.jsonObject["text"]!!.jsonPrimitive.content).asMessageChain()
                     else -> cqTextToMessageInternal(bot, contact, cqMessage).asMessageChain()
                 }
             } catch (e: NullPointerException) {
@@ -115,9 +112,9 @@ private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message
             return PlainText(message.unescape())
         }
         is JsonObject -> {
-            val type = message.jsonObject["type"]!!.content
+            val type = message.jsonObject["type"]!!.jsonPrimitive.content
             val data = message.jsonObject["data"] ?: return MSG_EMPTY
-            val args = data.jsonObject.keys.map { it to data.jsonObject[it]!!.content }.toMap()
+            val args = data.jsonObject.keys.map { it to data.jsonObject[it]!!.jsonPrimitive.content }.toMap()
             return convertToMiraiMessage(bot, contact, type, args)
         }
         else -> MSG_EMPTY
@@ -175,7 +172,7 @@ private suspend fun convertToMiraiMessage(
                                 fileIdOrPath = fileIdOrPath.replace("file:///", "")
                                 val file = File(fileIdOrPath).absoluteFile
                                 if (file.exists()) {
-                                    image = contact!!.uploadImage(file)
+                                    image = withContext(Dispatchers.IO) { contact!!.uploadImage(file) }
                                 }
                             } else {
                                 if (fileIdOrPath.endsWith(".mnimg")) {
@@ -183,7 +180,7 @@ private suspend fun convertToMiraiMessage(
                                 }
                                 val file = getDataFile("image", fileIdOrPath)
                                 if (file != null) {
-                                    image = contact!!.uploadImage(file)
+                                    image = withContext(Dispatchers.IO) { contact!!.uploadImage(file) }
                                 }
                             }
                             if (image == null) {
