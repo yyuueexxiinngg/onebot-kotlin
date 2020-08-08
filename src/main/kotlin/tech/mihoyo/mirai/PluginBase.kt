@@ -2,7 +2,6 @@ package tech.mihoyo.mirai
 
 import kotlinx.coroutines.async
 import net.mamoe.mirai.console.plugins.PluginBase
-import net.mamoe.mirai.console.plugins.description
 import net.mamoe.mirai.console.plugins.withDefault
 import net.mamoe.mirai.event.events.BotOnlineEvent
 import net.mamoe.mirai.event.subscribeAlways
@@ -19,7 +18,7 @@ object PluginBase : PluginBase() {
     }
 
     override fun onEnable() {
-        logger.info("Plugin loaded! ${description.version}")
+        logger.info("Plugin loaded!")
         subscribeAlways<BotOnlineEvent> {
             if (!allSession.containsKey(bot.id)) {
                 if (config.exist(bot.id.toString())) {
