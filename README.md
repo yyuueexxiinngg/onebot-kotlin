@@ -1,14 +1,21 @@
-# CQHTTP Mirai
+# CQHTTP Mirai Embedded
 
 ![Gradle CI](https://github.com/yyuueexxiinngg/cqhttp-mirai/workflows/Gradle%20CI/badge.svg)
 
 __CQHTTP runs on Mirai__
 
+## 此分支版本注意事项
+
+- 此版本内置Core和Console
+- 请将此版本Jar包放至与`mirai-console`, `miraiOK`同级目录
+- 此版本启动方式`java -jar cqhttp-mirai-**-embedded.jar`
+- 此版本配置文件及`image`文件夹路径有所变更, 在`plugins`文件夹下, 而非`plugins/CQHTTPMirai`
+- 请不要将此版本与主分支单插件版同时使用, 即不要再`plugins`文件夹下防止`cqhttp-mirai`的Jar包
+
 ## 开始使用
-0. 请首先运行[Mirai-console](https://github.com/mamoe/mirai-console)相关客户端生成plugins文件夹
-1. 将`cqhttp-mirai`生成的`jar包文件`放入`plugins`文件夹中
-2. 编辑`plugins/CQHTTPMirai/setting.yml`配置文件, 将以下给出配置复制并修改
-3. 再次启动[Mirai-console](https://github.com/mamoe/mirai-console)相关客户端
+1. 运行Jar包: `java -jar cqhttp-mirai-**-embedded.jar`
+2. 编辑`plugins/setting.yml`配置文件, 将以下给出配置复制并修改
+3. 重新运行
 
 ## 配置相关
 
