@@ -56,11 +56,14 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
             "clean_data_dir" -> responseDTO = mirai.cqCleanDataDir(params)
             "clean_plugin_log" -> responseDTO = mirai.cqCleanPluginLog(params)
             ".handle_quick_operation" -> responseDTO = mirai.cqHandleQuickOperation(params)
+
+            "set_group_name" -> responseDTO = mirai.cqSetGroupName(params)
             else -> {
                 logger.error("未知CQHTTP API: $action")
             }
         }
     } catch (e: PermissionDeniedException) {
+        logger.debug("机器人无操作权限, 调用的API: /$action")
         responseDTO = CQResponseDTO.CQMiraiFailure()
     } catch (e: Exception) {
         logger.error(e)
@@ -137,7 +140,6 @@ class MiraiApi(val bot: Bot) {
         }
         return CQResponseDTO.CQInvalidRequest()
     }
-
 
     suspend fun cqSetGroupKick(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.long
@@ -414,6 +416,26 @@ class MiraiApi(val bot: Bot) {
         return CQResponseDTO.CQGeneralSuccess()
     }
 
+    ////////////////
+    //// addon ////
+    //////////////
+
+    fun cqSetGroupName(params: Map<String, JsonElement>): CQResponseDTO {
+        val groupId = params["group_id"]?.long
+        val name = params["name"]?.content
+
+        return if(groupId != null && name != null && name != "") {
+            bot.getGroup(groupId).name = name
+            CQResponseDTO.CQGeneralSuccess()
+        } else {
+            CQResponseDTO.CQInvalidRequest()
+        }
+    }
+
+    ////////////////////////////////
+    //// currently unsupported ////
+    //////////////////////////////
+
     fun cqGetCookies(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQMiraiFailure()
     }
@@ -462,7 +484,6 @@ class MiraiApi(val bot: Bot) {
             CQResponseDTO.CQInvalidRequest()
         }
     }
-
 
     fun cqSetDiscussLeave(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQMiraiFailure()

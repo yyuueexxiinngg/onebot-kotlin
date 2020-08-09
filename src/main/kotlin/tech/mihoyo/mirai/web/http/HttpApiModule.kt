@@ -28,6 +28,7 @@ import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
+import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
 @ExperimentalCoroutinesApi
@@ -184,7 +185,16 @@ fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServe
             if (!it.second) call.responseDTO(responseDTO)
         }
         cqHttpApi("/.handle_quick_operation", serviceConfig) {
-            val responseDTO = callMiraiApi(",handle_quick_operation", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi(".handle_quick_operation", it.first, session.cqApiImpl)
+            if (!it.second) call.responseDTO(responseDTO)
+        }
+
+        ////////////////
+        //// addon ////
+        //////////////
+
+        cqHttpApi("/set_group_name", serviceConfig) {
+            val responseDTO = callMiraiApi("set_group_name", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
     }
@@ -252,7 +262,7 @@ internal inline fun Route.cqHttpApi(
         }
         post {
             if (checkAccessToken(call, serviceConfig)) {
-                body(Pair(Json.parseJson(call.receiveText()).jsonObject, false))
+                body(Pair(Json.parseJson(call.receiveTextWithCorrectEncoding()).jsonObject, false))
             }
         }
     }
@@ -269,7 +279,7 @@ internal inline fun Route.cqHttpApi(
         }
         post {
             if (checkAccessToken(call, serviceConfig)) {
-                val req = call.receiveText()
+                val req = call.receiveTextWithCorrectEncoding()
                 call.responseDTO(CQResponseDTO.CQAsyncStarted())
                 CoroutineScope(EmptyCoroutineContext).launch {
                     body(Pair(Json.parseJson(req).jsonObject, true))
@@ -277,4 +287,21 @@ internal inline fun Route.cqHttpApi(
             }
         }
     }
+}
+
+// https://github.com/ktorio/ktor/issues/384#issuecomment-458542686
+/**
+ * Receive the request as String.
+ * If there is no Content-Type in the HTTP header specified use ISO_8859_1 as default charset, see https://www.w3.org/International/articles/http-charset/index#charset.
+ * But use UTF-8 as default charset for application/json, see https://tools.ietf.org/html/rfc4627#section-3
+ */
+private suspend fun ApplicationCall.receiveTextWithCorrectEncoding(): String {
+    fun ContentType.defaultCharset(): Charset = when (this) {
+        ContentType.Application.Json -> Charsets.UTF_8
+        else -> Charsets.ISO_8859_1
+    }
+
+    val contentType = request.contentType()
+    val suitableCharset = contentType.charset() ?: contentType.defaultCharset()
+    return receiveStream().bufferedReader(charset = suitableCharset).readText()
 }

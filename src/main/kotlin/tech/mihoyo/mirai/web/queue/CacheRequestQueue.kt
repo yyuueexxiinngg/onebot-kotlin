@@ -6,7 +6,7 @@ import net.mamoe.mirai.event.events.NewFriendRequestEvent
 
 class CacheRequestQueue : LinkedHashMap<Long, BotEvent>() {
 
-    var cacheSize = 4096
+    var cacheSize = 512
 
     override fun get(key: Long): BotEvent = super.get(key) ?: throw NoSuchElementException()
 
