@@ -180,6 +180,7 @@ class WebSocketReverseClient(
     private fun startWebsocketConnectivityCheck(bot: Bot, config: WebSocketReverseServiceConfig, clientType: String) {
         val httpClientKey = "${config.reverseHost}:${config.reversePort}-Client-$clientType"
         if (httpClientKey !in connectivityChecks) {
+            connectivityChecks.add(httpClientKey)
             GlobalScope.launch {
                 if (httpClients.containsKey(httpClientKey)) {
                     var stillActive = true
@@ -208,6 +209,7 @@ class WebSocketReverseClient(
                             }
                             startGeneralWebsocketClient(bot, config, clientType)
                         }
+                        delay(5000)
                     }
                 }
             }
