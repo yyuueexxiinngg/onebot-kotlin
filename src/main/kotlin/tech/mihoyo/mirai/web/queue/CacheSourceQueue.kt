@@ -13,7 +13,7 @@ import net.mamoe.mirai.message.data.OnlineMessageSource
 
 class CacheSourceQueue : LinkedHashMap<Int, OnlineMessageSource>() {
 
-    var cacheSize = 4096
+    var cacheSize = 512
 
     override fun get(key: Int): OnlineMessageSource = super.get(key) ?: throw NoSuchElementException()
 
