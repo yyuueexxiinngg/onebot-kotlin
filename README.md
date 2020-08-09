@@ -4,6 +4,8 @@
 
 __CQHTTP runs on Mirai__
 
+### 自0.2.0起添加临时[Embedded分支版本](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded), 与主分支单插件版并行, 支持发送语音, 请看[此说明中第一部分](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded)进行配置
+
 ## 开始使用
 0. 请首先运行[Mirai-console](https://github.com/mamoe/mirai-console)相关客户端生成plugins文件夹
 1. 将`cqhttp-mirai`生成的`jar包文件`放入`plugins`文件夹中
