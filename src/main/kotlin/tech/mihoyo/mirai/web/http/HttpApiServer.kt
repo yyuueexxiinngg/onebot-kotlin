@@ -41,5 +41,4 @@ class HttpApiServer(
     fun close() {
         server.stop(5000, 5000)
     }
-
 }

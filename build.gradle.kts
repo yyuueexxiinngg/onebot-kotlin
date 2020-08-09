@@ -56,6 +56,7 @@ tasks {
 
     val runMiraiConsole by creating(JavaExec::class.java) {
         group = "mirai"
+        main = "mirai.RunMirai"
         dependsOn(shadowJar)
         dependsOn(testClasses)
 
@@ -91,7 +92,6 @@ tasks {
             copyBuildOutput()
 
             classpath = sourceSets["test"].runtimeClasspath
-            main = "mirai.RunMirai"
             standardInput = System.`in`
             args(miraiCoreVersion, miraiConsoleVersion)
         }
