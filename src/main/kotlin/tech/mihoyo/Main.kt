@@ -10,17 +10,21 @@ import tech.mihoyo.mirai.PluginBase
 fun main(args: Array<String>) {
     if (args.isNotEmpty()) {
         when (args[0]) {
-            "-help" -> println(
-                """
-                Usage:
-                    -mirai : Run mirai console
-            """.trimIndent()
-            )
+            "-help" -> printHelp()
             "-mirai" -> runMirai()
         }
     } else {
-        println("Usage: -mirai Run mirai console")
+        printHelp()
+        runMirai()
     }
+}
+
+fun printHelp() {
+    println(
+        """Usage:
+                -mirai : Run mirai console
+                """.trimIndent()
+    )
 }
 
 fun runMirai() {
