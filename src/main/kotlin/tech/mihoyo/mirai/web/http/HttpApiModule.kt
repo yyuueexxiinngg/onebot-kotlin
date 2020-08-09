@@ -185,7 +185,16 @@ fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServe
             if (!it.second) call.responseDTO(responseDTO)
         }
         cqHttpApi("/.handle_quick_operation", serviceConfig) {
-            val responseDTO = callMiraiApi(",handle_quick_operation", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi(".handle_quick_operation", it.first, session.cqApiImpl)
+            if (!it.second) call.responseDTO(responseDTO)
+        }
+
+        ////////////////
+        //// addon ////
+        //////////////
+
+        cqHttpApi("/set_group_name", serviceConfig) {
+            val responseDTO = callMiraiApi("set_group_name", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
     }
