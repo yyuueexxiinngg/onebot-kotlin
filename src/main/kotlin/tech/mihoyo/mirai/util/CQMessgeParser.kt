@@ -136,14 +136,8 @@ private suspend fun convertToMiraiMessage(
             if (args["qq"] == "all") {
                 return AtAll
             } else {
-                val group = bot.getGroupOrNull(contact!!.id)
-                if (group == null) {
-                    return MSG_EMPTY
-                }
-                val member = group.getOrNull(args["qq"]!!.toLong())
-                if (member == null) {
-                    return MSG_EMPTY
-                }
+                val group = bot.getGroupOrNull(contact!!.id) ?: return MSG_EMPTY
+                val member = group.getOrNull(args["qq"]!!.toLong()) ?: return MSG_EMPTY
                 return At(member)
             }
         }
@@ -210,7 +204,7 @@ private suspend fun convertToMiraiMessage(
                     args.containsKey("url") -> args["url"]
                     else -> null
                 }
-                return PlainText("Bot发了一张图片, 但是插件获取不到, 它心累了不想尝试" + if (imageUrl != null) ", 并给出了原图链接: $imageUrl" else "")
+                return PlainText("插件无法获取到图片" + if (imageUrl != null) ", 原图链接: $imageUrl" else "")
             }
         }
         "share" -> {

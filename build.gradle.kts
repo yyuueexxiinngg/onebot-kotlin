@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.3.71"
-    kotlin("plugin.serialization") version "1.3.71"
+    kotlin("jvm") version "1.3.72"
+    kotlin("plugin.serialization") version "1.3.72"
     java
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
@@ -18,9 +18,10 @@ repositories {
 val miraiCoreVersion: String by rootProject.ext
 val miraiConsoleVersion: String by rootProject.ext
 val ktorVersion: String by rootProject.ext
-val kotlinVersion = "1.3.71"
+val kotlinVersion = "1.3.72"
 
 fun ktor(id: String, version: String = this@Build_gradle.ktorVersion) = "io.ktor:ktor-$id:$version"
+fun kotlinx(id: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$id:$version"
 
 dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
