@@ -2,9 +2,9 @@ name: Gradle CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, embedded ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, embedded ]
 
 jobs:
   build:
