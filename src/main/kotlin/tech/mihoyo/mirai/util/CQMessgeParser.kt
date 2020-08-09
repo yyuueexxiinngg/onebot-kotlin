@@ -34,6 +34,7 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.getGroupOrNull
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.uploadImage
+import net.mamoe.mirai.message.uploadPtt
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
@@ -135,14 +136,8 @@ private suspend fun convertToMiraiMessage(
             if (args["qq"] == "all") {
                 return AtAll
             } else {
-                val group = bot.getGroupOrNull(contact!!.id)
-                if (group == null) {
-                    return MSG_EMPTY
-                }
-                val member = group.getOrNull(args["qq"]!!.toLong())
-                if (member == null) {
-                    return MSG_EMPTY
-                }
+                val group = bot.getGroupOrNull(contact!!.id) ?: return MSG_EMPTY
+                val member = group.getOrNull(args["qq"]!!.toLong()) ?: return MSG_EMPTY
                 return At(member)
             }
         }
@@ -209,7 +204,7 @@ private suspend fun convertToMiraiMessage(
                     args.containsKey("url") -> args["url"]
                     else -> null
                 }
-                return PlainText("Bot发了一张图片, 但是插件获取不到, 它心累了不想尝试" + if (imageUrl != null) ", 并给出了原图链接: $imageUrl" else "")
+                return PlainText("插件无法获取到图片" + if (imageUrl != null) ", 原图链接: $imageUrl" else "")
             }
         }
         "share" -> {
@@ -219,6 +214,60 @@ private suspend fun convertToMiraiMessage(
                 args["content"],
                 args["image"]
             )
+        }
+        "record" -> {
+            var record: Voice? = null
+            if (args.containsKey("file")) {
+                with(args["file"]!!) {
+                    when {
+                        startsWith("base64://") -> {
+                            val voiceBytes = Base64.getDecoder().decode(args["file"]!!.replace("base64://", ""))
+                            record = withContext(Dispatchers.IO) { contact!!.uploadPtt(voiceBytes) }
+                        }
+                        startsWith("http") -> {
+                            record = try {
+                                withContext(Dispatchers.IO) { contact!!.uploadPtt(URL(args["file"]!!)) }
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+                        else -> {
+                            var fileIdOrPath = args["file"]!!
+                            if (fileIdOrPath.startsWith("file:///")) {
+                                fileIdOrPath = fileIdOrPath.replace("file:///", "")
+                                val file = File(fileIdOrPath).absoluteFile
+                                if (file.exists()) {
+                                    record = contact!!.uploadPtt(file)
+                                }
+                            } else {
+                                val file = getDataFile("image", fileIdOrPath)
+                                if (file != null) {
+                                    record = contact!!.uploadPtt(file)
+                                }
+                            }
+                            if (record == null) {
+                                if (args.containsKey("url")) {
+                                    record = withContext(Dispatchers.IO) { contact!!.uploadPtt(URL(args["url"]!!)) }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            } else if (args.containsKey("url")) {
+                record = withContext(Dispatchers.IO) { contact!!.uploadPtt(URL(args["url"])) }
+            }
+            if (record == null) {
+                val recordUrl = when {
+                    args.containsKey("file") && args["file"]!!.startsWith("http") -> args["file"]
+                    args.containsKey("url") -> args["url"]
+                    else -> null
+                }
+                return PlainText("插件无法获取到语音" + if (recordUrl != null) ", 原语音链接: $recordUrl" else "")
+            } else {
+                logger.debug(record!!.fileName)
+                return record as Voice
+            }
         }
         "contact" -> {
             return if (args["type"] == "qq") {

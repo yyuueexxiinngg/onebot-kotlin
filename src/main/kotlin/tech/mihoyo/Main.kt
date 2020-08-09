@@ -46,7 +46,6 @@ fun runMirai() {
     val lockFreeLinkedListClass = Class.forName("net.mamoe.mirai.utils.LockFreeLinkedList")
     val addLast = lockFreeLinkedListClass.getDeclaredMethod("addLast", Object::class.java)
     addLast.isAccessible = true
-
     addLast.invoke(pluginsSequence.get(PluginManager), plugin)
 
     val load = plugin.javaClass.superclass.getDeclaredMethod("load\$mirai_console")
@@ -57,7 +56,5 @@ fun runMirai() {
     enable.isAccessible = true
     enable.invoke(plugin)
 
-    PluginManager.reloadPlugins()
-
-    runBlocking { CommandManager.join() } // 阻止主线程退出
+    runBlocking { CommandManager.join() }
 }

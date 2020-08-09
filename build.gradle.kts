@@ -68,6 +68,7 @@ tasks {
     val runEmbedded by creating(JavaExec::class.java) {
         group = "cqhttp-mirai"
         main = "tech.mihoyo.MainKt"
+        workingDir = File("test")
         dependsOn(shadowJar)
         dependsOn(testClasses)
         doFirst {
