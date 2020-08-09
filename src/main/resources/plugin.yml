@@ -1,6 +1,6 @@
 name: "CQHTTPMirai"
 author: "yyuueexxiinngg"
-version: "0.1.9"
+version: "0.2.0"
 vcs: "https://github.com/yyuueexxiinngg/cqhttp-mirai"
 main: "tech.mihoyo.mirai.PluginBase"
 info: "Mirai to CoolQ HTTP API Plugin"
