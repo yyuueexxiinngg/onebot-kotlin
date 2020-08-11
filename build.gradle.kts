@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "yyuueexxiinngg"
-version = "0.2.0-embedded"
+version = "0.2.1-embedded"
 
 repositories {
     maven(url = "https://mirrors.huaweicloud.com/repository/maven")
@@ -31,6 +31,7 @@ dependencies {
 
     api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
+    api("com.github.ajalt:clikt:2.6.0")
     api("net.mamoe:mirai-console:$miraiConsoleVersion")
     api(kotlinx("serialization-runtime", "0.20.0"))
     api(ktor("server-cio"))

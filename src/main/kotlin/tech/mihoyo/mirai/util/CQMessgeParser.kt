@@ -266,7 +266,6 @@ private suspend fun convertToMiraiMessage(
                 }
                 return PlainText("插件无法获取到语音" + if (recordUrl != null) ", 原语音链接: $recordUrl" else "")
             } else {
-                logger.debug(record!!.fileName)
                 return record as Voice
             }
         }
@@ -353,7 +352,7 @@ suspend fun Message.toCQString(): String {
         is RichMessage -> "[CQ:rich,data=${content.escape()}]"
         is MessageSource -> ""
         is QuoteReply -> ""
-        is Voice -> "[CQ:voice,url=${url},md5=${md5},file=${fileName}]"
+        is Voice -> "[CQ:record,url=${url},file=${fileName}]"
         else -> "此处消息的转义尚未被插件支持"
     }
 }
