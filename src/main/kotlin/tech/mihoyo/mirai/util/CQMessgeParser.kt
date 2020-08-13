@@ -340,15 +340,13 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                             }
                         } else {
                             if (type == "image") {
-                                val cacheFile = getDataFile(type, "$filePath.cqimg")
-                                if (cacheFile != null && cacheFile.canRead()) {
-                                    logger.debug("Reading $type cache file")
-                                }
+                                media = tryResolveCachedImage(filePath, contact)
                             }
-
-                            val file = getDataFile(type, filePath)
-                            if (file != null && file.canRead()) {
-                                mediaBytes = file.readBytes()
+                            if (media == null) {
+                                val file = getDataFile(type, filePath)
+                                if (file != null && file.canRead()) {
+                                    mediaBytes = file.readBytes()
+                                }
                             }
                         }
                         if (mediaBytes == null) {
@@ -377,66 +375,11 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
 
             when (type) {
                 "image" -> {
-                    var cacheFile = getDataFile(type, "$urlHash.cqimg")
-
-                    if (cacheFile != null && useCache) {
-                        if (cacheFile.canRead()) {
-                            logger.info("此链接图片已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
-                            var md5 = ""
-                            var size = 0
-                            var addTime = 0L
-
-                            val cacheMediaContent = cacheFile.readLines()
-                            cacheMediaContent.forEach {
-                                val parts = it.trim().split("=", limit = 2)
-                                if (parts.size == 2) {
-                                    when (parts[0]) {
-                                        "md5" -> md5 = parts[1]
-                                        "size" -> size = parts[1].toIntOrNull() ?: 0
-                                        "addtime" -> addTime = parts[1].toLongOrNull() ?: 0L
-                                    }
-                                }
-                            }
-
-                            if (md5 != "" && size != 0) {
-                                if (contact != null) {
-                                    // If add time till now more than one day, check if the image exists
-                                    if (addTime - currentTimeMillis >= 1000 * 60 * 60 * 24) {
-                                        if (ImgUtil.tryGroupPicUp(
-                                                contact.bot,
-                                                contact.id,
-                                                md5,
-                                                size
-                                            ) != ImgUtil.ImageState.FileExist
-                                        ) {
-                                            cacheFile.delete()
-                                            cacheFile = null
-                                        } else { // If file exists
-                                            media = Image(ImgUtil.md5ToImageId(md5, contact))
-                                            val cqImgContent = """
-                                                [image]
-                                                md5=$md5
-                                                size=$size
-                                                url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-$md5/0?term=2
-                                                addtime=$currentTimeMillis
-                                            """.trimIndent()
-                                            saveImageAsync("$urlHash.cqimg", cqImgContent).start() // Update cache file
-                                        }
-                                    } else { // If time < one day
-                                        media = Image(ImgUtil.md5ToImageId(md5, contact))
-                                    }
-                                }
-                            } else { // If cache file corrupted
-                                cacheFile.delete()
-                                cacheFile = null
-                            }
-                        } else {
-                            logger.error("$type cache file cannot read.")
-                        }
+                    if (useCache) {
+                        media = tryResolveCachedImage(urlHash, contact)
                     }
 
-                    // Not using 'else' because cacheFile might get deleted above
-                    if (cacheFile == null || !useCache) {
+                    if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!)
 
                         val bis = ByteArrayInputStream(mediaBytes)
@@ -474,6 +417,65 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
         }
     }
     return PlainText("插件无法获取到图片" + if (mediaUrl != null) ", 原图链接: $mediaUrl" else "")
+}
+
+suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
+    var image: Image? = null
+    val cacheFile = getDataFile("image", "$name.cqimg")
+    if (cacheFile != null) {
+        if (cacheFile.canRead()) {
+            logger.info("此链接图片已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
+            var md5 = ""
+            var size = 0
+            var addTime = 0L
+
+            val cacheMediaContent = cacheFile.readLines()
+            cacheMediaContent.forEach {
+                val parts = it.trim().split("=", limit = 2)
+                if (parts.size == 2) {
+                    when (parts[0]) {
+                        "md5" -> md5 = parts[1]
+                        "size" -> size = parts[1].toIntOrNull() ?: 0
+                        "addtime" -> addTime = parts[1].toLongOrNull() ?: 0L
+                    }
+                }
+            }
+
+            if (md5 != "" && size != 0) {
+                if (contact != null) {
+                    // If add time till now more than one day, check if the image exists
+                    if (addTime - currentTimeMillis >= 1000 * 60 * 60 * 24) {
+                        if (ImgUtil.tryGroupPicUp(
+                                contact.bot,
+                                contact.id,
+                                md5,
+                                size
+                            ) != ImgUtil.ImageState.FileExist
+                        ) {
+                            cacheFile.delete()
+                        } else { // If file exists
+                            image = Image(ImgUtil.md5ToImageId(md5, contact))
+                            val cqImgContent = """
+                                                [image]
+                                                md5=$md5
+                                                size=$size
+                                                url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-$md5/0?term=2
+                                                addtime=$currentTimeMillis
+                                            """.trimIndent()
+                            saveImageAsync("$name.cqimg", cqImgContent).start() // Update cache file
+                        }
+                    } else { // If time < one day
+                        image = Image(ImgUtil.md5ToImageId(md5, contact))
+                    }
+                }
+            } else { // If cache file corrupted
+                cacheFile.delete()
+            }
+        } else {
+            logger.error("Image $name cache file cannot read.")
+        }
+    }
+    return image
 }
 
 fun md5(data: ByteArray): ByteArray {
