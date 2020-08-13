@@ -161,14 +161,7 @@ class WebSocketReverseClient(
         subscriptions[httpClientKey] = session.bot.subscribeAlways {
             // 保存Event以便在WebsocketSession Block中使用
             if (this.bot.id == session.botId) {
-                val event = this
-                when (event) {
-                    is TempMessageEvent -> session.cqApiImpl.cachedTempContact[event.sender.id] =
-                        event.group.id
-                    is NewFriendRequestEvent -> session.cqApiImpl.cacheRequestQueue.add(event)
-                    is MemberJoinRequestEvent -> session.cqApiImpl.cacheRequestQueue.add(event)
-                }
-                event.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
+                this.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
                     outgoing.send(Frame.Text(this.toJson()))
                 }
             }

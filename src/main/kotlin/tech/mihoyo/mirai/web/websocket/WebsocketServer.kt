@@ -78,21 +78,24 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
                 }
             }
             try {
-                for (frame in incoming) {
-                    outgoing.send(frame)
-                }
+                incoming.consumeEach {}
             } finally {
+                logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /event 连接被关闭")
                 listener.complete()
             }
         }
         cqWebsocket("/api", session, serviceConfig) {
-            logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /api 开始处理API请求")
-            incoming.consumeEach {
-                when (it) {
-                    is Frame.Text -> {
-                        handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+            try {
+                logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /api 开始处理API请求")
+                incoming.consumeEach {
+                    when (it) {
+                        is Frame.Text -> {
+                            handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                        }
                     }
                 }
+            } finally {
+                logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /api 连接被关闭")
             }
         }
         cqWebsocket("/", session, serviceConfig) { _session ->
@@ -102,20 +105,19 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
                     send(Frame.Text(this.toJson()))
                 }
             }
+
             try {
-                for (frame in incoming) {
-                    outgoing.send(frame)
-                }
-            } finally {
-                listener.complete()
-            }
-            logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 开始处理API请求")
-            incoming.consumeEach {
-                when (it) {
-                    is Frame.Text -> {
-                        handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 开始处理API请求")
+                incoming.consumeEach {
+                    when (it) {
+                        is Frame.Text -> {
+                            handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                        }
                     }
                 }
+            } finally {
+                logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 连接被关闭")
+                listener.complete()
             }
         }
     }

@@ -271,7 +271,7 @@ data class CQFriendRequestEventDTO(
     val flag: String,
     override var time: Long
 ) : CQBotEventDTO() {
-    override var post_type: String = "notice"
+    override var post_type: String = "request"
     val request_type: String = "friend"
 }
 
@@ -286,6 +286,6 @@ data class CQGroupMemberAddRequestEventDTO(
     val flag: String,
     override var time: Long
 ) : CQBotEventDTO() {
-    override var post_type: String = "notice"
+    override var post_type: String = "request"
     val request_type: String = "group"
 }
