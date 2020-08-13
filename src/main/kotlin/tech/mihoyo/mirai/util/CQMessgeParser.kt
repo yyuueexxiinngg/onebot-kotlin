@@ -35,12 +35,15 @@ import net.mamoe.mirai.getGroupOrNull
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.uploadImage
 import net.mamoe.mirai.utils.MiraiExperimentalAPI
+import net.mamoe.mirai.utils.currentTimeMillis
+import tech.mihoyo.mirai.PluginBase
+import tech.mihoyo.mirai.PluginBase.saveImageAsync
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
+import java.security.MessageDigest
 import java.util.*
 import kotlin.collections.HashMap
-
 
 suspend fun cqMessageToMessageChains(
     bot: Bot,
@@ -148,64 +151,7 @@ private suspend fun convertToMiraiMessage(
             return PlainText(String(Character.toChars(args["id"]!!.toInt())))
         }
         "image" -> {
-            var image: Image? = null
-            if (args.containsKey("file")) {
-                with(args["file"]!!) {
-                    when {
-                        startsWith("base64://") -> {
-                            val imageBytes = Base64.getDecoder().decode(args["file"]!!.replace("base64://", ""))
-                            val bis = ByteArrayInputStream(imageBytes)
-                            image = withContext(Dispatchers.IO) { contact!!.uploadImage(bis) }
-                        }
-                        startsWith("http") -> {
-                            image = try {
-                                withContext(Dispatchers.IO) { contact!!.uploadImage(URL(args["file"]!!)) }
-                            } catch (e: Exception) {
-                                null
-                            }
-                        }
-                        else -> {
-                            var fileIdOrPath = args["file"]!!
-                            if (fileIdOrPath.startsWith("file:///")) {
-                                fileIdOrPath = fileIdOrPath.replace("file:///", "")
-                                val file = File(fileIdOrPath).absoluteFile
-                                if (file.exists()) {
-                                    image = contact!!.uploadImage(file)
-                                }
-                            } else {
-                                if (fileIdOrPath.endsWith(".mnimg")) {
-                                    image = Image(fileIdOrPath.replace(".mnimg", ""))
-                                }
-                                val file = getDataFile("image", fileIdOrPath)
-                                if (file != null) {
-                                    image = contact!!.uploadImage(file)
-                                }
-                            }
-                            if (image == null) {
-                                if (args.containsKey("url")) {
-                                    image = withContext(Dispatchers.IO) { contact!!.uploadImage(URL(args["url"]!!)) }
-                                }
-                            }
-                        }
-
-                    }
-                }
-            } else if (args.containsKey("url")) {
-                image = withContext(Dispatchers.IO) { contact!!.uploadImage(URL(args["url"])) }
-            }
-            if (image != null) {
-                if (args["type"] == "flash") {
-                    return image!!.flash()
-                }
-                return image as Image
-            } else {
-                val imageUrl = when {
-                    args.containsKey("file") && args["file"]!!.startsWith("http") -> args["file"]
-                    args.containsKey("url") -> args["url"]
-                    else -> null
-                }
-                return PlainText("插件无法获取到图片" + if (imageUrl != null) ", 原图链接: $imageUrl" else "")
-            }
+            return tryResolveMedia("image", contact, args)
         }
         "share" -> {
             return RichMessageHelper.share(
@@ -280,7 +226,7 @@ private fun String.toMap(): HashMap<String, String> {
     val map = HashMap<String, String>()
     split(",").forEach {
         val parts = it.split(delimiters = *arrayOf("="), limit = 2)
-        map[parts[0]] = parts[1].unescape()
+        map[parts[0].trim()] = parts[1].unescape()
     }
     return map
 }
@@ -352,6 +298,7 @@ suspend fun codeToChain(bot: Bot, message: String, contact: Contact?): MessageCh
 
 fun getDataFile(type: String, name: String): File? {
     arrayOf(
+        File(PluginBase.dataFolder, type).absolutePath + File.separatorChar,
         "data" + File.separatorChar + type + File.separatorChar,
         System.getProperty("java.library.path")
             .substringBefore(";") + File.separatorChar + "data" + File.separatorChar + type + File.separatorChar,
@@ -363,4 +310,196 @@ fun getDataFile(type: String, name: String): File? {
         }
     }
     return null
+}
+
+suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, String>): Message {
+    var media: Message? = null
+    var mediaBytes: ByteArray? = null
+    var mediaUrl: String? = null
+
+    withContext(Dispatchers.IO) {
+        if (args.containsKey("file")) {
+            with(args["file"]!!) {
+                when {
+                    startsWith("base64://") -> {
+                        mediaBytes = Base64.getDecoder().decode(args["file"]!!.replace("base64://", ""))
+                    }
+                    startsWith("http") -> {
+                        mediaUrl = args["file"]
+                    }
+                    else -> {
+                        val filePath = args["file"]!!
+                        if (filePath.startsWith("file:///")) {
+                            var fileUri = URL(args["file"]).toURI()
+                            if (fileUri.authority != null && fileUri.authority.isNotEmpty()) {
+                                fileUri = URL("file://" + args["file"]!!.substring("file:".length)).toURI()
+                            }
+                            val file = File(fileUri).absoluteFile
+                            if (file.exists() && file.canRead()) {
+                                mediaBytes = file.readBytes()
+                            }
+                        } else {
+                            if (type == "image") {
+                                val cacheFile = getDataFile(type, "$filePath.cqimg")
+                                if (cacheFile != null && cacheFile.canRead()) {
+                                    logger.debug("Reading $type cache file")
+                                }
+                            }
+
+                            val file = getDataFile(type, filePath)
+                            if (file != null && file.canRead()) {
+                                mediaBytes = file.readBytes()
+                            }
+                        }
+                        if (mediaBytes == null) {
+                            if (args.containsKey("url")) {
+                                mediaUrl = args["url"]!!
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (args.containsKey("url")) {
+            mediaUrl = args["url"]!!
+        }
+
+        if (mediaBytes == null && mediaUrl != null) {
+            var useCache = true
+            if (args.containsKey("cache")) {
+                try {
+                    useCache = args["cache"]?.toIntOrNull() != 0
+                } catch (e: Exception) {
+                    logger.debug(e.message)
+                }
+            }
+
+            val urlHash = md5(mediaUrl!!).toUHexString("")
+
+            when (type) {
+                "image" -> {
+                    var cacheFile = getDataFile(type, "$urlHash.cqimg")
+
+                    if (cacheFile != null && useCache) {
+                        if (cacheFile.canRead()) {
+                            logger.info("此链接图片已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
+                            var md5 = ""
+                            var size = 0
+                            var addTime = 0L
+
+                            val cacheMediaContent = cacheFile.readLines()
+                            cacheMediaContent.forEach {
+                                val parts = it.trim().split("=", limit = 2)
+                                if (parts.size == 2) {
+                                    when (parts[0]) {
+                                        "md5" -> md5 = parts[1]
+                                        "size" -> size = parts[1].toIntOrNull() ?: 0
+                                        "addtime" -> addTime = parts[1].toLongOrNull() ?: 0L
+                                    }
+                                }
+                            }
+
+                            if (md5 != "" && size != 0) {
+                                if (contact != null) {
+                                    // If add time till now more than one day, check if the image exists
+                                    if (addTime - currentTimeMillis >= 1000 * 60 * 60 * 24) {
+                                        if (ImgUtil.tryGroupPicUp(
+                                                contact.bot,
+                                                contact.id,
+                                                md5,
+                                                size
+                                            ) != ImgUtil.ImageState.FileExist
+                                        ) {
+                                            cacheFile.delete()
+                                            cacheFile = null
+                                        } else { // If file exists
+                                            media = Image(ImgUtil.md5ToImageId(md5, contact))
+                                            val cqImgContent = """
+                                                [image]
+                                                md5=$md5
+                                                size=$size
+                                                url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-$md5/0?term=2
+                                                addtime=$currentTimeMillis
+                                            """.trimIndent()
+                                            saveImageAsync("$urlHash.cqimg", cqImgContent).start() // Update cache file
+                                        }
+                                    } else { // If time < one day
+                                        media = Image(ImgUtil.md5ToImageId(md5, contact))
+                                    }
+                                }
+                            } else { // If cache file corrupted
+                                cacheFile.delete()
+                                cacheFile = null
+                            }
+                        } else {
+                            logger.error("$type cache file cannot read.")
+                        }
+                    }
+
+                    // Not using 'else' because cacheFile might get deleted above
+                    if (cacheFile == null || !useCache) {
+                        mediaBytes = HttpClient.getBytes(mediaUrl!!)
+
+                        val bis = ByteArrayInputStream(mediaBytes)
+                        media = contact!!.uploadImage(bis)
+
+                        if (useCache) {
+                            val imageMD5 = mediaBytes?.let { md5(it) }?.toUHexString("")
+                            if (imageMD5 != null) {
+                                val cqImgContent = """
+                                    [image]
+                                    md5=$imageMD5
+                                    size=${mediaBytes?.size ?: 0}
+                                    url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-$imageMD5/0?term=2
+                                    addtime=$currentTimeMillis
+                                    """.trimIndent()
+                                logger.info("此链接图片将缓存为$urlHash.cqimg")
+                                saveImageAsync("$urlHash.cqimg", cqImgContent).start()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (media != null) {
+        return media as Message
+    } else if (mediaBytes != null) {
+        when (type) {
+            "image" -> {
+                val bis = ByteArrayInputStream(mediaBytes)
+                media = withContext(Dispatchers.IO) { contact!!.uploadImage(bis) }
+                return media as Image
+            }
+        }
+    }
+    return PlainText("插件无法获取到图片" + if (mediaUrl != null) ", 原图链接: $mediaUrl" else "")
+}
+
+fun md5(data: ByteArray): ByteArray {
+    return MessageDigest.getInstance("MD5").digest(data)
+}
+
+fun md5(str: String): ByteArray = md5(str.toByteArray())
+
+@ExperimentalUnsignedTypes
+internal fun ByteArray.toUHexString(
+    separator: String = " ",
+    offset: Int = 0,
+    length: Int = this.size - offset
+): String {
+    if (length == 0) {
+        return ""
+    }
+    val lastIndex = offset + length
+    return buildString(length * 2) {
+        this@toUHexString.forEachIndexed { index, it ->
+            if (index in offset until lastIndex) {
+                var ret = it.toUByte().toString(16).toUpperCase()
+                if (ret.length == 1) ret = "0$ret"
+                append(ret)
+                if (index < lastIndex - 1) append(separator)
+            }
+        }
+    }
 }
