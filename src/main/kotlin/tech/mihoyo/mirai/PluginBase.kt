@@ -63,10 +63,7 @@ object PluginBase : PluginBase() {
                             session.cqApiImpl.cachedTempContact[this.sender.id] = this.group.id
                         }
 
-                        val shouldCacheImage =
-                            if (session.config.containsKey("cacheImage")) session.config.getBoolean("cacheImage") else true
-
-                        if (shouldCacheImage) {
+                        if (session.shouldCacheImage) {
                             message.filterIsInstance<Image>().forEach { image ->
                                 val delegate = image::class.members.find { it.name == "delegate" }?.call(image)
                                 var imageMD5 = ""
