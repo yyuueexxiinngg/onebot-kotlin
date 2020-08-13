@@ -39,6 +39,7 @@ import net.mamoe.mirai.utils.MiraiExperimentalAPI
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.PluginBase
 import tech.mihoyo.mirai.PluginBase.saveImageAsync
+import tech.mihoyo.mirai.PluginBase.saveRecordAsync
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
@@ -163,57 +164,7 @@ private suspend fun convertToMiraiMessage(
             )
         }
         "record" -> {
-            var record: Voice? = null
-            if (args.containsKey("file")) {
-                with(args["file"]!!) {
-                    when {
-                        startsWith("base64://") -> {
-                            val voiceBytes = Base64.getDecoder().decode(args["file"]!!.replace("base64://", ""))
-                            record = withContext(Dispatchers.IO) { contact!!.uploadPtt(voiceBytes) }
-                        }
-                        startsWith("http") -> {
-                            record = try {
-                                withContext(Dispatchers.IO) { contact!!.uploadPtt(URL(args["file"]!!)) }
-                            } catch (e: Exception) {
-                                null
-                            }
-                        }
-                        else -> {
-                            var fileIdOrPath = args["file"]!!
-                            if (fileIdOrPath.startsWith("file:///")) {
-                                fileIdOrPath = fileIdOrPath.replace("file:///", "")
-                                val file = File(fileIdOrPath).absoluteFile
-                                if (file.exists()) {
-                                    record = contact!!.uploadPtt(file)
-                                }
-                            } else {
-                                val file = getDataFile("image", fileIdOrPath)
-                                if (file != null) {
-                                    record = contact!!.uploadPtt(file)
-                                }
-                            }
-                            if (record == null) {
-                                if (args.containsKey("url")) {
-                                    record = withContext(Dispatchers.IO) { contact!!.uploadPtt(URL(args["url"]!!)) }
-                                }
-                            }
-                        }
-
-                    }
-                }
-            } else if (args.containsKey("url")) {
-                record = withContext(Dispatchers.IO) { contact!!.uploadPtt(URL(args["url"])) }
-            }
-            if (record == null) {
-                val recordUrl = when {
-                    args.containsKey("file") && args["file"]!!.startsWith("http") -> args["file"]
-                    args.containsKey("url") -> args["url"]
-                    else -> null
-                }
-                return PlainText("插件无法获取到语音" + if (recordUrl != null) ", 原语音链接: $recordUrl" else "")
-            } else {
-                return record as Voice
-            }
+            return tryResolveMedia("record", contact, args)
         }
         "contact" -> {
             return if (args["type"] == "qq") {
@@ -395,6 +346,8 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         } else {
                             if (type == "image") {
                                 media = tryResolveCachedImage(filePath, contact)
+                            } else if (type == "record") {
+                                media = tryResolveCachedRecord(filePath, contact)
                             }
                             if (media == null) {
                                 val file = getDataFile(type, filePath)
@@ -455,6 +408,19 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         }
                     }
                 }
+                "record" -> {
+                    if (useCache) {
+                        media = tryResolveCachedRecord(urlHash, contact)
+                    }
+                    if (media == null || !useCache) {
+                        mediaBytes = HttpClient.getBytes(mediaUrl!!)
+                        media = HttpClient.getBytes(mediaUrl!!).let { contact?.uploadPtt(it) }
+
+                        if (useCache && mediaBytes != null) {
+                            saveRecordAsync("$urlHash.cqrecord", mediaBytes!!).start()
+                        }
+                    }
+                }
             }
         }
     }
@@ -470,7 +436,19 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
             }
         }
     }
-    return PlainText("插件无法获取到图片" + if (mediaUrl != null) ", 原图链接: $mediaUrl" else "")
+    return PlainText("插件无法获取到媒体" + if (mediaUrl != null) ", 媒体链接: $mediaUrl" else "")
+}
+
+suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
+    val cacheFile = getDataFile("record", "$name.cqrecord")
+    if (cacheFile != null) {
+        if (cacheFile.canRead()) {
+            logger.info("此语音已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
+            val voiceBytes = cacheFile.readBytes()
+            return contact?.uploadPtt(voiceBytes)
+        }
+    }
+    return null
 }
 
 suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {

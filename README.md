@@ -38,6 +38,8 @@ debug: false
 '1234567890':
   # 是否缓存所有收到的图片, 默认为否 (仅包含图片信息, 不包含图片本身,  < 0.5KB)
   cacheImage: false
+  # 是否缓存所有收到的语音, 默认为否 (将下载完整语音进行保存)
+  cacheRecord: false
   # HTTP 相关配置
   http:
     # 可选，是否启用HTTP API服务器, 默认为不启用, 此项开始与否跟postUrl无关

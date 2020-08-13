@@ -16,8 +16,10 @@ import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.message.data.Image
+import net.mamoe.mirai.message.data.Voice
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.SessionManager.allSession
+import tech.mihoyo.mirai.util.HttpClient
 import tech.mihoyo.mirai.util.toUHexString
 import tech.mihoyo.mirai.web.HttpApiServices
 import java.io.File
@@ -104,6 +106,15 @@ object PluginBase : PluginBase() {
                                 saveImageAsync("$imageMD5.cqimg", cqImgContent).start()
                             }
                         }
+
+                        if (session.shouldCacheRecord) {
+                            message.filterIsInstance<Voice>().forEach { voice ->
+                                val voiceBytes = voice.url?.let { it -> HttpClient.getBytes(it) }
+                                if (voiceBytes != null) {
+                                    saveRecordAsync("${voice.md5.toUHexString("")}.cqrecord", voiceBytes).start()
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -117,8 +128,15 @@ object PluginBase : PluginBase() {
     }
 
     private val imageFold: File = File(dataFolder, "image").apply { mkdirs() }
+    private val recordFold: File = File(dataFolder, "record").apply { mkdirs() }
 
     internal fun image(imageName: String) = File(imageFold, imageName)
+    internal fun record(recordName: String) = File(recordFold, recordName)
+
+    fun saveRecordAsync(name: String, data: ByteArray) =
+        async {
+            record(name).apply { writeBytes(data) }
+        }
 
     fun saveImageAsync(name: String, data: ByteArray) =
         async {

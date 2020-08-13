@@ -75,7 +75,7 @@ tasks {
         doFirst {
             classpath = sourceSets["test"].runtimeClasspath
             standardInput = System.`in`
-            args("-mirai")
+            args("--backend", "mirai")
         }
     }
 
