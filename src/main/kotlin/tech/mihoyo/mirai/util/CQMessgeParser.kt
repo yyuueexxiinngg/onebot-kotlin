@@ -240,11 +240,11 @@ suspend fun Message.toCQString(): String {
         is VipFace -> "[CQ:vipface,id=${kind.id},name=${kind.name},count=${count}]"
         is PokeMessage -> "[CQ:poke,id=${id},type=${type},name=${name}]"
         is AtAll -> "[CQ:at,qq=all]"
-        is Image -> "[CQ:image,file=$imageId,url=${queryUrl()}]"  // 无需转义 https://github.com/richardchien/coolq-http-api/blob/30bfedec692cd1c383ad7561af80c4744343861f/src/cqhttp/plugins/message_enhancer/message_enhancer.cpp#L249
+        is Image -> "[CQ:image,file=${md5.toUHexString("")},url=${queryUrl().escape()}]"
         is RichMessage -> "[CQ:rich,data=${content.escape()}]"
         is MessageSource -> ""
         is QuoteReply -> ""
-        is Voice -> "[CQ:voice,url=${url},md5=${md5},file=${fileName}]"
+        is Voice -> "[CQ:record,url=${url.escape()},file=${md5.toUHexString("")}]"
         else -> "此处消息的转义尚未被插件支持"
     }
 }
