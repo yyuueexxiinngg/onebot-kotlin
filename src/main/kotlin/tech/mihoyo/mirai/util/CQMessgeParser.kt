@@ -434,6 +434,10 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                 media = withContext(Dispatchers.IO) { contact!!.uploadImage(bis) }
                 return media as Image
             }
+            "record" -> {
+                media = withContext(Dispatchers.IO) { contact!!.uploadPtt(mediaBytes!!) }
+                return media as Voice
+            }
         }
     }
     return PlainText("插件无法获取到媒体" + if (mediaUrl != null) ", 媒体链接: $mediaUrl" else "")
