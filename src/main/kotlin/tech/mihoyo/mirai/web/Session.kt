@@ -4,6 +4,7 @@ import io.ktor.util.*
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.plugins.ConfigSection
+import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.http.HttpApiServer
 import tech.mihoyo.mirai.web.websocket.WebSocketReverseClient
 import tech.mihoyo.mirai.web.websocket.WebSocketServer
@@ -51,10 +52,16 @@ abstract class Session internal constructor(
 @KtorExperimentalAPI
 class BotSession internal constructor(val bot: Bot, val config: ConfigSection, coroutineContext: CoroutineContext) :
     Session(coroutineContext, bot.id) {
+    val shouldCacheImage = if (config.containsKey("cacheImage")) config.getBoolean("cacheImage") else false
     val cqApiImpl = MiraiApi(bot)
     val httpApiServer = HttpApiServer(this)
     val websocketClient = WebSocketReverseClient(this)
     val websocketServer = WebSocketServer(this)
+
+    init {
+        if(shouldCacheImage) logger.info("Bot: ${bot.id} 已开启接收图片缓存, 将会缓存收取到的所有图片")
+        else logger.info("Bot: ${bot.id} 未开启接收图片缓存, 将不会缓存收取到的所有图片, 如需开启, 请在当前Bot配置中添加cacheImage=true")
+    }
 
     override fun close() {
         websocketClient.close()
