@@ -17,6 +17,18 @@ __CQHTTP runs on Mirai__
 2. 编辑`plugins/setting.yml`配置文件, 将以下给出配置复制并修改
 3. 重新运行
 
+### 接收的参数
+
+- `--account 123456789` 要自动登录的账号
+- `--password *******` 要自动登录账号的密码
+
+### 读取的环境变量
+
+- `cqhttp.account` 同`--account`参数, 但优先级低, 会被参数覆盖
+- `cqhttp.password` 同`--password`参数, 但优先级低, 会被参数覆盖
+
+#### 此外还支持读取`miraiOK`生成的`config.txt`配置文件中的命令
+
 ## 配置相关
 
 ```yaml

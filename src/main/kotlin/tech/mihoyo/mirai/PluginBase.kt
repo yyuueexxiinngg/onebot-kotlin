@@ -33,7 +33,7 @@ object PluginBase : PluginBase() {
     @KtorExperimentalAPI
     @ExperimentalCoroutinesApi
     override fun onEnable() {
-        logger.info("Plugin loaded! ${description.version}")
+        logger.info("Plugin loaded!")
         subscribeAlways<BotEvent> {
             when (this) {
                 is BotOnlineEvent -> {
