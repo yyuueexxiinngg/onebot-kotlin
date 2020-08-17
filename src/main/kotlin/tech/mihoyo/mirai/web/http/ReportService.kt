@@ -127,7 +127,7 @@ class ReportService(
                 }
             }
             method = HttpMethod.Post
-            body = TextContent(json, ContentType.Application.Json)
+            body = TextContent(json, ContentType.Application.Json.withParameter("charset", "utf-8"))
         }
         logger.debug("收到上报响应  $res")
         if (shouldHandleOperation && res != null && res != "") {
