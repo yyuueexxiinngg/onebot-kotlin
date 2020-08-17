@@ -65,7 +65,7 @@ class ReportService(
 
                             this.toCQDTO(isRawMessage = config.postMessageFormat == "string")
                                 .takeIf { it !is CQIgnoreEventDTO }?.apply {
-                                    val eventDTO  = this
+                                    val eventDTO = this
                                     val jsonToSend = this.toJson()
                                     GlobalScope.launch(Dispatchers.IO) {
                                         report(
@@ -88,7 +88,7 @@ class ReportService(
                             val config = this
                             event.toCQDTO(isRawMessage = config.postMessageFormat == "string")
                                 .takeIf { it !is CQIgnoreEventDTO }?.apply {
-                                    val eventDTO  = this
+                                    val eventDTO = this
                                     val jsonToSend = this.toJson()
                                     GlobalScope.launch(Dispatchers.IO) {
                                         report(

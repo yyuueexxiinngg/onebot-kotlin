@@ -325,15 +325,43 @@ class MiraiApi(val bot: Bot) {
             if (postType == "message") {
                 val messageType = context["message_type"]?.content
 
-                var reply = operation?.get("reply")?.content
-                if (reply != null) {
+                val replyElement = operation?.get("reply")
+                if (replyElement != null) {
+                    val nextCallParams = context.toMutableMap()
                     if (messageType == "group" && operation?.get("at_sender")?.booleanOrNull == true) {
                         context["user_id"]?.longOrNull?.apply {
-                            reply = "[CQ:at,qq=$this] $reply"
+                            when (replyElement) {
+                                is JsonArray -> {
+                                    val replyMessageChain = replyElement.jsonArray.toMutableList()
+                                    replyMessageChain.add(
+                                        0, JsonObject(
+                                            mapOf(
+                                                "type" to JsonPrimitive("at"),
+                                                "data" to JsonObject(mapOf("qq" to JsonPrimitive(this)))
+                                            )
+                                        )
+                                    )
+                                    nextCallParams["message"] = JsonArray(replyMessageChain)
+                                }
+                                is JsonObject -> {
+                                    val replyMessageChain = mutableListOf(replyElement.jsonObject)
+                                    replyMessageChain.add(
+                                        0, JsonObject(
+                                            mapOf(
+                                                "type" to JsonPrimitive("at"),
+                                                "data" to JsonObject(mapOf("qq" to JsonPrimitive(this)))
+                                            )
+                                        )
+                                    )
+                                    nextCallParams["message"] = JsonArray(replyMessageChain)
+                                }
+                                else -> {
+                                    val textToReply = "[CQ:at,qq=$this] ${replyElement.content}"
+                                    nextCallParams["message"] = JsonPrimitive(textToReply)
+                                }
+                            }
                         }
                     }
-                    val nextCallParams = context.toMutableMap()
-                    nextCallParams["message"] = JsonPrimitive(reply)
                     return cqSendMessage(nextCallParams)
                 }
 
@@ -424,7 +452,7 @@ class MiraiApi(val bot: Bot) {
         val groupId = params["group_id"]?.long
         val name = params["name"]?.content
 
-        return if(groupId != null && name != null && name != "") {
+        return if (groupId != null && name != null && name != "") {
             bot.getGroup(groupId).name = name
             CQResponseDTO.CQGeneralSuccess()
         } else {
