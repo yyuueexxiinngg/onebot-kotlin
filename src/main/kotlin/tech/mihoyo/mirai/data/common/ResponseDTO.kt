@@ -5,6 +5,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
+import net.mamoe.mirai.data.GroupHonorListData
 
 @Serializable
 sealed class CQResponseDataDTO
@@ -36,6 +37,8 @@ open class CQResponseDTO(
     class CQPluginStatus(status: CQPluginStatusData) : CQResponseDTO("ok", 0, status)
     class CQVersionInfo(versionInfo: CQVersionInfoData) : CQResponseDTO("ok", 0, versionInfo)
 
+    class CQHonorList(honorList: GroupHonorListData) : CQResponseDTO("ok", 0, honorList)
+
     object ResponseDataSerializer : KSerializer<Any?> {
         override val descriptor: SerialDescriptor
             get() = String.serializer().descriptor
@@ -49,6 +52,10 @@ open class CQResponseDTO(
                 is List<*> -> encoder.encodeSerializableValue(
                     ListSerializer(CQResponseDataDTO.serializer()),
                     value as List<CQResponseDataDTO>
+                )
+                is GroupHonorListData -> encoder.encodeSerializableValue(
+                    GroupHonorListData.serializer(),
+                    value
                 )
                 else -> encoder.encodeSerializableValue(
                     CQResponseDataDTO.serializer(),

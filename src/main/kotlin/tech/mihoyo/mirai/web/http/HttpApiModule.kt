@@ -10,6 +10,7 @@
 package tech.mihoyo.mirai.web.http
 
 import io.ktor.application.*
+import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -23,6 +24,7 @@ import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import net.mamoe.mirai.LowLevelAPI
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
@@ -31,9 +33,11 @@ import tech.mihoyo.mirai.util.toJson
 import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
+@LowLevelAPI
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServerServiceConfig) {
+    install(CallLogging)
     // it.second -> if is async call
     routing {
         cqHttpApi("/send_msg", serviceConfig) {
@@ -195,6 +199,15 @@ fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServe
 
         cqHttpApi("/set_group_name", serviceConfig) {
             val responseDTO = callMiraiApi("set_group_name", it.first, session.cqApiImpl)
+            if (!it.second) call.responseDTO(responseDTO)
+        }
+
+        /////////////////
+        //// hidden ////
+        ///////////////
+
+        cqHttpApi("/_get_group_honor_list", serviceConfig) {
+            val responseDTO = callMiraiApi("_get_group_honor_list", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
     }

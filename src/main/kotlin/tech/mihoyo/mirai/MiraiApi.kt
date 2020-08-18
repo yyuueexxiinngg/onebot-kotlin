@@ -3,7 +3,9 @@ package tech.mihoyo.mirai
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.contact.PermissionDeniedException
+import net.mamoe.mirai.data.GroupHonorType
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.data.recall
@@ -14,6 +16,7 @@ import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.queue.CacheRequestQueue
 
 
+@LowLevelAPI
 suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mirai: MiraiApi): CQResponseDTO {
     var responseDTO: CQResponseDTO = CQResponseDTO.CQPluginFailure()
     try {
@@ -58,6 +61,8 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
             ".handle_quick_operation" -> responseDTO = mirai.cqHandleQuickOperation(params)
 
             "set_group_name" -> responseDTO = mirai.cqSetGroupName(params)
+
+            "_get_group_honor_list" -> responseDTO = mirai.cqGetGroupHonorList(params)
             else -> {
                 logger.error("未知CQHTTP API: $action")
             }
@@ -424,9 +429,27 @@ class MiraiApi(val bot: Bot) {
         val groupId = params["group_id"]?.long
         val name = params["name"]?.content
 
-        return if(groupId != null && name != null && name != "") {
+        return if (groupId != null && name != null && name != "") {
             bot.getGroup(groupId).name = name
             CQResponseDTO.CQGeneralSuccess()
+        } else {
+            CQResponseDTO.CQInvalidRequest()
+        }
+    }
+
+    /////////////////
+    //// hidden ////
+    ///////////////
+
+    @LowLevelAPI
+    suspend fun cqGetGroupHonorList(params: Map<String, JsonElement>): CQResponseDTO {
+        val groupId = params["group_id"]?.longOrNull
+        val type = params["type"]?.intOrNull
+
+        return if (groupId != null && type != null) {
+            val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.fromInt(type))
+
+            data?.let { CQResponseDTO.CQHonorList(data) } ?: CQResponseDTO.CQMiraiFailure()
         } else {
             CQResponseDTO.CQInvalidRequest()
         }

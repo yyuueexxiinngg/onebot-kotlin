@@ -3,6 +3,7 @@ package tech.mihoyo.mirai
 import io.ktor.util.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.console.plugins.PluginBase
 import net.mamoe.mirai.console.plugins.withDefault
 import net.mamoe.mirai.contact.Friend
@@ -32,6 +33,7 @@ object PluginBase : PluginBase() {
         services.onLoad()
     }
 
+    @LowLevelAPI
     @KtorExperimentalAPI
     @ExperimentalCoroutinesApi
     override fun onEnable() {

@@ -14,13 +14,11 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.LowLevelAPI
 
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
-import net.mamoe.mirai.event.events.MemberJoinRequestEvent
-import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.data.common.*
@@ -30,6 +28,7 @@ import java.io.EOFException
 import java.io.IOException
 import java.net.ConnectException
 
+@LowLevelAPI
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 class WebSocketReverseClient(
