@@ -15,13 +15,17 @@ import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
 import io.ktor.websocket.WebSockets
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
+import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.data.common.CQHeartbeatMetaEventDTO
 import tech.mihoyo.mirai.data.common.CQIgnoreEventDTO
+import tech.mihoyo.mirai.data.common.CQPluginStatusData
 import tech.mihoyo.mirai.data.common.toCQDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
@@ -65,6 +69,7 @@ class WebSocketServer(
 }
 
 @LowLevelAPI
+@KtorExperimentalAPI
 @ExperimentalCoroutinesApi
 fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketServerServiceConfig) {
     logger.debug("Bot: ${session.bot.id} 尝试开启正向Websocket服务端于端口: ${serviceConfig.wsPort}")
@@ -80,11 +85,15 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
                     send(Frame.Text(this.toJson()))
                 }
             }
+
+            val heartbeatJob = if (session.heartbeatEnabled) emitHeartbeat(session, outgoing) else null
+
             try {
                 incoming.consumeEach {}
             } finally {
                 logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /event 连接被关闭")
                 listener.complete()
+                heartbeatJob?.cancel()
             }
         }
         cqWebsocket("/api", session, serviceConfig) {
@@ -109,6 +118,8 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
                 }
             }
 
+            val heartbeatJob = if (session.heartbeatEnabled) emitHeartbeat(session, outgoing) else null
+
             try {
                 logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 开始处理API请求")
                 incoming.consumeEach {
@@ -121,10 +132,35 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
             } finally {
                 logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 连接被关闭")
                 listener.complete()
+                heartbeatJob?.cancel()
             }
         }
     }
 }
+
+@KtorExperimentalAPI
+@ExperimentalCoroutinesApi
+private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Frame>): Job {
+    return GlobalScope.launch {
+        while (true) {
+            outgoing.send(
+                Frame.Text(
+                    CQHeartbeatMetaEventDTO(
+                        session.botId,
+                        currentTimeMillis,
+                        CQPluginStatusData(
+                            good = session.bot.isOnline,
+                            plugins_good = session.bot.isOnline,
+                            online = session.bot.isOnline
+                        )
+                    ).toJson()
+                )
+            )
+            delay(session.heartbeatInterval)
+        }
+    }
+}
+
 
 @LowLevelAPI
 @ContextDsl

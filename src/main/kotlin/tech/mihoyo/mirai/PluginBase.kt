@@ -4,11 +4,14 @@ import io.ktor.util.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import net.mamoe.mirai.LowLevelAPI
+import net.mamoe.mirai.Bot
+import net.mamoe.mirai.console.plugins.Config
 import net.mamoe.mirai.console.plugins.PluginBase
-import net.mamoe.mirai.console.plugins.withDefault
+import net.mamoe.mirai.console.plugins.description
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.events.BotOnlineEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
@@ -20,25 +23,38 @@ import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Voice
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.SessionManager.allSession
-import tech.mihoyo.mirai.util.HttpClient
+import tech.mihoyo.mirai.SessionManager.closeSession
 import tech.mihoyo.mirai.util.toUHexString
-import tech.mihoyo.mirai.web.HttpApiServices
 import java.io.File
 
 object PluginBase : PluginBase() {
-    private val config = loadConfig("setting.yml")
-    val debug by config.withDefault { false }
-    var services: HttpApiServices = HttpApiServices(this)
+    private lateinit var config: Config
+    var debug = false
+    var initialSubscription: Listener<BotEvent>? = null
     override fun onLoad() {
-        services.onLoad()
     }
 
     @LowLevelAPI
     @KtorExperimentalAPI
     @ExperimentalCoroutinesApi
     override fun onEnable() {
+        config = loadConfig("setting.yml")
+        debug = if (config.exist("debug")) config.getBoolean("debug") else false
         logger.info("Plugin loaded!")
-        subscribeAlways<BotEvent> {
+
+        Bot.forEachInstance {
+            if (!allSession.containsKey(it.id)) {
+                if (config.exist(it.id.toString())) {
+                    SessionManager.createBotSession(it, config.getConfigSection(it.id.toString()))
+                } else {
+                    logger.debug("${it.id}未对CQHTTPMirai进行配置")
+                }
+            } else {
+                logger.debug("${it.id}已存在")
+            }
+        }
+
+        initialSubscription = subscribeAlways {
             when (this) {
                 is BotOnlineEvent -> {
                     if (!allSession.containsKey(bot.id)) {
@@ -121,12 +137,11 @@ object PluginBase : PluginBase() {
                 }
             }
         }
-        services.onEnable()
     }
 
     override fun onDisable() {
-        services.onDisable()
-        allSession.forEach { (_, session) -> session.close() }
+        initialSubscription?.complete()
+        allSession.forEach { (sessionId, _) -> closeSession(sessionId) }
     }
 
     private val imageFold: File = File(dataFolder, "image").apply { mkdirs() }

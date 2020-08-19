@@ -275,7 +275,18 @@ internal inline fun Route.cqHttpApi(
         }
         post {
             if (checkAccessToken(call, serviceConfig)) {
-                body(Pair(Json.parseJson(call.receiveTextWithCorrectEncoding()).jsonObject, false))
+                val contentType = call.request.contentType()
+                when {
+                    contentType.contentSubtype.contains("form-urlencoded") -> {
+                        body(Pair(paramsToJson(call.receiveParameters()), false))
+                    }
+                    contentType.contentSubtype.contains("json") -> {
+                        body(Pair(Json.parseJson(call.receiveTextWithCorrectEncoding()).jsonObject, false))
+                    }
+                    else -> {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
+                }
             }
         }
     }
@@ -292,10 +303,21 @@ internal inline fun Route.cqHttpApi(
         }
         post {
             if (checkAccessToken(call, serviceConfig)) {
-                val req = call.receiveTextWithCorrectEncoding()
-                call.responseDTO(CQResponseDTO.CQAsyncStarted())
-                CoroutineScope(EmptyCoroutineContext).launch {
-                    body(Pair(Json.parseJson(req).jsonObject, true))
+                val contentType = call.request.contentType()
+                when {
+                    contentType.contentSubtype.contains("form-urlencoded") -> {
+                        body(Pair(paramsToJson(call.receiveParameters()), true))
+                    }
+                    contentType.contentSubtype.contains("json") -> {
+                        val req = call.receiveTextWithCorrectEncoding()
+                        call.responseDTO(CQResponseDTO.CQAsyncStarted())
+                        CoroutineScope(EmptyCoroutineContext).launch {
+                            body(Pair(Json.parseJson(req).jsonObject, true))
+                        }
+                    }
+                    else -> {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
                 }
             }
         }
