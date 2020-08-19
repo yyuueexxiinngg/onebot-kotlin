@@ -9,6 +9,8 @@ import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.contact.PermissionDeniedException
 import net.mamoe.mirai.data.GroupHonorListData
 import net.mamoe.mirai.data.GroupHonorType
+import net.mamoe.mirai.data.GroupAnnouncement
+import net.mamoe.mirai.data.GroupAnnouncementMsg
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.data.recall
@@ -66,6 +68,7 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
             "set_group_name" -> responseDTO = mirai.cqSetGroupName(params)
             "get_group_honor_info" -> responseDTO = mirai.cqGetGroupHonorInfo(params)
 
+            "_set_group_announcement" -> responseDTO = mirai.cqSetGroupAnnouncement(params)
             else -> {
                 logger.error("未知CQHTTP API: $action")
             }
@@ -468,7 +471,6 @@ class MiraiApi(val bot: Bot) {
         }
     }
 
-
     @OptIn(UnstableDefault::class)
     @LowLevelAPI
     suspend fun cqGetGroupHonorInfo(params: Map<String, JsonElement>): CQResponseDTO {
@@ -489,6 +491,19 @@ class MiraiApi(val bot: Bot) {
     /////////////////
     //// hidden ////
     ///////////////
+
+    @LowLevelAPI
+    suspend fun cqSetGroupAnnouncement(params: Map<String, JsonElement>): CQResponseDTO {
+        val groupId = params["group_id"]?.long
+        val content = params["content"]?.content
+
+        return if (groupId != null && content != null && content != "") {
+            bot._lowLevelSendAnnouncement(groupId, GroupAnnouncement(msg = GroupAnnouncementMsg(text = content)))
+            CQResponseDTO.CQGeneralSuccess()
+        } else {
+            CQResponseDTO.CQInvalidRequest()
+        }
+    }
 
 
     ////////////////////////////////

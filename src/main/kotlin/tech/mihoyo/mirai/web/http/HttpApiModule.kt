@@ -207,10 +207,15 @@ fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServe
             if (!it.second) call.responseDTO(responseDTO)
         }
 
+
         /////////////////
         //// hidden ////
         ///////////////
 
+        cqHttpApi("/_set_group_announcement", serviceConfig) {
+            val responseDTO = callMiraiApi("_set_group_announcement", it.first, session.cqApiImpl)
+            if (!it.second) call.responseDTO(responseDTO)
+        }
     }
 }
 
