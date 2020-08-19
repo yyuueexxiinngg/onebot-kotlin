@@ -194,7 +194,7 @@ fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServe
         }
 
         ////////////////
-        //// addon ////
+        ////  v11  ////
         //////////////
 
         cqHttpApi("/set_group_name", serviceConfig) {
@@ -202,14 +202,15 @@ fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServe
             if (!it.second) call.responseDTO(responseDTO)
         }
 
+        cqHttpApi("/get_group_honor_info", serviceConfig) {
+            val responseDTO = callMiraiApi("get_group_honor_info", it.first, session.cqApiImpl)
+            if (!it.second) call.responseDTO(responseDTO)
+        }
+
         /////////////////
         //// hidden ////
         ///////////////
 
-        cqHttpApi("/_get_group_honor_list", serviceConfig) {
-            val responseDTO = callMiraiApi("_get_group_honor_list", it.first, session.cqApiImpl)
-            if (!it.second) call.responseDTO(responseDTO)
-        }
     }
 }
 

@@ -63,8 +63,8 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
             ".handle_quick_operation" -> responseDTO = mirai.cqHandleQuickOperation(params)
 
             "set_group_name" -> responseDTO = mirai.cqSetGroupName(params)
+            "get_group_honor_info" -> responseDTO = mirai.cqGetGroupHonorInfo(params)
 
-            "_get_group_honor_list" -> responseDTO = mirai.cqGetGroupHonorList(params)
             else -> {
                 logger.error("未知CQHTTP API: $action")
             }
@@ -452,7 +452,7 @@ class MiraiApi(val bot: Bot) {
     }
 
     ////////////////
-    //// addon ////
+    ////  v11  ////
     //////////////
 
     fun cqSetGroupName(params: Map<String, JsonElement>): CQResponseDTO {
@@ -467,13 +467,10 @@ class MiraiApi(val bot: Bot) {
         }
     }
 
-    /////////////////
-    //// hidden ////
-    ///////////////
 
     @OptIn(UnstableDefault::class)
     @LowLevelAPI
-    suspend fun cqGetGroupHonorList(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun cqGetGroupHonorInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.longOrNull
         val type = params["type"]?.intOrNull
 
@@ -487,6 +484,11 @@ class MiraiApi(val bot: Bot) {
             CQResponseDTO.CQInvalidRequest()
         }
     }
+
+    /////////////////
+    //// hidden ////
+    ///////////////
+
 
     ////////////////////////////////
     //// currently unsupported ////
