@@ -1,8 +1,8 @@
 plugins {
-    kotlin("jvm") version "1.3.72"
-    kotlin("plugin.serialization") version "1.3.72"
+    kotlin("jvm") version "1.4.0"
+    kotlin("plugin.serialization") version "1.4.0"
     java
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.github.johnrengelman.shadow") version "6.0.0"
 }
 
 group = "yyuueexxiinngg"
@@ -11,14 +11,16 @@ version = "0.2.2-embedded"
 repositories {
     maven(url = "https://mirrors.huaweicloud.com/repository/maven")
     maven(url = "https://dl.bintray.com/kotlin/kotlin-eap")
+    gradlePluginPortal()
     jcenter()
     mavenCentral()
 }
 
-val miraiCoreVersion: String by rootProject.ext
-val miraiConsoleVersion: String by rootProject.ext
-val ktorVersion: String by rootProject.ext
-val kotlinVersion = "1.3.72"
+val miraiCoreVersion = "1.2.0"
+val miraiConsoleVersion = "0.5.2"
+val ktorVersion = "1.4.0"
+val kotlinVersion = "1.4.0"
+val kotlinSerializationVersion = "1.0.0-RC"
 
 fun ktor(id: String, version: String = this@Build_gradle.ktorVersion) = "io.ktor:ktor-$id:$version"
 fun kotlinx(id: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$id:$version"
@@ -27,7 +29,9 @@ dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
 //    compileOnly("net.mamoe:mirai-core:$miraiCoreVersion")
     compileOnly("net.mamoe:mirai-console:$miraiConsoleVersion")
-    compileOnly(kotlin("serialization", kotlinVersion))
+    compileOnly(kotlin("serialization", kotlinSerializationVersion))
+
+    implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
 
     api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 

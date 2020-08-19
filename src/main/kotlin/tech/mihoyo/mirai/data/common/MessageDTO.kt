@@ -10,9 +10,12 @@
 package tech.mihoyo.mirai.data.common
 
 import kotlinx.serialization.*
-import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
-import tech.mihoyo.mirai.coolq.api.http.util.PokeMap
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import tech.mihoyo.mirai.util.PokeMap
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.*
@@ -154,7 +157,6 @@ sealed class CQMessageChainOrStringDTO {
             error("Not implemented")
         }
 
-        @OptIn(UnstableDefault::class)
         override fun serialize(encoder: Encoder, value: CQMessageChainOrStringDTO) {
             when (value) {
                 is WrappedCQMessageChainString -> {
@@ -198,9 +200,8 @@ data class WrappedCQMessageChainList(
             error("Not implemented")
         }
 
-        @OptIn(UnstableDefault::class)
         override fun serialize(encoder: Encoder, value: WrappedCQMessageChainList) {
-            return MessageDTO.serializer().list.serialize(encoder, value.value)
+            return ListSerializer(MessageDTO.serializer()).serialize(encoder, value.value)
         }
     }
 }
@@ -211,7 +212,6 @@ sealed class MessageDTO : DTO
 /*
     Extend function
  */
-@MiraiExperimentalAPI
 suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
     val rawMessage = WrappedCQMessageChainString("")
     message.forEach { rawMessage.value += it.toCQString() }

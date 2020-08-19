@@ -20,10 +20,8 @@ import io.ktor.util.pipeline.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.serialization.UnstableDefault
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.json.*
 import net.mamoe.mirai.LowLevelAPI
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.callMiraiApi
@@ -33,9 +31,6 @@ import tech.mihoyo.mirai.util.toJson
 import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
-@LowLevelAPI
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
 fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServerServiceConfig) {
     install(CallLogging)
     // it.second -> if is async call
@@ -241,7 +236,6 @@ suspend fun checkAccessToken(call: ApplicationCall, serviceConfig: HttpApiServer
     return true
 }
 
-@OptIn(UnstableDefault::class)
 fun paramsToJson(params: Parameters): JsonObject {
 /*    val parsed = "{\"" + URLDecoder.decode(params.formUrlEncode(), "UTF-8")
         .replace("\"", "\\\"")
@@ -261,13 +255,9 @@ fun paramsToJson(params: Parameters): JsonObject {
     }
     parsed += "}"
     logger.debug("HTTP API Received: $parsed")
-    return Json.parseJson(parsed).jsonObject
+    return Json.parseToJsonElement(parsed).jsonObject
 }
 
-@OptIn(UnstableDefault::class)
-@KtorExperimentalAPI
-@ExperimentalCoroutinesApi
-@ContextDsl
 internal inline fun Route.cqHttpApi(
     path: String,
     serviceConfig: HttpApiServerServiceConfig,
@@ -287,7 +277,7 @@ internal inline fun Route.cqHttpApi(
                         body(Pair(paramsToJson(call.receiveParameters()), false))
                     }
                     contentType.contentSubtype.contains("json") -> {
-                        body(Pair(Json.parseJson(call.receiveTextWithCorrectEncoding()).jsonObject, false))
+                        body(Pair(Json.parseToJsonElement(call.receiveTextWithCorrectEncoding()).jsonObject, false))
                     }
                     else -> {
                         call.respond(HttpStatusCode.BadRequest)
@@ -318,7 +308,7 @@ internal inline fun Route.cqHttpApi(
                         val req = call.receiveTextWithCorrectEncoding()
                         call.responseDTO(CQResponseDTO.CQAsyncStarted())
                         CoroutineScope(EmptyCoroutineContext).launch {
-                            body(Pair(Json.parseJson(req).jsonObject, true))
+                            body(Pair(Json.parseToJsonElement(req).jsonObject, true))
                         }
                     }
                     else -> {

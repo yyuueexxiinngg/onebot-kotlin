@@ -14,7 +14,6 @@ import kotlinx.serialization.Serializable
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.*
-import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.currentTimeMillis
 
 @Serializable
