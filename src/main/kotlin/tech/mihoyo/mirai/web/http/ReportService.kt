@@ -51,17 +51,17 @@ class ReportService(
     }
 
     private suspend fun startReportService() {
-        report(
-            session.cqApiImpl,
-            serviceConfig.postUrl,
-            session.bot.id,
-            CQLifecycleMetaEventDTO(session.botId, "enable", currentTimeMillis).toJson(),
-            serviceConfig.secret,
-            false
-        )
+        if (serviceConfig.postUrl != null && serviceConfig.postUrl != "") {
+            report(
+                session.cqApiImpl,
+                serviceConfig.postUrl!!,
+                session.bot.id,
+                CQLifecycleMetaEventDTO(session.botId, "enable", currentTimeMillis).toJson(),
+                serviceConfig.secret,
+                false
+            )
 
-        subscription = session.bot.subscribeAlways {
-            if (serviceConfig.postUrl != "") {
+            subscription = session.bot.subscribeAlways {
                 if (serviceConfig.secret != "") {
                     val mac = Mac.getInstance("HmacSHA1")
                     val secret = SecretKeySpec(serviceConfig.secret.toByteArray(), "HmacSHA1")
@@ -76,7 +76,7 @@ class ReportService(
                         GlobalScope.launch(Dispatchers.IO) {
                             report(
                                 session.cqApiImpl,
-                                serviceConfig.postUrl,
+                                serviceConfig.postUrl!!,
                                 bot.id,
                                 jsonToSend,
                                 serviceConfig.secret,
@@ -85,28 +85,28 @@ class ReportService(
                         }
                     }
             }
-        }
 
-        if (session.heartbeatEnabled) {
-            heartbeatJob = GlobalScope.launch {
-                while (true) {
-                    report(
-                        session.cqApiImpl,
-                        serviceConfig.postUrl,
-                        session.bot.id,
-                        CQHeartbeatMetaEventDTO(
-                            session.botId,
-                            currentTimeMillis,
-                            CQPluginStatusData(
-                                good = session.bot.isOnline,
-                                plugins_good = session.bot.isOnline,
-                                online = session.bot.isOnline
-                            )
-                        ).toJson(),
-                        serviceConfig.secret,
-                        false
-                    )
-                    delay(session.heartbeatInterval)
+            if (session.heartbeatEnabled) {
+                heartbeatJob = GlobalScope.launch {
+                    while (true) {
+                        report(
+                            session.cqApiImpl,
+                            serviceConfig.postUrl!!,
+                            session.bot.id,
+                            CQHeartbeatMetaEventDTO(
+                                session.botId,
+                                currentTimeMillis,
+                                CQPluginStatusData(
+                                    good = session.bot.isOnline,
+                                    plugins_good = session.bot.isOnline,
+                                    online = session.bot.isOnline
+                                )
+                            ).toJson(),
+                            serviceConfig.secret,
+                            false
+                        )
+                        delay(session.heartbeatInterval)
+                    }
                 }
             }
         }
@@ -154,14 +154,17 @@ class ReportService(
     }
 
     suspend fun close() {
-        report(
-            session.cqApiImpl,
-            serviceConfig.postUrl,
-            session.bot.id,
-            CQLifecycleMetaEventDTO(session.botId, "disable", currentTimeMillis).toJson(),
-            serviceConfig.secret,
-            false
-        )
+        if (serviceConfig.postUrl != null && serviceConfig.postUrl != "") {
+            report(
+                session.cqApiImpl,
+                serviceConfig.postUrl!!,
+                session.bot.id,
+                CQLifecycleMetaEventDTO(session.botId, "disable", currentTimeMillis).toJson(),
+                serviceConfig.secret,
+                false
+            )
+        }
+        http.close()
         heartbeatJob?.cancel()
         subscription?.complete()
     }

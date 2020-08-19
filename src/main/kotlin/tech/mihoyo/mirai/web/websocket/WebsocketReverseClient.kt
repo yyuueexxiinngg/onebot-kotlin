@@ -38,6 +38,7 @@ class WebSocketReverseClient(
     private var websocketSessions: MutableMap<String, DefaultClientWebSocketSession> = mutableMapOf()
     private var heartbeatJobs: MutableMap<String, Job> = mutableMapOf()
     private var connectivityChecks: MutableList<String> = mutableListOf()
+    private var closing = false
 
     init {
         if (session.config.exist("ws_reverse")) {
@@ -135,7 +136,8 @@ class WebSocketReverseClient(
             httpClients[httpClientKey]?.apply { this.close() }
             httpClients.remove(httpClientKey)
             delay(config.reconnectInterval)
-            startGeneralWebsocketClient(session.bot, config, clientType)
+            if (!closing) startGeneralWebsocketClient(session.bot, config, clientType)
+            else logger.info("反向WWebsocket连接关闭中, Host: $httpClientKey Path: $path")
         }
     }
 
@@ -230,6 +232,9 @@ class WebSocketReverseClient(
     }
 
     fun close() {
+        closing = true
+        heartbeatJobs.forEach { it.value.cancel() }
+        heartbeatJobs.clear()
         websocketSessions.forEach { it.value.cancel() }
         websocketSessions.clear()
         subscriptions.forEach { it.value?.complete() }
