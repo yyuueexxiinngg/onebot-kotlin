@@ -7,7 +7,7 @@
  * https://github.com/mamoe/mirai/blob/master/LICENSE
  */
 
-package tech.mihoyo.mirai.coolq.api.http.util
+package tech.mihoyo.mirai.util
 
 import net.mamoe.mirai.message.data.Face
 import kotlin.reflect.full.memberProperties

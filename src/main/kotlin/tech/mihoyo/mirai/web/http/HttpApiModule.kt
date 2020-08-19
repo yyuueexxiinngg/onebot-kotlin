@@ -19,12 +19,9 @@ import io.ktor.util.pipeline.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.serialization.UnstableDefault
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.*
 import net.mamoe.mirai.LowLevelAPI
-import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.web.BotSession
 import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
 import tech.mihoyo.mirai.util.logger
@@ -233,7 +230,6 @@ suspend fun checkAccessToken(call: ApplicationCall, serviceConfig: HttpApiServer
     return true
 }
 
-@OptIn(UnstableDefault::class)
 fun paramsToJson(params: Parameters): JsonObject {
 /*    val parsed = "{\"" + URLDecoder.decode(params.formUrlEncode(), "UTF-8")
         .replace("\"", "\\\"")
@@ -253,10 +249,9 @@ fun paramsToJson(params: Parameters): JsonObject {
     }
     parsed += "}"
     logger.debug("HTTP API Received: $parsed")
-    return Json.parseJson(parsed).jsonObject
+    return Json.parseToJsonElement(parsed).jsonObject
 }
 
-@OptIn(UnstableDefault::class)
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
 @ContextDsl

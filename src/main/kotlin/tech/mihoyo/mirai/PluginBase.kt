@@ -17,6 +17,9 @@ import net.mamoe.mirai.event.events.BotOnlineEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.event.subscribeAlways
+import tech.mihoyo.mirai.web.SessionManager.allSession
+import tech.mihoyo.mirai.web.HttpApiServices
+import tech.mihoyo.mirai.web.SessionManager
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.message.data.Image

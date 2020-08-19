@@ -33,6 +33,7 @@ import tech.mihoyo.mirai.util.toJson
 @LowLevelAPI
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
+@LowLevelAPI
 class WebSocketServer(
     val session: BotSession
 ) {

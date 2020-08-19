@@ -1,8 +1,8 @@
 plugins {
-    kotlin("jvm") version "1.3.72"
-    kotlin("plugin.serialization") version "1.3.72"
+    kotlin("jvm") version "1.4.0-rc"
+    kotlin("plugin.serialization") version "1.4.0-rc"
     java
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.github.johnrengelman.shadow") version "6.0.0"
 }
 
 group = "yyuueexxiinngg"
@@ -18,7 +18,7 @@ repositories {
 val miraiCoreVersion: String by rootProject.ext
 val miraiConsoleVersion: String by rootProject.ext
 val ktorVersion: String by rootProject.ext
-val kotlinVersion = "1.3.72"
+val kotlinVersion = "1.4.0-rc"
 
 fun ktor(id: String, version: String = this@Build_gradle.ktorVersion) = "io.ktor:ktor-$id:$version"
 fun kotlinx(id: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$id:$version"
@@ -27,7 +27,9 @@ dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
     compileOnly("net.mamoe:mirai-core:$miraiCoreVersion")
     compileOnly("net.mamoe:mirai-console:$miraiConsoleVersion")
-    compileOnly(kotlin("serialization", kotlinVersion))
+    compileOnly(kotlin("serialization", "1.0-M1-1.4.0-rc"))
+
+    implementation(kotlinx("serialization-runtime", "1.0-M1-1.4.0-rc"))
 
     api(ktor("server-cio"))
     api(ktor("client-cio"))

@@ -1,4 +1,4 @@
-package tech.mihoyo.mirai
+package tech.mihoyo.mirai.web
 
 import io.ktor.util.*
 import kotlinx.coroutines.*
@@ -6,6 +6,7 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.console.plugins.ConfigSection
 import tech.mihoyo.mirai.util.logger
+import tech.mihoyo.mirai.MiraiApi
 import tech.mihoyo.mirai.web.http.HttpApiServer
 import tech.mihoyo.mirai.web.http.ReportService
 import tech.mihoyo.mirai.web.websocket.WebSocketReverseClient
@@ -54,6 +55,7 @@ abstract class Session internal constructor(
 @LowLevelAPI
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
+@LowLevelAPI
 class BotSession internal constructor(val bot: Bot, val config: ConfigSection, coroutineContext: CoroutineContext) :
     Session(coroutineContext, bot.id) {
     private val heartbeatConfig = if (config.containsKey("heartbeat")) config.getConfigSection("heartbeat") else null

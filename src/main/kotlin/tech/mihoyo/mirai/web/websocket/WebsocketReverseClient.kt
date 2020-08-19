@@ -20,7 +20,7 @@ import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeMillis
-import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.web.BotSession
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
@@ -31,6 +31,7 @@ import java.net.ConnectException
 @LowLevelAPI
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
+@LowLevelAPI
 class WebSocketReverseClient(
     val session: BotSession
 ) {

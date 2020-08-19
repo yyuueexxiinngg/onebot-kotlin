@@ -4,7 +4,6 @@ import io.ktor.http.cio.websocket.Frame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
-import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.LowLevelAPI
 import tech.mihoyo.mirai.MiraiApi
@@ -15,13 +14,12 @@ import tech.mihoyo.mirai.util.toJson
 import kotlin.coroutines.EmptyCoroutineContext
 
 @LowLevelAPI
-@OptIn(UnstableDefault::class)
 suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi, cqActionText: String) {
     try {
         logger.debug(cqActionText)
-        val json = Json.parseJson(cqActionText).jsonObject
+        val json = Json.parseToJsonElement(cqActionText).jsonObject
         val echo = json["echo"]
-        var action = json["action"]?.content
+        var action = json["action"]?.let { it.jsonPrimitive.content }
         val responseDTO: CQResponseDTO
         if (action?.endsWith("_async") == true) {
             responseDTO = CQResponseDTO.CQAsyncStarted()

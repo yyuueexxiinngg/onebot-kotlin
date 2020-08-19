@@ -1,4 +1,4 @@
-package tech.mihoyo.mirai.coolq.api.http.util
+package tech.mihoyo.mirai.util
 
 import net.mamoe.mirai.message.data.PokeMessage
 import net.mamoe.mirai.message.data.PokeMessage.Types.Poke
