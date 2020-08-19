@@ -28,10 +28,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.getGroupOrNull
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.uploadImage
-import net.mamoe.mirai.message.uploadPtt
 import net.mamoe.mirai.utils.MiraiExperimentalAPI
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.PluginBase
@@ -411,7 +411,10 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     }
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!)
-                        media = HttpClient.getBytes(mediaUrl!!).let { contact?.uploadPtt(it) }
+                        media = HttpClient.getInputStream(mediaUrl!!)
+                            .let { stream ->
+                                contact?.let { (it as Group).uploadVoice(stream) }
+                            }
 
                         if (useCache && mediaBytes != null) {
                             saveRecordAsync("$urlHash.cqrecord", mediaBytes!!).start()
@@ -432,7 +435,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                 return media as Image
             }
             "record" -> {
-                media = withContext(Dispatchers.IO) { contact!!.uploadPtt(mediaBytes!!) }
+                media = withContext(Dispatchers.IO) { (contact!! as Group).uploadVoice(mediaBytes!!.inputStream()) }
                 return media as Voice
             }
         }
@@ -445,8 +448,7 @@ suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
     if (cacheFile != null) {
         if (cacheFile.canRead()) {
             logger.info("此语音已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
-            val voiceBytes = cacheFile.readBytes()
-            return contact?.uploadPtt(voiceBytes)
+            return contact?.let { (it as Group).uploadVoice(cacheFile.inputStream()) }
         }
     }
     return null
