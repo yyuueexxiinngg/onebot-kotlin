@@ -5,7 +5,6 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
-import net.mamoe.mirai.data.GroupHonorListData
 
 @Serializable
 sealed class CQResponseDataDTO
@@ -37,7 +36,7 @@ open class CQResponseDTO(
     class CQPluginStatus(status: CQPluginStatusData) : CQResponseDTO("ok", 0, status)
     class CQVersionInfo(versionInfo: CQVersionInfoData) : CQResponseDTO("ok", 0, versionInfo)
 
-    class CQHonorList(honorList: GroupHonorListData) : CQResponseDTO("ok", 0, honorList)
+    class CQHonorInfo(honorInfo: CQGroupHonorInfoData) : CQResponseDTO("ok", 0, honorInfo)
 
     object ResponseDataSerializer : KSerializer<Any?> {
         override val descriptor: SerialDescriptor
@@ -52,10 +51,6 @@ open class CQResponseDTO(
                 is List<*> -> encoder.encodeSerializableValue(
                     ListSerializer(CQResponseDataDTO.serializer()),
                     value as List<CQResponseDataDTO>
-                )
-                is GroupHonorListData -> encoder.encodeSerializableValue(
-                    GroupHonorListData.serializer(),
-                    value
                 )
                 else -> encoder.encodeSerializableValue(
                     CQResponseDataDTO.serializer(),
@@ -155,3 +150,149 @@ data class CQVersionInfoData(
     val plugin_build_number: String,
     val plugin_build_configuration: String = "debug"
 ) : CQResponseDataDTO()
+
+@Serializable
+data class CQGroupHonorInfoData(
+    @SerialName("acceptLanguages")
+    val accept_languages: List<Language?>? = null,
+    @SerialName("gc")
+    val group_id: String?,
+    @SerialName("type")
+    val honor_type: Int?,
+    @SerialName("uin")
+    val user_id: String?,
+    @SerialName("talkativeList")
+    val talkative_list: List<Talkative?>? = null,
+    @SerialName("currentTalkative")
+    val current_talkative: CurrentTalkative? = null,
+    @SerialName("actorList")
+    val actor_list: List<Actor?>? = null,
+    @SerialName("legendList")
+    val legend_list: List<Actor?>? = null,
+    @SerialName("newbieList")
+    val newbie_list: List<Actor?>? = null,
+    @SerialName("strongnewbieList")
+    val strong_newbie_list: List<Actor?>? = null,
+    @SerialName("emotionList")
+    val emotion_list: List<Actor?>? = null,
+    @SerialName("levelname")
+    val level_name: LevelName? = null,
+    @SerialName("manageList")
+    val manage_list: List<Tag?>? = null,
+    @SerialName("exclusiveList")
+    val exclusive_list: List<Tag?>? = null,
+    @SerialName("activeObj")
+    val active_obj: PlaceHolder? = null,
+    @SerialName("showActiveObj")
+    val show_active_obj: PlaceHolder? = null,
+    @SerialName("myTitle")
+    val my_title: String?,
+    @SerialName("myIndex")
+    val my_index: Int? = 0,
+    @SerialName("myAvatar")
+    val my_avatar: String?,
+    @SerialName("hasServerError")
+    val has_server_error: Boolean?,
+    @SerialName("hwExcellentList")
+    val hw_excellent_list: List<Actor?>? = null
+) : CQResponseDataDTO() {
+    @Serializable
+    data class PlaceHolder(
+        @SerialName("placeHolder")
+        val place_holder: String? = null
+    )
+
+    @Serializable
+    data class Language(
+        @SerialName("code")
+        val code: String? = null,
+        @SerialName("script")
+        val script: String? = null,
+        @SerialName("region")
+        val region: String? = null,
+        @SerialName("quality")
+        val quality: Double? = null
+    )
+
+    @Serializable
+    data class Actor(
+        @SerialName("uin")
+        val user_id: Long? = 0,
+        @SerialName("avatar")
+        val avatar: String? = null,
+        @SerialName("name")
+        val nickname: String? = null,
+        @SerialName("desc")
+        val description: String? = null,
+        @SerialName("btnText")
+        val btn_text: String? = null,
+        @SerialName("text")
+        val text: String? = null,
+        @SerialName("icon")
+        val icon: Int?
+    )
+
+    @Serializable
+    data class Talkative(
+        @SerialName("uin")
+        val user_id: Long? = 0,
+        @SerialName("avatar")
+        val avatar: String? = null,
+        @SerialName("name")
+        val name: String? = null,
+        @SerialName("desc")
+        val description: String? = null,
+        @SerialName("btnText")
+        val btn_text: String? = null,
+        @SerialName("text")
+        val text: String? = null
+    )
+
+    @Serializable
+    data class CurrentTalkative(
+        @SerialName("uin")
+        val user_id: Long? = 0,
+        @SerialName("day_count")
+        val day_count: Int? = null,
+        @SerialName("avatar")
+        val avatar: String? = null,
+        @SerialName("avatar_size")
+        val avatar_size: Int? = null,
+        @SerialName("nick")
+        val nickname: String? = null
+    )
+
+    @Serializable
+    data class LevelName(
+        @SerialName("lvln1")
+        val lv1: String? = null,
+        @SerialName("lvln2")
+        val lv2: String? = null,
+        @SerialName("lvln3")
+        val lv3: String? = null,
+        @SerialName("lvln4")
+        val lv4: String? = null,
+        @SerialName("lvln5")
+        val lv5: String? = null,
+        @SerialName("lvln6")
+        val lv6: String? = null
+    )
+
+    @Serializable
+    data class Tag(
+        @SerialName("uin")
+        val user_id: Long? = 0,
+        @SerialName("avatar")
+        val avatar: String? = null,
+        @SerialName("name")
+        val nickname: String? = null,
+        @SerialName("btnText")
+        val btn_text: String? = null,
+        @SerialName("text")
+        val text: String? = null,
+        @SerialName("tag")
+        val tag: String? = null,  // 头衔
+        @SerialName("tagColor")
+        val tag_color: String? = null
+    )
+}

@@ -32,6 +32,7 @@ dependencies {
     api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
     implementation("org.slf4j:slf4j-simple:1.7.9")
+    implementation("com.google.code.gson:gson:2.8.6")
     api("com.github.ajalt:clikt:2.6.0")
     api("net.mamoe:mirai-console:$miraiConsoleVersion")
     api(kotlinx("serialization-runtime", "0.20.0"))

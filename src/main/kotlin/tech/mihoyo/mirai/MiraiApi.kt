@@ -1,10 +1,12 @@
 package tech.mihoyo.mirai
 
 import kotlinx.coroutines.isActive
+import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.contact.PermissionDeniedException
+import net.mamoe.mirai.data.GroupHonorListData
 import net.mamoe.mirai.data.GroupHonorType
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
@@ -469,6 +471,7 @@ class MiraiApi(val bot: Bot) {
     //// hidden ////
     ///////////////
 
+    @OptIn(UnstableDefault::class)
     @LowLevelAPI
     suspend fun cqGetGroupHonorList(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.longOrNull
@@ -476,8 +479,10 @@ class MiraiApi(val bot: Bot) {
 
         return if (groupId != null && type != null) {
             val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.fromInt(type))
+            val jsonData = data?.let { Json.stringify(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Json.parse(CQGroupHonorInfoData.serializer(), it) }
 
-            data?.let { CQResponseDTO.CQHonorList(data) } ?: CQResponseDTO.CQMiraiFailure()
+            cqData?.let { CQResponseDTO.CQHonorInfo(cqData) } ?: CQResponseDTO.CQMiraiFailure()
         } else {
             CQResponseDTO.CQInvalidRequest()
         }

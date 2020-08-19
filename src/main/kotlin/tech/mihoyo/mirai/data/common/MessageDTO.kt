@@ -36,7 +36,7 @@ data class CQGroupMessagePacketDTO(
     val group_id: Long,
     val user_id: Long,
     val anonymous: CQAnonymousMemberDTO?,
-    var message: CQMessageChainOrStringDTO,  // Can be messageChainDTO or string depending on config
+    var message: @ContextualSerialization Any,  // Can be messageChainDTO or string depending on config
     val raw_message: String,
     val font: Int,
     val sender: CQMemberDTO,
@@ -53,7 +53,7 @@ data class CQPrivateMessagePacketDTO(
     val sub_type: String, // friend、group、discuss、other
     val message_id: Int,
     val user_id: Long,
-    val message: CQMessageChainOrStringDTO, // Can be messageChainDTO or string depending on config
+    val message: @ContextualSerialization Any, // Can be messageChainDTO or string depending on config
     val raw_message: String,
     val font: Int,
     val sender: CQQQDTO,
@@ -66,7 +66,7 @@ data class CQPrivateMessagePacketDTO(
 // Message DTO
 @Serializable
 @SerialName("text")
-data class CQPlainDTO(val data: CQPlainData) : MessageDTO()
+data class CQPlainDTO(val data: CQPlainData, val type: String = "text") : MessageDTO()
 
 @Serializable
 data class CQPlainData(val text: String)
@@ -74,7 +74,7 @@ data class CQPlainData(val text: String)
 
 @Serializable
 @SerialName("at")
-data class CQAtDTO(val data: CQAtData) : MessageDTO()
+data class CQAtDTO(val data: CQAtData, val type: String = "at") : MessageDTO()
 
 @Serializable
 data class CQAtData(val qq: Long)
@@ -82,14 +82,14 @@ data class CQAtData(val qq: Long)
 
 @Serializable
 @SerialName("face")
-data class CQFaceDTO(val data: CQFaceData) : MessageDTO()
+data class CQFaceDTO(val data: CQFaceData, val type: String = "face") : MessageDTO()
 
 @Serializable
 data class CQFaceData(val id: Int = -1)
 
 @Serializable
 @SerialName("image")
-data class CQImageDTO(val data: CQImageData) : MessageDTO()
+data class CQImageDTO(val data: CQImageData, val type: String = "image") : MessageDTO()
 
 @Serializable
 data class CQImageData(
@@ -99,7 +99,7 @@ data class CQImageData(
 
 @Serializable
 @SerialName("shake")
-data class CQPokeMessageDTO(val data: CQPokeData) : MessageDTO()
+data class CQPokeMessageDTO(val data: CQPokeData, val type: String = "shake") : MessageDTO()
 
 @Serializable
 data class CQPokeData(val name: String)
@@ -213,8 +213,8 @@ sealed class MessageDTO : DTO
  */
 @MiraiExperimentalAPI
 suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
-    val rawMessage = WrappedCQMessageChainString("")
-    message.forEach { rawMessage.value += it.toCQString() }
+    var rawMessage = ""
+    message.forEach { rawMessage += it.toCQString() }
     return when (this) {
         is GroupMessageEvent -> CQGroupMessagePacketDTO(
             self_id = bot.id,
@@ -224,7 +224,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             user_id = sender.id,
             anonymous = null,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
-            raw_message = rawMessage.value,
+            raw_message = rawMessage,
             font = 0,
             sender = CQMemberDTO(sender),
             time = currentTimeMillis
@@ -235,7 +235,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             message_id = message.id,
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
-            raw_message = rawMessage.value,
+            raw_message = rawMessage,
             font = 0,
             sender = CQQQDTO(sender),
             time = currentTimeMillis
@@ -246,7 +246,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             message_id = message.id,
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
-            raw_message = rawMessage.value,
+            raw_message = rawMessage,
             font = 0,
             sender = CQQQDTO(sender),
             time = currentTimeMillis
@@ -255,10 +255,16 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
     }
 }
 
-suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): WrappedCQMessageChainList {
+/*suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): WrappedCQMessageChainList {
     return WrappedCQMessageChainList(mutableListOf<MessageDTO>().apply {
         forEachContent { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
     })
+}*/
+
+suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): List<MessageDTO> {
+    return mutableListOf<MessageDTO>().apply {
+        forEachContent { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
+    }
 }
 
 suspend fun Message.toDTO() = when (this) {
