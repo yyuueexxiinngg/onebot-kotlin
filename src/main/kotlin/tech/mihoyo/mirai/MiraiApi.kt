@@ -17,7 +17,7 @@ import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.queue.CacheRequestQueue
 
 
-@LowLevelAPI
+@OptIn(LowLevelAPI::class)
 suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mirai: MiraiApi): CQResponseDTO {
     var responseDTO: CQResponseDTO = CQResponseDTO.CQPluginFailure()
     try {

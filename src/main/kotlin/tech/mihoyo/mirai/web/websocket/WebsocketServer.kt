@@ -11,14 +11,12 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
-import io.ktor.util.KtorExperimentalAPI
-import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
 import io.ktor.websocket.WebSockets
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
-import net.mamoe.mirai.LowLevelAPI
+import net.mamoe.mirai.console.plugins.ToBeRemoved
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeMillis
@@ -30,9 +28,7 @@ import tech.mihoyo.mirai.data.common.toCQDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
 
-@LowLevelAPI
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
+@OptIn(ToBeRemoved::class)
 class WebSocketServer(
     val session: BotSession
 ) {
@@ -68,9 +64,7 @@ class WebSocketServer(
 
 }
 
-@LowLevelAPI
-@KtorExperimentalAPI
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketServerServiceConfig) {
     logger.debug("Bot: ${session.bot.id} 尝试开启正向Websocket服务端于端口: ${serviceConfig.wsPort}")
     install(DefaultHeaders)
@@ -138,9 +132,6 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
     }
 }
 
-@LowLevelAPI
-@KtorExperimentalAPI
-@ExperimentalCoroutinesApi
 private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Frame>): Job {
     return GlobalScope.launch {
         while (true) {
@@ -163,8 +154,6 @@ private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Fra
 }
 
 
-@LowLevelAPI
-@ContextDsl
 private inline fun Route.cqWebsocket(
     path: String,
     session: BotSession,

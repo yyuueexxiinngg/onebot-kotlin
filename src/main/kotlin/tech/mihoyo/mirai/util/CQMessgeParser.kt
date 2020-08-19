@@ -103,7 +103,7 @@ private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message
     return when (message) {
         is String -> {
             if (message.startsWith("[CQ:") && message.endsWith("]")) {
-                val parts = message.substring(4, message.length - 1).split(delimiters = *arrayOf(","), limit = 2)
+                val parts = message.substring(4, message.length - 1).split(delimiters = arrayOf(","), limit = 2)
 
                 lateinit var args: HashMap<String, String>
                 args = if (parts.size == 2) {
@@ -228,7 +228,7 @@ private fun String.toMap(): HashMap<String, String> {
     return map
 }
 
-@MiraiExperimentalAPI
+@OptIn(MiraiExperimentalAPI::class, ExperimentalUnsignedTypes::class)
 suspend fun Message.toCQString(): String {
     return when (this) {
         is PlainText -> content.escape()
@@ -241,7 +241,7 @@ suspend fun Message.toCQString(): String {
         is RichMessage -> "[CQ:rich,data=${content.escape()}]"
         is MessageSource -> ""
         is QuoteReply -> ""
-        is Voice -> "[CQ:record,url=${url.escape()},file=${md5.toUHexString("")}]"
+        is Voice -> "[CQ:record,url=${url?.escape()},file=${md5.toUHexString("")}]"
         else -> "此处消息的转义尚未被插件支持"
     }
 }

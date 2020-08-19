@@ -25,7 +25,7 @@ else CQJson.json.encodeToString(serializer, this)
  * Json解析规则，需要注册支持的多态的类
  */
 object CQJson {
-    @OptIn(UnsafeSerializationApi::class)
+    @OptIn(InternalSerializationApi::class)
     val json = Json {
 
         isLenient = true

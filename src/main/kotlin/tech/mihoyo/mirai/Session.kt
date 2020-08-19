@@ -1,10 +1,9 @@
 package tech.mihoyo.mirai
 
-import io.ktor.util.*
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.console.plugins.ConfigSection
+import net.mamoe.mirai.console.plugins.ToBeRemoved
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.http.HttpApiServer
 import tech.mihoyo.mirai.web.http.ReportService
@@ -25,9 +24,7 @@ internal object SessionManager {
 
     fun closeSession(session: Session) = closeSession(session.botId)
 
-    @LowLevelAPI
-    @KtorExperimentalAPI
-    @ExperimentalCoroutinesApi
+    @OptIn(ToBeRemoved::class)
     fun createBotSession(bot: Bot, config: ConfigSection): BotSession =
         BotSession(bot, config, EmptyCoroutineContext).also { session -> allSession[bot.id] = session }
 }
@@ -51,9 +48,7 @@ abstract class Session internal constructor(
     }
 }
 
-@LowLevelAPI
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
+@OptIn(ToBeRemoved::class)
 class BotSession internal constructor(val bot: Bot, val config: ConfigSection, coroutineContext: CoroutineContext) :
     Session(coroutineContext, bot.id) {
     private val heartbeatConfig = if (config.containsKey("heartbeat")) config.getConfigSection("heartbeat") else null

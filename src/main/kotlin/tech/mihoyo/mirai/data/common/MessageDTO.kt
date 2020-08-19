@@ -212,7 +212,6 @@ sealed class MessageDTO : DTO
 /*
     Extend function
  */
-@MiraiExperimentalAPI
 suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
     val rawMessage = WrappedCQMessageChainString("")
     message.forEach { rawMessage.value += it.toCQString() }

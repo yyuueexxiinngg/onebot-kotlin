@@ -13,7 +13,6 @@ import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
 import kotlin.coroutines.EmptyCoroutineContext
 
-@LowLevelAPI
 suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi, cqActionText: String) {
     try {
         logger.debug(cqActionText)

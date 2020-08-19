@@ -33,9 +33,6 @@ object PluginBase : PluginBase() {
     override fun onLoad() {
     }
 
-    @LowLevelAPI
-    @KtorExperimentalAPI
-    @ExperimentalCoroutinesApi
     override fun onEnable() {
         config = loadConfig("setting.yml")
         debug = if (config.exist("debug")) config.getBoolean("debug") else false

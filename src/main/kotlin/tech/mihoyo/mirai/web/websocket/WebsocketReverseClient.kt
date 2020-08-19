@@ -28,9 +28,6 @@ import java.io.EOFException
 import java.io.IOException
 import java.net.ConnectException
 
-@LowLevelAPI
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
 class WebSocketReverseClient(
     val session: BotSession
 ) {

@@ -19,6 +19,7 @@ import io.ktor.util.pipeline.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.LowLevelAPI
 import tech.mihoyo.mirai.BotSession
@@ -29,9 +30,6 @@ import tech.mihoyo.mirai.util.toJson
 import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
-@LowLevelAPI
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
 fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServerServiceConfig) {
     // it.second -> if is async call
     routing {
@@ -252,9 +250,6 @@ fun paramsToJson(params: Parameters): JsonObject {
     return Json.parseToJsonElement(parsed).jsonObject
 }
 
-@KtorExperimentalAPI
-@ExperimentalCoroutinesApi
-@ContextDsl
 internal inline fun Route.cqHttpApi(
     path: String,
     serviceConfig: HttpApiServerServiceConfig,
