@@ -24,6 +24,7 @@ import net.mamoe.mirai.message.data.Voice
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.SessionManager.allSession
 import tech.mihoyo.mirai.SessionManager.closeSession
+import tech.mihoyo.mirai.util.HttpClient
 import tech.mihoyo.mirai.util.toUHexString
 import java.io.File
 

@@ -138,6 +138,7 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
     }
 }
 
+@LowLevelAPI
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
 private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Frame>): Job {
