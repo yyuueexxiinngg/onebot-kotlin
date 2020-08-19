@@ -18,6 +18,7 @@ import io.ktor.websocket.WebSockets
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeMillis
@@ -29,6 +30,7 @@ import tech.mihoyo.mirai.data.common.toCQDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
 
+@LowLevelAPI
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 class WebSocketServer(
@@ -66,6 +68,7 @@ class WebSocketServer(
 
 }
 
+@LowLevelAPI
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
 fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketServerServiceConfig) {
@@ -135,6 +138,7 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
     }
 }
 
+@LowLevelAPI
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
 private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Frame>): Job {
@@ -159,6 +163,7 @@ private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Fra
 }
 
 
+@LowLevelAPI
 @ContextDsl
 private inline fun Route.cqWebsocket(
     path: String,

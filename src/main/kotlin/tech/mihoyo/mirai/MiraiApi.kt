@@ -3,7 +3,10 @@ package tech.mihoyo.mirai
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.contact.PermissionDeniedException
+import net.mamoe.mirai.data.GroupAnnouncement
+import net.mamoe.mirai.data.GroupAnnouncementMsg
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.data.recall
@@ -14,6 +17,7 @@ import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.queue.CacheRequestQueue
 
 
+@LowLevelAPI
 suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mirai: MiraiApi): CQResponseDTO {
     var responseDTO: CQResponseDTO = CQResponseDTO.CQPluginFailure()
     try {
@@ -58,6 +62,8 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
             ".handle_quick_operation" -> responseDTO = mirai.cqHandleQuickOperation(params)
 
             "set_group_name" -> responseDTO = mirai.cqSetGroupName(params)
+
+            "_set_group_announcement" -> responseDTO = mirai.cqSetGroupAnnouncement(params)
             else -> {
                 logger.error("未知CQHTTP API: $action")
             }
@@ -445,7 +451,7 @@ class MiraiApi(val bot: Bot) {
     }
 
     ////////////////
-    //// addon ////
+    ////  v11  ////
     //////////////
 
     fun cqSetGroupName(params: Map<String, JsonElement>): CQResponseDTO {
@@ -454,6 +460,23 @@ class MiraiApi(val bot: Bot) {
 
         return if (groupId != null && name != null && name != "") {
             bot.getGroup(groupId).name = name
+            CQResponseDTO.CQGeneralSuccess()
+        } else {
+            CQResponseDTO.CQInvalidRequest()
+        }
+    }
+
+    /////////////////
+    //// hidden ////
+    ///////////////
+
+    @LowLevelAPI
+    suspend fun cqSetGroupAnnouncement(params: Map<String, JsonElement>): CQResponseDTO {
+        val groupId = params["group_id"]?.long
+        val content = params["content"]?.content
+
+        return if (groupId != null && content != null && content != "") {
+            bot._lowLevelSendAnnouncement(groupId, GroupAnnouncement(msg = GroupAnnouncementMsg(text = content)))
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()

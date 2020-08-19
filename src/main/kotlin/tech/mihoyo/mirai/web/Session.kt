@@ -3,6 +3,7 @@ package tech.mihoyo.mirai
 import io.ktor.util.*
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.console.plugins.ConfigSection
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.http.HttpApiServer
@@ -24,6 +25,7 @@ internal object SessionManager {
 
     fun closeSession(session: Session) = closeSession(session.botId)
 
+    @LowLevelAPI
     @KtorExperimentalAPI
     @ExperimentalCoroutinesApi
     fun createBotSession(bot: Bot, config: ConfigSection): BotSession =
@@ -49,6 +51,7 @@ abstract class Session internal constructor(
     }
 }
 
+@LowLevelAPI
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 class BotSession internal constructor(val bot: Bot, val config: ConfigSection, coroutineContext: CoroutineContext) :

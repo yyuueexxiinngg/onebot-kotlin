@@ -6,6 +6,7 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.*
+import net.mamoe.mirai.LowLevelAPI
 import tech.mihoyo.mirai.MiraiApi
 import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
@@ -13,6 +14,7 @@ import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
 import kotlin.coroutines.EmptyCoroutineContext
 
+@LowLevelAPI
 @OptIn(UnstableDefault::class)
 suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi, cqActionText: String) {
     try {

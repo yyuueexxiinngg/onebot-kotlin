@@ -12,6 +12,7 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonException
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
@@ -25,6 +26,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 
+@LowLevelAPI
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
 class ReportService(

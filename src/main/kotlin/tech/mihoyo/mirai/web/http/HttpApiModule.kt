@@ -23,6 +23,7 @@ import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import net.mamoe.mirai.LowLevelAPI
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
@@ -31,6 +32,7 @@ import tech.mihoyo.mirai.util.toJson
 import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
+@LowLevelAPI
 @ExperimentalCoroutinesApi
 @KtorExperimentalAPI
 fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServerServiceConfig) {
@@ -190,11 +192,20 @@ fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServe
         }
 
         ////////////////
-        //// addon ////
+        ////  v11  ////
         //////////////
 
         cqHttpApi("/set_group_name", serviceConfig) {
             val responseDTO = callMiraiApi("set_group_name", it.first, session.cqApiImpl)
+            if (!it.second) call.responseDTO(responseDTO)
+        }
+
+        /////////////////
+        //// hidden ////
+        ///////////////
+
+        cqHttpApi("/_set_group_announcement", serviceConfig) {
+            val responseDTO = callMiraiApi("_set_group_announcement", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
     }
