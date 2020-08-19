@@ -21,7 +21,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.LowLevelAPI
-import tech.mihoyo.mirai.web.BotSession
+import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
 import tech.mihoyo.mirai.util.logger
@@ -274,7 +274,7 @@ internal inline fun Route.cqHttpApi(
                         body(Pair(paramsToJson(call.receiveParameters()), false))
                     }
                     contentType.contentSubtype.contains("json") -> {
-                        body(Pair(Json.parseJson(call.receiveTextWithCorrectEncoding()).jsonObject, false))
+                        body(Pair(Json.parseToJsonElement(call.receiveTextWithCorrectEncoding()).jsonObject, false))
                     }
                     else -> {
                         call.respond(HttpStatusCode.BadRequest)
@@ -305,7 +305,7 @@ internal inline fun Route.cqHttpApi(
                         val req = call.receiveTextWithCorrectEncoding()
                         call.responseDTO(CQResponseDTO.CQAsyncStarted())
                         CoroutineScope(EmptyCoroutineContext).launch {
-                            body(Pair(Json.parseJson(req).jsonObject, true))
+                            body(Pair(Json.parseToJsonElement(req).jsonObject, true))
                         }
                     }
                     else -> {

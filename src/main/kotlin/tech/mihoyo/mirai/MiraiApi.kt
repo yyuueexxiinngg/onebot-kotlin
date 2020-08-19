@@ -334,8 +334,8 @@ class MiraiApi(val bot: Bot) {
                 val replyElement = operation?.get("reply")
                 if (replyElement != null) {
                     val nextCallParams = context.toMutableMap()
-                    if (messageType == "group" && operation?.get("at_sender")?.booleanOrNull == true) {
-                        context["user_id"]?.longOrNull?.apply {
+                    if (messageType == "group" && operation?.get("at_sender")?.jsonPrimitive?.booleanOrNull == true) {
+                        context["user_id"]?.jsonPrimitive?.apply {
                             when (replyElement) {
                                 is JsonArray -> {
                                     val replyMessageChain = replyElement.jsonArray.toMutableList()
@@ -343,7 +343,7 @@ class MiraiApi(val bot: Bot) {
                                         0, JsonObject(
                                             mapOf(
                                                 "type" to JsonPrimitive("at"),
-                                                "data" to JsonObject(mapOf("qq" to JsonPrimitive(this)))
+                                                "data" to JsonObject(mapOf("qq" to JsonPrimitive(this.long)))
                                             )
                                         )
                                     )
@@ -355,14 +355,14 @@ class MiraiApi(val bot: Bot) {
                                         0, JsonObject(
                                             mapOf(
                                                 "type" to JsonPrimitive("at"),
-                                                "data" to JsonObject(mapOf("qq" to JsonPrimitive(this)))
+                                                "data" to JsonObject(mapOf("qq" to JsonPrimitive(this.long)))
                                             )
                                         )
                                     )
                                     nextCallParams["message"] = JsonArray(replyMessageChain)
                                 }
                                 else -> {
-                                    val textToReply = "[CQ:at,qq=$this] ${replyElement.content}"
+                                    val textToReply = "[CQ:at,qq=$this] ${replyElement.jsonPrimitive.content}"
                                     nextCallParams["message"] = JsonPrimitive(textToReply)
                                 }
                             }
@@ -455,8 +455,8 @@ class MiraiApi(val bot: Bot) {
     //////////////
 
     fun cqSetGroupName(params: Map<String, JsonElement>): CQResponseDTO {
-        val groupId = params["group_id"]?.long
-        val name = params["name"]?.content
+        val groupId = params["group_id"]?.jsonPrimitive?.long
+        val name = params["name"]?.jsonPrimitive?.content
 
         return if (groupId != null && name != null && name != "") {
             bot.getGroup(groupId).name = name
@@ -472,8 +472,8 @@ class MiraiApi(val bot: Bot) {
 
     @LowLevelAPI
     suspend fun cqSetGroupAnnouncement(params: Map<String, JsonElement>): CQResponseDTO {
-        val groupId = params["group_id"]?.long
-        val content = params["content"]?.content
+        val groupId = params["group_id"]?.jsonPrimitive?.long
+        val content = params["content"]?.jsonPrimitive?.content
 
         return if (groupId != null && content != null && content != "") {
             bot._lowLevelSendAnnouncement(groupId, GroupAnnouncement(msg = GroupAnnouncementMsg(text = content)))

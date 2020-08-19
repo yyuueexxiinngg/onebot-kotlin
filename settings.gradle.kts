@@ -10,6 +10,7 @@ pluginManagement {
     repositories {
         maven(url = "https://dl.bintray.com/kotlin/kotlin-eap")
         maven(url = "https://mirrors.huaweicloud.com/repository/maven")
+        gradlePluginPortal()
         mavenCentral()
         jcenter()
     }
