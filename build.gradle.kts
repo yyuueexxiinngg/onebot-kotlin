@@ -29,7 +29,7 @@ dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
 //    compileOnly("net.mamoe:mirai-core:$miraiCoreVersion")
     compileOnly("net.mamoe:mirai-console:$miraiConsoleVersion")
-    compileOnly(kotlin("serialization", kotlinSerializationVersion))
+    compileOnly(kotlin("serialization", kotlinVersion))
 
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
 
