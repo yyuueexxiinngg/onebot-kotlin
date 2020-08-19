@@ -20,15 +20,12 @@ import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.SessionManager.allSession
 import tech.mihoyo.mirai.util.toUHexString
-import tech.mihoyo.mirai.web.HttpApiServices
 import java.io.File
 
 object PluginBase : PluginBase() {
     private val config = loadConfig("setting.yml")
     val debug by config.withDefault { false }
-    var services: HttpApiServices = HttpApiServices(this)
     override fun onLoad() {
-        services.onLoad()
     }
 
     @KtorExperimentalAPI
@@ -109,11 +106,9 @@ object PluginBase : PluginBase() {
                 }
             }
         }
-        services.onEnable()
     }
 
     override fun onDisable() {
-        services.onDisable()
         allSession.forEach { (_, session) -> session.close() }
     }
 

@@ -6,6 +6,7 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.plugins.ConfigSection
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.http.HttpApiServer
+import tech.mihoyo.mirai.web.http.ReportService
 import tech.mihoyo.mirai.web.websocket.WebSocketReverseClient
 import tech.mihoyo.mirai.web.websocket.WebSocketServer
 import kotlin.coroutines.CoroutineContext
@@ -52,16 +53,17 @@ abstract class Session internal constructor(
 @KtorExperimentalAPI
 class BotSession internal constructor(val bot: Bot, val config: ConfigSection, coroutineContext: CoroutineContext) :
     Session(coroutineContext, bot.id) {
+    private val heartbeatConfig = if (config.containsKey("heartbeat")) config.getConfigSection("heartbeat") else null
     val shouldCacheImage = if (config.containsKey("cacheImage")) config.getBoolean("cacheImage") else false
-    val heartbeatConfig = if (config.containsKey("heartbeat")) config.getConfigSection("heartbeat") else null
     val heartbeatEnabled =
         heartbeatConfig?.let { if (it.containsKey("enable")) it.getBoolean("enable") else false } ?: false
     val heartbeatInterval =
         heartbeatConfig?.let { if (it.containsKey("interval")) it.getLong("interval") else 15000L } ?: 15000L
     val cqApiImpl = MiraiApi(bot)
-    val httpApiServer = HttpApiServer(this)
-    val websocketClient = WebSocketReverseClient(this)
-    val websocketServer = WebSocketServer(this)
+    private val httpApiServer = HttpApiServer(this)
+    private val websocketClient = WebSocketReverseClient(this)
+    private val websocketServer = WebSocketServer(this)
+    private val httpReportService = ReportService(this)
 
     init {
         if (shouldCacheImage) logger.info("Bot: ${bot.id} 已开启接收图片缓存, 将会缓存收取到的所有图片")
@@ -71,9 +73,12 @@ class BotSession internal constructor(val bot: Bot, val config: ConfigSection, c
     }
 
     override fun close() {
-        websocketClient.close()
-        websocketServer.close()
-        httpApiServer.close()
+        runBlocking {
+            websocketClient.close()
+            websocketServer.close()
+            httpApiServer.close()
+            httpReportService.close()
+        }
         super.close()
     }
 }
