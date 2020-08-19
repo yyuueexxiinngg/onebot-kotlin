@@ -19,8 +19,9 @@ import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.events.BotOnlineEvent
 import net.mamoe.mirai.event.subscribeAlways
 import tech.mihoyo.mirai.MiraiApi
+import tech.mihoyo.mirai.data.common.CQHeartbeatMetaEventDTO
 import tech.mihoyo.mirai.data.common.CQIgnoreEventDTO
-import tech.mihoyo.mirai.data.common.CQMetaEventDTO
+import tech.mihoyo.mirai.data.common.CQLifecycleMetaEventDTO
 import tech.mihoyo.mirai.data.common.toCQDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
@@ -74,7 +75,7 @@ class ReportService(
                                             bot.id,
                                             jsonToSend,
                                             config.secret,
-                                            eventDTO !is CQMetaEventDTO
+                                            eventDTO !is CQLifecycleMetaEventDTO
                                         )
                                     }
                                 }
@@ -97,7 +98,7 @@ class ReportService(
                                             bot.id,
                                             jsonToSend,
                                             config.secret,
-                                            eventDTO !is CQMetaEventDTO
+                                            eventDTO !is CQLifecycleMetaEventDTO && eventDTO !is CQHeartbeatMetaEventDTO
                                         )
                                     }
                                 }

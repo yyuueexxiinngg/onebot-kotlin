@@ -53,14 +53,21 @@ abstract class Session internal constructor(
 class BotSession internal constructor(val bot: Bot, val config: ConfigSection, coroutineContext: CoroutineContext) :
     Session(coroutineContext, bot.id) {
     val shouldCacheImage = if (config.containsKey("cacheImage")) config.getBoolean("cacheImage") else false
+    val heartbeatConfig = if (config.containsKey("heartbeat")) config.getConfigSection("heartbeat") else null
+    val heartbeatEnabled =
+        heartbeatConfig?.let { if (it.containsKey("enable")) it.getBoolean("enable") else false } ?: false
+    val heartbeatInterval =
+        heartbeatConfig?.let { if (it.containsKey("interval")) it.getLong("interval") else 15000L } ?: 15000L
     val cqApiImpl = MiraiApi(bot)
     val httpApiServer = HttpApiServer(this)
     val websocketClient = WebSocketReverseClient(this)
     val websocketServer = WebSocketServer(this)
 
     init {
-        if(shouldCacheImage) logger.info("Bot: ${bot.id} 已开启接收图片缓存, 将会缓存收取到的所有图片")
+        if (shouldCacheImage) logger.info("Bot: ${bot.id} 已开启接收图片缓存, 将会缓存收取到的所有图片")
         else logger.info("Bot: ${bot.id} 未开启接收图片缓存, 将不会缓存收取到的所有图片, 如需开启, 请在当前Bot配置中添加cacheImage=true")
+
+        if (heartbeatEnabled) logger.info("Bot: ${bot.id} 已开启心跳机制, 设定的心跳发送频率为 $heartbeatInterval 毫秒")
     }
 
     override fun close() {

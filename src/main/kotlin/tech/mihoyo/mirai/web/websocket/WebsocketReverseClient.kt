@@ -17,10 +17,7 @@ import net.mamoe.mirai.Bot
 
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
-import net.mamoe.mirai.event.events.MemberJoinRequestEvent
-import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.data.common.*
@@ -39,6 +36,7 @@ class WebSocketReverseClient(
     private var serviceConfig: List<WebSocketReverseServiceConfig> = mutableListOf()
     private var subscriptions: MutableMap<String, Listener<BotEvent>?> = mutableMapOf()
     private var websocketSessions: MutableMap<String, DefaultClientWebSocketSession> = mutableMapOf()
+    private var heartbeatJobs: MutableMap<String, Job> = mutableMapOf()
     private var connectivityChecks: MutableList<String> = mutableListOf()
 
     init {
@@ -103,7 +101,7 @@ class WebSocketReverseClient(
                 websocketSessions[httpClientKey] = this
                 if (!subscriptions.containsKey(httpClientKey)) {
                     // 通知服务方链接建立
-                    send(Frame.Text(CQMetaEventDTO(bot.id, "connect", currentTimeMillis).toJson()))
+                    send(Frame.Text(CQLifecycleMetaEventDTO(bot.id, "connect", currentTimeMillis).toJson()))
                     startWebsocketConnectivityCheck(bot, config, clientType)
                     logger.debug("$httpClientKey Websocket Client启动完毕")
                     when (clientType) {
@@ -166,6 +164,27 @@ class WebSocketReverseClient(
                 }
             }
         }
+
+        if (session.heartbeatEnabled) {
+            heartbeatJobs[httpClientKey] = GlobalScope.launch {
+                while (true) {
+                    outgoing.send(
+                        Frame.Text(
+                            CQHeartbeatMetaEventDTO(
+                                session.botId,
+                                currentTimeMillis,
+                                CQPluginStatusData(
+                                    good = session.bot.isOnline,
+                                    plugins_good = session.bot.isOnline,
+                                    online = session.bot.isOnline
+                                )
+                            ).toJson()
+                        )
+                    )
+                    delay(session.heartbeatInterval)
+                }
+            }
+        }
     }
 
     @KtorExperimentalAPI
@@ -186,6 +205,7 @@ class WebSocketReverseClient(
                         }
 
                         if (!stillActive) {
+                            heartbeatJobs[httpClientKey]?.apply { this.cancel() }
                             websocketSessions.remove(httpClientKey)
                             subscriptions[httpClientKey]?.apply {
                                 this.complete()

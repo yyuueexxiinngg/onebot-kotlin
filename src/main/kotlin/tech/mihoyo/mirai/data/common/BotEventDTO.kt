@@ -184,14 +184,25 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
 
 
 @Serializable
-@SerialName("CQMetaEvent")
-data class CQMetaEventDTO(
+@SerialName("CQLifecycleMetaEvent")
+data class CQLifecycleMetaEventDTO(
     override var self_id: Long,
     val sub_type: String, // enable、disable、connect
     override var time: Long
 ) : CQBotEventDTO() {
     override var post_type: String = "meta_event"
     val meta_event_type: String = "lifecycle"
+}
+
+@Serializable
+@SerialName("CQHeartbeatMetaEvent")
+data class CQHeartbeatMetaEventDTO(
+    override var self_id: Long,
+    override var time: Long,
+    val status: CQPluginStatusData
+) : CQBotEventDTO() {
+    override var post_type: String = "meta_event"
+    val meta_event_type: String = "heartbeat"
 }
 
 @Serializable
