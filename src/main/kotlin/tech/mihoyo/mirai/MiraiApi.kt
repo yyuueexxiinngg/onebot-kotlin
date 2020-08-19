@@ -1,5 +1,6 @@
 package tech.mihoyo.mirai
 
+import com.google.gson.Gson
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.*
@@ -477,7 +478,7 @@ class MiraiApi(val bot: Bot) {
         return if (groupId != null && type != null) {
             val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.fromInt(type))
             val jsonData = data?.let { Json.stringify(GroupHonorListData.serializer(), it) }
-            val cqData = jsonData?.let { Json.parse(CQGroupHonorInfoData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
 
             cqData?.let { CQResponseDTO.CQHonorInfo(cqData) } ?: CQResponseDTO.CQMiraiFailure()
         } else {

@@ -36,7 +36,7 @@ data class CQGroupMessagePacketDTO(
     val group_id: Long,
     val user_id: Long,
     val anonymous: CQAnonymousMemberDTO?,
-    var message: @ContextualSerialization Any,  // Can be messageChainDTO or string depending on config
+    var message: CQMessageChainOrStringDTO,  // Can be messageChainDTO or string depending on config
     val raw_message: String,
     val font: Int,
     val sender: CQMemberDTO,
@@ -53,7 +53,7 @@ data class CQPrivateMessagePacketDTO(
     val sub_type: String, // friend、group、discuss、other
     val message_id: Int,
     val user_id: Long,
-    val message: @ContextualSerialization Any, // Can be messageChainDTO or string depending on config
+    val message: CQMessageChainOrStringDTO, // Can be messageChainDTO or string depending on config
     val raw_message: String,
     val font: Int,
     val sender: CQQQDTO,
@@ -213,8 +213,8 @@ sealed class MessageDTO : DTO
  */
 @MiraiExperimentalAPI
 suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
-    var rawMessage = ""
-    message.forEach { rawMessage += it.toCQString() }
+    val rawMessage = WrappedCQMessageChainString("")
+    message.forEach { rawMessage.value += it.toCQString() }
     return when (this) {
         is GroupMessageEvent -> CQGroupMessagePacketDTO(
             self_id = bot.id,
@@ -224,7 +224,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             user_id = sender.id,
             anonymous = null,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
-            raw_message = rawMessage,
+            raw_message = rawMessage.value,
             font = 0,
             sender = CQMemberDTO(sender),
             time = currentTimeMillis
@@ -235,7 +235,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             message_id = message.id,
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
-            raw_message = rawMessage,
+            raw_message = rawMessage.value,
             font = 0,
             sender = CQQQDTO(sender),
             time = currentTimeMillis
@@ -246,7 +246,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             message_id = message.id,
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
-            raw_message = rawMessage,
+            raw_message = rawMessage.value,
             font = 0,
             sender = CQQQDTO(sender),
             time = currentTimeMillis
@@ -255,16 +255,10 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
     }
 }
 
-/*suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): WrappedCQMessageChainList {
+suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): WrappedCQMessageChainList {
     return WrappedCQMessageChainList(mutableListOf<MessageDTO>().apply {
         forEachContent { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
     })
-}*/
-
-suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): List<MessageDTO> {
-    return mutableListOf<MessageDTO>().apply {
-        forEachContent { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
-    }
 }
 
 suspend fun Message.toDTO() = when (this) {

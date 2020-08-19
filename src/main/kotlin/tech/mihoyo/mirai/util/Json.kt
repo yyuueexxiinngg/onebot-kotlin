@@ -1,21 +1,25 @@
 package tech.mihoyo.mirai.util
 
-import com.google.gson.Gson
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import tech.mihoyo.mirai.data.common.*
 import kotlin.reflect.KClass
 
-val gson = Gson()
-
 @OptIn(ImplicitReflectionSerializer::class, UnstableDefault::class)
-inline fun <reified T : Any> T.toJson(): String =  gson.toJson(this)
+inline fun <reified T : Any> T.toJson(
+    serializer: SerializationStrategy<T>? = null
+): String = if (serializer == null) {
+    CQJson.json.stringify(this)
+} else CQJson.json.stringify(serializer, this)
 
 // 序列化列表时，stringify需要使用的泛型是T，而非List<T>
 // 因为使用的stringify的stringify(objs: List<T>)重载
 @OptIn(ImplicitReflectionSerializer::class, UnstableDefault::class)
-inline fun <reified T : Any> List<T>.toJson(): String = gson.toJson(this)
+inline fun <reified T : Any> List<T>.toJson(
+    serializer: SerializationStrategy<List<T>>? = null
+): String = if (serializer == null) CQJson.json.stringify(this)
+else CQJson.json.stringify(serializer, this)
 
 /**
  * Json解析规则，需要注册支持的多态的类
@@ -24,6 +28,7 @@ object CQJson {
     @OptIn(ImplicitReflectionSerializer::class)
     @UnstableDefault
     val json = Json {
+        classDiscriminator = "ClassType"
         isLenient = true
         ignoreUnknownKeys = true
 
