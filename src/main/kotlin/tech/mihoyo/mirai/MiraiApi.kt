@@ -278,7 +278,7 @@ class MiraiApi(val bot: Bot) {
      */
     fun cqGetGroupInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
-        val noCache = params["no_cache"]?.jsonPrimitive?.long ?: false
+        val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
 
         return if (groupId != null) {
             val group = bot.getGroup(groupId)
@@ -291,7 +291,7 @@ class MiraiApi(val bot: Bot) {
     fun cqGetGroupMemberInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
-        val noCache = params["no_cache"]?.jsonPrimitive?.long ?: false
+        val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
 
         return if (groupId != null && memberId != null) {
             val member = bot.getGroup(groupId)[memberId]
