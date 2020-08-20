@@ -367,6 +367,8 @@ class MiraiApi(val bot: Bot) {
                                 }
                             }
                         }
+                    } else {
+                        nextCallParams["message"] = replyElement
                     }
                     return cqSendMessage(nextCallParams)
                 }
