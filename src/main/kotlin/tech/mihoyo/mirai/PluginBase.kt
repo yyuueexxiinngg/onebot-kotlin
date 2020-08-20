@@ -2,6 +2,7 @@ package tech.mihoyo.mirai
 
 import kotlinx.coroutines.async
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.console.plugins.Config
 import net.mamoe.mirai.console.plugins.PluginBase
 import net.mamoe.mirai.contact.Friend
@@ -23,6 +24,7 @@ import tech.mihoyo.mirai.SessionManager.closeSession
 import tech.mihoyo.mirai.util.HttpClient
 import tech.mihoyo.mirai.util.toUHexString
 import java.io.File
+import kotlin.reflect.jvm.isAccessible
 
 object PluginBase : PluginBase() {
     private lateinit var config: Config
@@ -31,6 +33,7 @@ object PluginBase : PluginBase() {
     override fun onLoad() {
     }
 
+    @OptIn(LowLevelAPI::class)
     override fun onEnable() {
         config = loadConfig("setting.yml")
         debug = if (config.exist("debug")) config.getBoolean("debug") else false
@@ -121,7 +124,12 @@ object PluginBase : PluginBase() {
 
                         if (session.shouldCacheRecord) {
                             message.filterIsInstance<Voice>().forEach { voice ->
-                                val voiceBytes = voice.url?.let { it -> HttpClient.getBytes(it) }
+                                val voiceUrl = if (voice.url != null) voice.url else {
+                                    val voiceUrlFiled = voice::class.members.find { it.name == "_url" }
+                                    voiceUrlFiled?.isAccessible = true
+                                    "http://grouptalk.c2c.qq.com${voiceUrlFiled?.call(voice)}"
+                                }
+                                val voiceBytes = voiceUrl?.let { it -> HttpClient.getBytes(it) }
                                 if (voiceBytes != null) {
                                     saveRecordAsync("${voice.md5.toUHexString("")}.cqrecord", voiceBytes).start()
                                 }
