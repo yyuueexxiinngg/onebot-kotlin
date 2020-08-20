@@ -172,19 +172,21 @@ data class CQGroupHonorInfoData(
     @SerialName("actor_list")
     val actorList: List<Actor?>? = null,
     @SerialName("legend_list")
-    val legendList: List<Actor?>? = null,
+    var legendList: List<Actor?>? = null,
+    @SerialName("performer_list")
+    var performerList: List<Actor?>? = null,
     @SerialName("newbie_list")
     val newbieList: List<Actor?>? = null,
     @SerialName("strong_newbie_list") @SerializedName("strongnewbieList")
-    val strongNewbieList: List<Actor?>? = null,
+    var strongNewbieList: List<Actor?>? = null,
     @SerialName("emotion_list")
-    val emotionList: List<Actor?>? = null,
+    var emotionList: List<Actor?>? = null,
     @SerialName("level_name") @SerializedName("levelname")
     val levelName: LevelName? = null,
     @SerialName("manage_list")
-    val manageList: List<Tag?>? = null,
+    var manageList: List<Tag?>? = null,
     @SerialName("exclusive_list")
-    val exclusiveList: List<Tag?>? = null,
+    var exclusiveList: List<Tag?>? = null,
     @SerialName("active_obj")
     val activeObj: PlaceHolder? = null,
     @SerialName("show_active_obj")
