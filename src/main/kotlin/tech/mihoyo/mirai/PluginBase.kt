@@ -1,7 +1,5 @@
 package tech.mihoyo.mirai
 
-import io.ktor.util.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
@@ -20,11 +18,14 @@ import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.message.data.Image
+import net.mamoe.mirai.message.data.Voice
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.SessionManager.allSession
 import tech.mihoyo.mirai.SessionManager.closeSession
+import tech.mihoyo.mirai.util.HttpClient
 import tech.mihoyo.mirai.util.toUHexString
 import java.io.File
+import kotlin.reflect.jvm.isAccessible
 
 object PluginBase : PluginBase() {
     private lateinit var config: Config
@@ -33,6 +34,7 @@ object PluginBase : PluginBase() {
     override fun onLoad() {
     }
 
+    @OptIn(LowLevelAPI::class)
     override fun onEnable() {
         config = loadConfig("setting.yml")
         debug = if (config.exist("debug")) config.getBoolean("debug") else false
@@ -120,6 +122,20 @@ object PluginBase : PluginBase() {
                                 saveImageAsync("$imageMD5.cqimg", cqImgContent).start()
                             }
                         }
+
+                        if (session.shouldCacheRecord) {
+                            message.filterIsInstance<Voice>().forEach { voice ->
+                                val voiceUrl = if (voice.url != null) voice.url else {
+                                    val voiceUrlFiled = voice::class.members.find { it.name == "_url" }
+                                    voiceUrlFiled?.isAccessible = true
+                                    "http://grouptalk.c2c.qq.com${voiceUrlFiled?.call(voice)}"
+                                }
+                                val voiceBytes = voiceUrl?.let { it -> HttpClient.getBytes(it) }
+                                if (voiceBytes != null) {
+                                    saveRecordAsync("${voice.md5.toUHexString("")}.cqrecord", voiceBytes).start()
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -132,8 +148,15 @@ object PluginBase : PluginBase() {
     }
 
     private val imageFold: File = File(dataFolder, "image").apply { mkdirs() }
+    private val recordFold: File = File(dataFolder, "record").apply { mkdirs() }
 
     internal fun image(imageName: String) = File(imageFold, imageName)
+    internal fun record(recordName: String) = File(recordFold, recordName)
+
+    fun saveRecordAsync(name: String, data: ByteArray) =
+        async {
+            record(name).apply { writeBytes(data) }
+        }
 
     fun saveImageAsync(name: String, data: ByteArray) =
         async {

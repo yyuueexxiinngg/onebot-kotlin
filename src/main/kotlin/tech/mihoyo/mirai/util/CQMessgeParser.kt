@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.getGroupOrNull
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.uploadImage
@@ -35,6 +36,7 @@ import net.mamoe.mirai.utils.MiraiExperimentalAPI
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.PluginBase
 import tech.mihoyo.mirai.PluginBase.saveImageAsync
+import tech.mihoyo.mirai.PluginBase.saveRecordAsync
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
@@ -157,6 +159,9 @@ private suspend fun convertToMiraiMessage(
                 args["content"],
                 args["image"]
             )
+        }
+        "record" -> {
+            return tryResolveMedia("record", contact, args)
         }
         "contact" -> {
             return if (args["type"] == "qq") {
@@ -338,6 +343,8 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         } else {
                             if (type == "image") {
                                 media = tryResolveCachedImage(filePath, contact)
+                            } else if (type == "record") {
+                                media = tryResolveCachedRecord(filePath, contact)
                             }
                             if (media == null) {
                                 val file = getDataFile(type, filePath)
@@ -398,6 +405,22 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         }
                     }
                 }
+                "record" -> {
+                    if (useCache) {
+                        media = tryResolveCachedRecord(urlHash, contact)
+                    }
+                    if (media == null || !useCache) {
+                        mediaBytes = HttpClient.getBytes(mediaUrl!!)
+                        media = HttpClient.getInputStream(mediaUrl!!)
+                            .let { stream ->
+                                contact?.let { (it as Group).uploadVoice(stream) }
+                            }
+
+                        if (useCache && mediaBytes != null) {
+                            saveRecordAsync("$urlHash.cqrecord", mediaBytes!!).start()
+                        }
+                    }
+                }
             }
         }
     }
@@ -411,9 +434,24 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                 media = withContext(Dispatchers.IO) { contact!!.uploadImage(bis) }
                 return media as Image
             }
+            "record" -> {
+                media = withContext(Dispatchers.IO) { (contact!! as Group).uploadVoice(mediaBytes!!.inputStream()) }
+                return media as Voice
+            }
         }
     }
-    return PlainText("插件无法获取到图片" + if (mediaUrl != null) ", 原图链接: $mediaUrl" else "")
+    return PlainText("插件无法获取到媒体" + if (mediaUrl != null) ", 媒体链接: $mediaUrl" else "")
+}
+
+suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
+    val cacheFile = getDataFile("record", "$name.cqrecord")
+    if (cacheFile != null) {
+        if (cacheFile.canRead()) {
+            logger.info("此语音已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
+            return contact?.let { (it as Group).uploadVoice(cacheFile.inputStream()) }
+        }
+    }
+    return null
 }
 
 suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {

@@ -53,6 +53,7 @@ class BotSession internal constructor(val bot: Bot, val config: ConfigSection, c
     Session(coroutineContext, bot.id) {
     private val heartbeatConfig = if (config.containsKey("heartbeat")) config.getConfigSection("heartbeat") else null
     val shouldCacheImage = if (config.containsKey("cacheImage")) config.getBoolean("cacheImage") else false
+    val shouldCacheRecord = if (config.containsKey("cacheRecord")) config.getBoolean("cacheRecord") else false
     val heartbeatEnabled =
         heartbeatConfig?.let { if (it.containsKey("enable")) it.getBoolean("enable") else false } ?: false
     val heartbeatInterval =
@@ -66,6 +67,9 @@ class BotSession internal constructor(val bot: Bot, val config: ConfigSection, c
     init {
         if (shouldCacheImage) logger.info("Bot: ${bot.id} 已开启接收图片缓存, 将会缓存收取到的所有图片")
         else logger.info("Bot: ${bot.id} 未开启接收图片缓存, 将不会缓存收取到的所有图片, 如需开启, 请在当前Bot配置中添加cacheImage=true")
+
+        if(shouldCacheRecord) logger.info("Bot: ${bot.id} 已开启接收语音缓存, 将会缓存收取到的所有语音")
+        else logger.info("Bot: ${bot.id} 未开启接收语音缓存, 将不会缓存收取到的所有语音, 如需开启, 请在当前Bot配置中添加cacheRecord=true")
 
         if (heartbeatEnabled) logger.info("Bot: ${bot.id} 已开启心跳机制, 设定的心跳发送频率为 $heartbeatInterval 毫秒")
     }
