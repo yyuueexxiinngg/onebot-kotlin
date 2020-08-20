@@ -2,7 +2,6 @@ package tech.mihoyo.mirai
 
 import com.google.gson.Gson
 import kotlinx.coroutines.isActive
-import kotlinx.serialization.UnstableDefault
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
@@ -471,15 +470,14 @@ class MiraiApi(val bot: Bot) {
         }
     }
 
-    @OptIn(UnstableDefault::class)
     @LowLevelAPI
     suspend fun cqGetGroupHonorInfo(params: Map<String, JsonElement>): CQResponseDTO {
-        val groupId = params["group_id"]?.longOrNull
-        val type = params["type"]?.intOrNull
+        val groupId = params["group_id"]?.jsonPrimitive?.longOrNull
+        val type = params["type"]?.jsonPrimitive?.intOrNull
 
         return if (groupId != null && type != null) {
             val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.fromInt(type))
-            val jsonData = data?.let { Json.stringify(GroupHonorListData.serializer(), it) }
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
             val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
 
             cqData?.let { CQResponseDTO.CQHonorInfo(cqData) } ?: CQResponseDTO.CQMiraiFailure()

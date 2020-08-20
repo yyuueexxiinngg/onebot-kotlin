@@ -39,7 +39,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
     api("com.github.ajalt:clikt:2.6.0")
     api("net.mamoe:mirai-console:$miraiConsoleVersion")
-    api(kotlinx("serialization-runtime", "0.20.0"))
     api(ktor("server-cio"))
     api(ktor("client-cio"))
     api(ktor("websockets"))
