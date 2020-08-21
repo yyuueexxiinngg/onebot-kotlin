@@ -1,11 +1,9 @@
 package tech.mihoyo.mirai.web.websocket
 
 import io.ktor.http.cio.websocket.Frame
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.*
-import net.mamoe.mirai.LowLevelAPI
 import tech.mihoyo.mirai.MiraiApi
 import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
@@ -24,10 +22,10 @@ suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi
             responseDTO = CQResponseDTO.CQAsyncStarted()
             action = action.replace("_async", "")
             CoroutineScope(EmptyCoroutineContext).launch {
-                callMiraiApi(action, json["params"]?.jsonObject?: mapOf(), mirai)
+                callMiraiApi(action, json["params"]?.jsonObject ?: mapOf(), mirai)
             }
         } else {
-            responseDTO = callMiraiApi(action, json["params"]?.jsonObject?: mapOf(), mirai)
+            responseDTO = callMiraiApi(action, json["params"]?.jsonObject ?: mapOf(), mirai)
         }
         responseDTO.echo = echo
         val jsonToSend = responseDTO.toJson()

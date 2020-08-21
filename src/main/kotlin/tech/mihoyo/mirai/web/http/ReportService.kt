@@ -9,7 +9,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.content.TextContent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -23,8 +22,17 @@ import tech.mihoyo.mirai.MiraiApi
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
+import tech.mihoyo.mirai.web.HeartbeatScope
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+
+class ReportServiceScope(coroutineContext: CoroutineContext) : CoroutineScope {
+    override val coroutineContext: CoroutineContext = coroutineContext + CoroutineExceptionHandler { _, throwable ->
+        logger.error("Exception in ReportService", throwable)
+    } + SupervisorJob()
+}
 
 
 class ReportService(
@@ -41,10 +49,12 @@ class ReportService(
 
     private lateinit var serviceConfig: ReportServiceConfig
 
+    private val scope = ReportServiceScope(EmptyCoroutineContext)
+
     init {
         if (session.config.exist("http")) {
             serviceConfig = ReportServiceConfig(session.config.getConfigSection("http"))
-            GlobalScope.launch {
+            scope.launch {
                 startReportService()
             }
         }
@@ -73,7 +83,7 @@ class ReportService(
                     .takeIf { it !is CQIgnoreEventDTO }?.apply {
                         val eventDTO = this
                         val jsonToSend = this.toJson()
-                        GlobalScope.launch(Dispatchers.IO) {
+                        scope.launch(Dispatchers.IO) {
                             report(
                                 session.cqApiImpl,
                                 serviceConfig.postUrl!!,
@@ -87,7 +97,7 @@ class ReportService(
             }
 
             if (session.heartbeatEnabled) {
-                heartbeatJob = GlobalScope.launch {
+                heartbeatJob = HeartbeatScope(EmptyCoroutineContext).launch {
                     while (true) {
                         report(
                             session.cqApiImpl,

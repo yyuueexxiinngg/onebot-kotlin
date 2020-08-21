@@ -27,6 +27,15 @@ import tech.mihoyo.mirai.data.common.CQPluginStatusData
 import tech.mihoyo.mirai.data.common.toCQDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
+import tech.mihoyo.mirai.web.HeartbeatScope
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+
+class WebsocketServerScope(coroutineContext: CoroutineContext) : CoroutineScope {
+    override val coroutineContext: CoroutineContext = coroutineContext + CoroutineExceptionHandler { _, throwable ->
+        logger.error("Exception in WebsocketServer", throwable)
+    } + SupervisorJob()
+}
 
 @OptIn(ToBeRemoved::class)
 class WebSocketServer(
@@ -65,7 +74,9 @@ class WebSocketServer(
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("DuplicatedCode")
 fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketServerServiceConfig) {
+    val scope = WebsocketServerScope(EmptyCoroutineContext)
     logger.debug("Bot: ${session.bot.id} 尝试开启正向Websocket服务端于端口: ${serviceConfig.wsPort}")
     install(DefaultHeaders)
     install(WebSockets)
@@ -96,7 +107,9 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
                 incoming.consumeEach {
                     when (it) {
                         is Frame.Text -> {
-                            handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                            scope.launch {
+                                handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                            }
                         }
                     }
                 }
@@ -119,7 +132,9 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
                 incoming.consumeEach {
                     when (it) {
                         is Frame.Text -> {
-                            handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                            scope.launch {
+                                handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                            }
                         }
                     }
                 }
@@ -133,7 +148,7 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
 }
 
 private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Frame>): Job {
-    return GlobalScope.launch {
+    return HeartbeatScope(EmptyCoroutineContext).launch {
         while (true) {
             outgoing.send(
                 Frame.Text(

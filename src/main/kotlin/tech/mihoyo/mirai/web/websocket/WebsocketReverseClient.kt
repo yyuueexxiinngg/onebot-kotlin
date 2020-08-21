@@ -14,7 +14,6 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.LowLevelAPI
 
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
@@ -24,9 +23,18 @@ import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
+import tech.mihoyo.mirai.web.HeartbeatScope
 import java.io.EOFException
 import java.io.IOException
 import java.net.ConnectException
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+
+class WebsocketReverseClientScope(coroutineContext: CoroutineContext) : CoroutineScope {
+    override val coroutineContext: CoroutineContext = coroutineContext + CoroutineExceptionHandler { _, throwable ->
+        logger.error("Exception in WebsocketReverseClient", throwable)
+    } + SupervisorJob()
+}
 
 class WebSocketReverseClient(
     val session: BotSession
@@ -38,6 +46,7 @@ class WebSocketReverseClient(
     private var heartbeatJobs: MutableMap<String, Job> = mutableMapOf()
     private var connectivityChecks: MutableList<String> = mutableListOf()
     private var closing = false
+    private val scope = WebsocketReverseClientScope(EmptyCoroutineContext)
 
     init {
         if (session.config.exist("ws_reverse")) {
@@ -45,7 +54,7 @@ class WebSocketReverseClient(
             serviceConfig.forEach {
                 logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}, Use Universal: ${it.useUniversal}")
                 if (it.enable) {
-                    GlobalScope.launch {
+                    scope.launch {
                         if (it.useUniversal) {
                             startGeneralWebsocketClient(session.bot, it, "Universal")
                         } else {
@@ -140,11 +149,14 @@ class WebSocketReverseClient(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun listenApi(incoming: ReceiveChannel<Frame>, outgoing: SendChannel<Frame>) {
         incoming.consumeEach {
             when (it) {
                 is Frame.Text -> {
-                    handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                    scope.launch {
+                        handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                    }
                 }
                 else -> logger.warning("Unsupported incomeing frame")
             }
@@ -167,7 +179,7 @@ class WebSocketReverseClient(
         }
 
         if (session.heartbeatEnabled) {
-            heartbeatJobs[httpClientKey] = GlobalScope.launch {
+            heartbeatJobs[httpClientKey] = HeartbeatScope(EmptyCoroutineContext).launch {
                 while (true) {
                     outgoing.send(
                         Frame.Text(
@@ -188,13 +200,12 @@ class WebSocketReverseClient(
         }
     }
 
-    @KtorExperimentalAPI
-    @ExperimentalCoroutinesApi
+    @OptIn(KtorExperimentalAPI::class, ExperimentalCoroutinesApi::class)
     private fun startWebsocketConnectivityCheck(bot: Bot, config: WebSocketReverseServiceConfig, clientType: String) {
         val httpClientKey = "${config.reverseHost}:${config.reversePort}-Client-$clientType"
         if (httpClientKey !in connectivityChecks) {
             connectivityChecks.add(httpClientKey)
-            GlobalScope.launch {
+            scope.launch {
                 if (httpClients.containsKey(httpClientKey)) {
                     var stillActive = true
                     while (true) {
