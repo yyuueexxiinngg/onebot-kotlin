@@ -445,7 +445,9 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
 }
 
 suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
-    val cacheFile = getDataFile("record", "$name.cqrecord")
+    val cacheFile =
+        if (name.endsWith(".cqrecord")) getDataFile("record", name)
+        else getDataFile("record", "$name.cqrecord")
     if (cacheFile != null) {
         if (cacheFile.canRead()) {
             logger.info("此语音已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
@@ -457,7 +459,15 @@ suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
 
 suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
     var image: Image? = null
-    val cacheFile = getDataFile("image", "$name.cqimg") ?: getDataFile("image", "${name.toLowerCase()}.image")
+    val cacheFile =
+        with(name) {
+            when {
+                endsWith(".cqimg") -> getDataFile("image", name)
+                endsWith(".image") -> getDataFile("image", name.toLowerCase())
+                else -> getDataFile("image", "$name.cqimg") ?: getDataFile("image", "${name.toLowerCase()}.image")
+            }
+        }
+
     if (cacheFile != null) {
         if (cacheFile.canRead()) {
             logger.info("此链接图片已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
