@@ -40,6 +40,7 @@ import tech.mihoyo.mirai.PluginBase.saveRecordAsync
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
+import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
 import kotlin.collections.HashMap
@@ -456,7 +457,7 @@ suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
 
 suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
     var image: Image? = null
-    val cacheFile = getDataFile("image", "$name.cqimg")
+    val cacheFile = getDataFile("image", "$name.cqimg") ?: getDataFile("image", "${name.toLowerCase()}.image")
     if (cacheFile != null) {
         if (cacheFile.canRead()) {
             logger.info("此链接图片已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
@@ -464,15 +465,26 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
             var size = 0
             var addTime = 0L
 
-            val cacheMediaContent = cacheFile.readLines()
-            cacheMediaContent.forEach {
-                val parts = it.trim().split("=", limit = 2)
-                if (parts.size == 2) {
-                    when (parts[0]) {
-                        "md5" -> md5 = parts[1]
-                        "size" -> size = parts[1].toIntOrNull() ?: 0
-                        "addtime" -> addTime = parts[1].toLongOrNull() ?: 0L
+            when (cacheFile.extension) {
+                "cqimg" -> {
+                    val cacheMediaContent = cacheFile.readLines()
+                    cacheMediaContent.forEach {
+                        val parts = it.trim().split("=", limit = 2)
+                        if (parts.size == 2) {
+                            when (parts[0]) {
+                                "md5" -> md5 = parts[1]
+                                "size" -> size = parts[1].toIntOrNull() ?: 0
+                                "addtime" -> addTime = parts[1].toLongOrNull() ?: 0L
+                            }
+                        }
                     }
+                }
+
+                "image" -> {
+                    val fs = cacheFile.inputStream()
+                    md5 = fs.readNBytes(16).toUHexString("")
+                    size = fs.readNBytes(4).toUnsignedInt().toInt()
+                    fs.close()
                 }
             }
 
@@ -539,4 +551,10 @@ internal fun ByteArray.toUHexString(
             }
         }
     }
+}
+
+private fun ByteArray.toUnsignedInt(): Long {
+    val buffer: ByteBuffer = ByteBuffer.allocate(8).put(byteArrayOf(0, 0, 0, 0)).put(this)
+    buffer.position(0)
+    return buffer.long
 }
