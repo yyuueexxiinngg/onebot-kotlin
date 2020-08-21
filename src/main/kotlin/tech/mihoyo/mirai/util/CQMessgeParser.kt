@@ -40,6 +40,7 @@ import tech.mihoyo.mirai.PluginBase.saveRecordAsync
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
+import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
@@ -564,6 +565,6 @@ internal fun ByteArray.toUHexString(
 
 private fun ByteArray.toUnsignedInt(): Long {
     val buffer: ByteBuffer = ByteBuffer.allocate(8).put(byteArrayOf(0, 0, 0, 0)).put(this)
-    buffer.position(0)
+    (buffer as Buffer).position(0)
     return buffer.long
 }
