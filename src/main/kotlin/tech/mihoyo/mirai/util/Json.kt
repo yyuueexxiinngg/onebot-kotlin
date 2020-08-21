@@ -38,6 +38,11 @@ object CQJson {
                 this.subclass(CQPrivateMessagePacketDTO::class)
                 this.subclass(CQIgnoreEventDTO::class)
             }
+
+            CQBotEventDTO::class.sealedSubclasses.forEach {
+                val clazz = it as KClass<CQBotEventDTO>
+                polymorphic(CQEventDTO::class, clazz, clazz.serializer())
+            }
         }
     }
 }
