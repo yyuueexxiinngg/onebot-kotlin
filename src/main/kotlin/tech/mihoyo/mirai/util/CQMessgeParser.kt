@@ -491,10 +491,9 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
                 }
 
                 "image" -> {
-                    val fs = cacheFile.inputStream()
-                    md5 = fs.readNBytes(16).toUHexString("")
-                    size = fs.readNBytes(4).toUnsignedInt().toInt()
-                    fs.close()
+                    val bytes = cacheFile.readBytes()
+                    md5 = bytes.copyOf(16).toUHexString("")
+                    size = bytes.copyOfRange(16, 20).toUnsignedInt().toInt()
                 }
             }
 
