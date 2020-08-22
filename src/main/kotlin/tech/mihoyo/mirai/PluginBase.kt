@@ -36,6 +36,7 @@ object PluginBase : PluginBase() {
         config = loadConfig("setting.yml")
         debug = if (config.exist("debug")) config.getBoolean("debug") else false
         logger.info("Plugin loaded! ${description.version}")
+        if(debug) logger.debug("开发交流群: 1143274864")
 
         Bot.forEachInstance {
             if (!allSession.containsKey(it.id)) {
