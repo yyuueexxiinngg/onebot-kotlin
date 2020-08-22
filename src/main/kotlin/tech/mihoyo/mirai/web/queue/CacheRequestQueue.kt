@@ -1,6 +1,7 @@
 package tech.mihoyo.mirai.web.queue
 
 import net.mamoe.mirai.event.events.BotEvent
+import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 
@@ -21,6 +22,10 @@ class CacheRequestQueue : LinkedHashMap<Long, BotEvent>() {
     }
 
     fun add(source: MemberJoinRequestEvent) {
+        put(source.eventId, source)
+    }
+
+    fun add(source: BotInvitedJoinGroupRequestEvent) {
         put(source.eventId, source)
     }
 }

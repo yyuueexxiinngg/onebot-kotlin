@@ -7,6 +7,7 @@ import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.contact.PermissionDeniedException
 import net.mamoe.mirai.data.GroupAnnouncement
 import net.mamoe.mirai.data.GroupAnnouncementMsg
+import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.data.recall
@@ -243,9 +244,10 @@ class MiraiApi(val bot: Bot) {
         val reason = params["reason"]?.jsonPrimitive?.contentOrNull
 
         return if (flag != null) {
-            val event = cacheRequestQueue[flag.toLongOrNull()]
-            if (event is MemberJoinRequestEvent)
-                if (approve) event.accept() else event.reject()
+            when (val event = cacheRequestQueue[flag.toLongOrNull()]) {
+                is MemberJoinRequestEvent -> if (approve) event.accept() else event.reject(message = reason ?: "")
+                is BotInvitedJoinGroupRequestEvent -> if (approve) event.accept() else event.ignore()
+            }
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
