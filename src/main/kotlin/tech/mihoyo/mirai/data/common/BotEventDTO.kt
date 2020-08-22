@@ -67,9 +67,34 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                 else -> CQIgnoreEventDTO(bot.id)
             }
         }
+        is BotJoinGroupEvent.Active -> CQMemberJoinEventDTO(
+            self_id = bot.id,
+            sub_type = "approve",
+            group_id = group.id,
+            operator_id = 0L, // Not available in Mirai
+            user_id = bot.id,
+            time = currentTimeMillis
+        )
+        is BotJoinGroupEvent.Invite -> CQMemberJoinEventDTO(
+            self_id = bot.id,
+            sub_type = "invite",
+            group_id = group.id,
+            operator_id = 0L, // Not available in Mirai
+            user_id = bot.id,
+            time = currentTimeMillis
+        )
+
         is BotLeaveEvent -> {
             when (this) {
                 is BotLeaveEvent.Kick -> CQMemberLeaveEventDTO(
+                    self_id = bot.id,
+                    sub_type = "kick_me",
+                    group_id = group.id,
+                    operator_id = 0L, // Retrieve operator is currently not supported
+                    user_id = bot.id,
+                    time = currentTimeMillis
+                )
+                is BotLeaveEvent.Active -> CQMemberLeaveEventDTO(
                     self_id = bot.id,
                     sub_type = "kick_me",
                     group_id = group.id,
@@ -170,10 +195,19 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
         )
         is MemberJoinRequestEvent -> CQGroupMemberAddRequestEventDTO(
             self_id = bot.id,
-            sub_type = "add", // Invite not support by Mirai
+            sub_type = "add",
             group_id = groupId,
             user_id = fromId,
             comment = message,
+            flag = eventId.toString(),
+            time = currentTimeMillis
+        )
+        is BotInvitedJoinGroupRequestEvent -> CQGroupMemberAddRequestEventDTO(
+            self_id = bot.id,
+            sub_type = "invite",
+            group_id = groupId,
+            user_id = invitorId,
+            comment = "",
             flag = eventId.toString(),
             time = currentTimeMillis
         )

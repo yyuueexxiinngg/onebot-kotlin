@@ -9,10 +9,7 @@ import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.Listener
-import net.mamoe.mirai.event.events.BotEvent
-import net.mamoe.mirai.event.events.BotOnlineEvent
-import net.mamoe.mirai.event.events.MemberJoinRequestEvent
-import net.mamoe.mirai.event.events.NewFriendRequestEvent
+import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
@@ -38,6 +35,7 @@ object PluginBase : PluginBase() {
         config = loadConfig("setting.yml")
         debug = if (config.exist("debug")) config.getBoolean("debug") else false
         logger.info("Plugin loaded!")
+        if(debug) logger.debug("开发交流群: 1143274864")
 
         Bot.forEachInstance {
             if (!allSession.containsKey(it.id)) {
@@ -68,6 +66,11 @@ object PluginBase : PluginBase() {
                     }
                 }
                 is MemberJoinRequestEvent -> {
+                    allSession[bot.id]?.let {
+                        (it as BotSession).cqApiImpl.cacheRequestQueue.add(this)
+                    }
+                }
+                is BotInvitedJoinGroupRequestEvent -> {
                     allSession[bot.id]?.let {
                         (it as BotSession).cqApiImpl.cacheRequestQueue.add(this)
                     }
