@@ -177,7 +177,10 @@ private inline fun Route.cqWebsocket(
 ) {
     webSocket(path) {
         if (serviceConfig.accessToken != null && serviceConfig.accessToken != "") {
-            val accessToken = call.parameters["access_token"]
+            val accessToken =
+                call.parameters["access_token"] ?: call.request.headers["Authorization"]?.let {
+                    Regex("""(?:[Tt]oken|Bearer)\s+(.*)""").find(it)?.groupValues?.get(1)
+                }
             if (accessToken != serviceConfig.accessToken) {
                 close(CloseReason(CloseReason.Codes.NORMAL, "accessToken不正确"))
                 return@webSocket

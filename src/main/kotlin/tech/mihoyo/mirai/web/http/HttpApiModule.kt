@@ -214,7 +214,10 @@ internal suspend fun ApplicationCall.responseDTO(dto: CQResponseDTO) {
 
 suspend fun checkAccessToken(call: ApplicationCall, serviceConfig: HttpApiServerServiceConfig): Boolean {
     if (serviceConfig.accessToken != null && serviceConfig.accessToken != "") {
-        val accessToken = call.parameters["access_token"] ?: call.request.headers["Authorization"]
+        val accessToken =
+            call.parameters["access_token"] ?: call.request.headers["Authorization"]?.let {
+                Regex("""(?:[Tt]oken|Bearer)\s+(.*)""").find(it)?.groupValues?.get(1)
+            }
         if (accessToken != null) {
             if (accessToken != serviceConfig.accessToken) {
                 call.respond(HttpStatusCode.Forbidden)
