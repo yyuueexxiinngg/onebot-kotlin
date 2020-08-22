@@ -143,7 +143,7 @@ class MiraiApi(val bot: Bot) {
         val messageId = params["message_id"]?.jsonPrimitive?.intOrNull
         messageId?.let {
             cachedSourceQueue[it].recall()
-            CQResponseDTO.CQGeneralSuccess()
+            return CQResponseDTO.CQGeneralSuccess()
         }
         return CQResponseDTO.CQInvalidRequest()
     }
