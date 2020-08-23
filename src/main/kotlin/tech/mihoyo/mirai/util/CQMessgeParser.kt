@@ -413,7 +413,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     }
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!)
-                        media = HttpClient.getInputStream(mediaUrl!!)
+                        media = ByteArrayInputStream(mediaBytes)
                             .let { stream ->
                                 contact?.let { (it as Group).uploadVoice(stream) }
                             }

@@ -22,6 +22,7 @@ import tech.mihoyo.mirai.util.HttpClient
 import tech.mihoyo.mirai.util.toUHexString
 import java.io.File
 import kotlin.reflect.jvm.isAccessible
+import yyuueexxiinngg.cqhttp_mirai.BuildConfig
 
 object PluginBase : PluginBase() {
     private lateinit var config: Config
@@ -34,7 +35,8 @@ object PluginBase : PluginBase() {
     override fun onEnable() {
         config = loadConfig("setting.yml")
         debug = if (config.exist("debug")) config.getBoolean("debug") else false
-        logger.info("Plugin loaded!")
+        logger.info("Plugin loaded! ${BuildConfig.VERSION}")
+        logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
         if(debug) logger.debug("开发交流群: 1143274864")
 
         Bot.forEachInstance {
