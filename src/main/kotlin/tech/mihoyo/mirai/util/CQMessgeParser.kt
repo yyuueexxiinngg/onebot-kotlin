@@ -377,6 +377,8 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                 }
             }
 
+            val timeoutSecond = (if (args.containsKey("timeout")) args["timeout"]?.toIntOrNull() else null) ?: 0
+
             val urlHash = md5(mediaUrl!!).toUHexString("")
 
             when (type) {
@@ -386,10 +388,11 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     }
 
                     if (media == null || !useCache) {
-                        mediaBytes = HttpClient.getBytes(mediaUrl!!)
+                        mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L)
 
-                        val bis = ByteArrayInputStream(mediaBytes)
-                        media = contact!!.uploadImage(bis)
+                        media = mediaBytes?.let {
+                            contact!!.uploadImage(ByteArrayInputStream(it))
+                        }
 
                         if (useCache) {
                             val imageMD5 = mediaBytes?.let { md5(it) }?.toUHexString("")
@@ -398,7 +401,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                                     [image]
                                     md5=$imageMD5
                                     size=${mediaBytes?.size ?: 0}
-                                    url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-$imageMD5/0?term=2
+                                    url=https://gchat.qpic.cn/gchatpic_new/${contact!!.bot.id}/0-00-$imageMD5/0?term=2
                                     addtime=$currentTimeMillis
                                     """.trimIndent()
                                 logger.info("此链接图片将缓存为$urlHash.cqimg")
@@ -412,11 +415,10 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         media = tryResolveCachedRecord(urlHash, contact)
                     }
                     if (media == null || !useCache) {
-                        mediaBytes = HttpClient.getBytes(mediaUrl!!)
-                        media = ByteArrayInputStream(mediaBytes)
-                            .let { stream ->
-                                contact?.let { (it as Group).uploadVoice(stream) }
-                            }
+                        mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L)
+                        media = mediaBytes?.let {
+                            contact?.let { (it as Group).uploadVoice(ByteArrayInputStream(mediaBytes)) }
+                        }
 
                         if (useCache && mediaBytes != null) {
                             saveRecordAsync("$urlHash.cqrecord", mediaBytes!!).start()
