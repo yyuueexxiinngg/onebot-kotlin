@@ -10,6 +10,7 @@
 package tech.mihoyo.mirai.web.http
 
 import io.ktor.application.*
+import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -31,6 +32,7 @@ import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
 fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServerServiceConfig) {
+    install(CallLogging)
     // it.second -> if is async call
     routing {
         cqHttpApi("/send_msg", serviceConfig) {

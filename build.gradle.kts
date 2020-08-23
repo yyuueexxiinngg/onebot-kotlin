@@ -32,6 +32,7 @@ dependencies {
     compileOnly(kotlin("serialization", kotlinVersion))
 
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
+    implementation("ch.qos.logback:logback-classic:1.2.3")
 
     api(ktor("server-cio"))
     api(ktor("client-cio"))
