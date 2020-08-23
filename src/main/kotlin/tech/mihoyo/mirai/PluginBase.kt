@@ -1,6 +1,8 @@
 package tech.mihoyo.mirai
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.console.plugins.Config
@@ -37,7 +39,7 @@ object PluginBase : PluginBase() {
         debug = if (config.exist("debug")) config.getBoolean("debug") else false
         logger.info("Plugin loaded! ${BuildConfig.VERSION}")
         logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
-        if(debug) logger.debug("开发交流群: 1143274864")
+        if (debug) logger.debug("开发交流群: 1143274864")
 
         Bot.forEachInstance {
             if (!allSession.containsKey(it.id)) {
@@ -166,6 +168,10 @@ object PluginBase : PluginBase() {
         async {
             image(name).apply { writeBytes(data) }
         }
+
+    suspend fun saveImage(name: String, data: ByteArray) = withContext(Dispatchers.IO) {
+        image(name).apply { writeBytes(data) }
+    }
 
     fun saveImageAsync(name: String, data: String) =
         async {

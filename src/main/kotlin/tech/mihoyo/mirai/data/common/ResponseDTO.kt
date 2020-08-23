@@ -34,6 +34,8 @@ open class CQResponseDTO(
     class CQGroupInfo(group_id: Long, group_name: String, member_count: Int, max_member_count: Int) :
         CQResponseDTO("ok", 0, CQGroupInfoData(group_id, group_name, member_count, max_member_count))
 
+    class CQImageInfo(image: CQImageInfoData) : CQResponseDTO("ok", 0, image)
+    class CQRecordInfo(record: CQRecordInfoData) : CQResponseDTO("ok", 0, record)
     class CQMemberInfo(member: CQMemberInfoData) : CQResponseDTO("ok", 0, member)
     class CQMemberList(memberList: List<CQMemberInfoData>) : CQResponseDTO("ok", 0, memberList)
     class CQCanSendImage(data: CQCanSendImageData = CQCanSendImageData()) : CQResponseDTO("ok", 0, data)
@@ -126,6 +128,27 @@ data class CQMemberInfoData(
         member.group.botPermission == MemberPermission.ADMINISTRATOR || member.group.botPermission == MemberPermission.OWNER
     )
 }
+
+@Serializable
+@SerialName("ImageInfoData")
+data class CQImageInfoData(
+    val file: String,
+    @SerialName("filename") val fileName: String,
+    val md5: String,
+    val size: Int,
+    val url: String,
+    @SerialName("add_time") val addTime: Long,
+    @SerialName("file_type") val fileType: String,
+) : CQResponseDataDTO()
+
+@Serializable
+@SerialName("RecordInfoData")
+data class CQRecordInfoData(
+    val file: String,
+    @SerialName("filename") val fileName: String,
+    val md5: String,
+    @SerialName("file_type") val fileType: String,
+) : CQResponseDataDTO()
 
 @Serializable
 @SerialName("CanSendImageData")
