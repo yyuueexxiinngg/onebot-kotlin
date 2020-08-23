@@ -11,10 +11,11 @@ import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.data.recall
+import tech.mihoyo.mirai.PluginBase.saveImage
+import tech.mihoyo.mirai.PluginBase.saveImageAsync
 import tech.mihoyo.mirai.data.common.*
+import tech.mihoyo.mirai.util.*
 import tech.mihoyo.mirai.web.queue.CacheSourceQueue
-import tech.mihoyo.mirai.util.cqMessageToMessageChains
-import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.queue.CacheRequestQueue
 
 
@@ -412,11 +413,70 @@ class MiraiApi(val bot: Bot) {
         }
     }
 
-    /**
-     * Getting image path, not supported for now
-     */
-    fun cqGetImage(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQPluginFailure()
+    suspend fun cqGetRecord(params: Map<String, JsonElement>): CQResponseDTO {
+        val file = params["file"]?.jsonPrimitive?.contentOrNull
+        val outFormat = params["out_format"]?.jsonPrimitive?.contentOrNull // Currently not supported
+        return if (file != null) {
+            val cachedFile = getCachedRecordFile(file)
+            cachedFile?.let {
+                val fileType = with(it.readBytes().copyOfRange(0, 10).toUHexString("")) {
+                    when {
+                        startsWith("2321414D52") -> "amr"
+                        startsWith("02232153494C4B5F5633") -> "silk"
+                        else -> "cqrecord"
+                    }
+                }
+                CQResponseDTO.CQRecordInfo(
+                    CQRecordInfoData(
+                        it.absolutePath,
+                        it.nameWithoutExtension,
+                        it.nameWithoutExtension,
+                        fileType
+                    )
+                )
+            } ?: CQResponseDTO.CQPluginFailure()
+        } else {
+            CQResponseDTO.CQInvalidRequest()
+        }
+    }
+
+    suspend fun cqGetImage(params: Map<String, JsonElement>): CQResponseDTO {
+        val file = params["file"]?.jsonPrimitive?.contentOrNull
+        return if (file != null) {
+            val image = getCachedImageFile(file)
+            image?.let { cachedImageMeta ->
+                var cachedFile = getDataFile("image", cachedImageMeta.fileName)
+                if (cachedFile == null) {
+                    HttpClient.getBytes(cachedImageMeta.url)?.let { saveImage(cachedImageMeta.fileName, it) }
+                }
+                cachedFile = getDataFile("image", cachedImageMeta.fileName)
+
+                cachedFile?.let {
+                    val fileType = with(it.readBytes().copyOfRange(0, 8).toUHexString("")) {
+                        when {
+                            startsWith("FFD8") -> "jpg"
+                            startsWith("89504E47") -> "png"
+                            startsWith("47494638") -> "gif"
+                            startsWith("424D") -> "bmp"
+                            else -> "cqimg"
+                        }
+                    }
+                    CQResponseDTO.CQImageInfo(
+                        CQImageInfoData(
+                            it.absolutePath,
+                            cachedImageMeta.fileName,
+                            cachedImageMeta.md5,
+                            cachedImageMeta.size,
+                            cachedImageMeta.url,
+                            cachedImageMeta.addTime,
+                            fileType
+                        )
+                    )
+                }
+            } ?: CQResponseDTO.CQPluginFailure()
+        } else {
+            CQResponseDTO.CQInvalidRequest()
+        }
     }
 
     fun cqCanSendImage(params: Map<String, JsonElement>): CQResponseDTO {
@@ -496,10 +556,6 @@ class MiraiApi(val bot: Bot) {
     }
 
     fun cqGetCSRFToken(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
-    }
-
-    fun cqGetRecord(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQMiraiFailure()
     }
 

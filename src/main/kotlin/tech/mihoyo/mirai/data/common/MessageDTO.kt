@@ -20,7 +20,6 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.*
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.MiraiExperimentalAPI
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.util.toCQString
 import java.net.URL
