@@ -29,7 +29,10 @@ assignees: ''
 
 #### 版本
 cqhttp-mirai- ` ` <!--在``中填写你正在使用的版本号，如`0.2.2.3-embedded`-->
+<!--如使用Embedded版本, 以下版本信息可不填-->
+mirai-core-` `   
 
+mirai-console-` `
 
 
 
