@@ -3,10 +3,12 @@ plugins {
     kotlin("plugin.serialization") version "1.4.0"
     java
     id("com.github.johnrengelman.shadow") version "6.0.0"
+    id("com.github.gmazzo.buildconfig") version "2.0.2"
 }
 
+val projectVersion = "0.2.2.6"
+version = projectVersion
 group = "yyuueexxiinngg"
-version = "0.2.2"
 
 repositories {
     maven(url = "https://mirrors.huaweicloud.com/repository/maven")
@@ -24,6 +26,22 @@ val kotlinSerializationVersion = "1.0.0-RC"
 
 fun ktor(id: String, version: String = this@Build_gradle.ktorVersion) = "io.ktor:ktor-$id:$version"
 fun kotlinx(id: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$id:$version"
+fun String.runCommand(workingDir: File): String? {
+    return try {
+        val parts = this.split("\\s".toRegex())
+        val proc = ProcessBuilder(*parts.toTypedArray())
+            .directory(workingDir)
+            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+            .redirectError(ProcessBuilder.Redirect.PIPE)
+            .start()
+
+        proc.waitFor(60, TimeUnit.MINUTES)
+        proc.inputStream.bufferedReader().readText().trim()
+    } catch (e: java.io.IOException) {
+        e.printStackTrace()
+        null
+    }
+}
 
 dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
@@ -58,6 +76,27 @@ tasks {
     }
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
+    }
+
+    val injectVersionToPluginDesc by register("injectVersionToPluginDesc") {
+        group = "cqhttp-mirai"
+        doLast {
+            val pluginDescFile = File(projectDir, "src/main/resources/plugin.yml")
+            val lines = pluginDescFile.readLines().toMutableList()
+            lines[2] = "version: \"$projectVersion\""
+            pluginDescFile.writeText(lines.joinToString(separator = "\n"))
+        }
+    }
+
+    buildConfig {
+        val commitHash = "git rev-parse --short HEAD".runCommand(projectDir)
+        buildConfigField("String", "VERSION", "\"$projectVersion\"")
+        if (commitHash != null) { buildConfigField("String", "COMMIT_HASH", "\"$commitHash\"") }
+    }
+
+    shadowJar {
+        dependsOn(generateBuildConfig)
+        dependsOn(injectVersionToPluginDesc)
     }
 
     val runMiraiConsole by creating(JavaExec::class.java) {
