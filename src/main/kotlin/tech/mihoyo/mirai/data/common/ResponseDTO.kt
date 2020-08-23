@@ -211,9 +211,9 @@ data class CQGroupHonorInfoData(
     @SerialName("exclusive_list")
     var exclusiveList: List<Tag?>? = null,
     @SerialName("active_obj")
-    val activeObj: PlaceHolder? = null,
+    var activeObj: Map<String, List<Tag?>?>? = null, // Key为活跃等级名, 如`冒泡`
     @SerialName("show_active_obj")
-    val showActiveObj: PlaceHolder? = null,
+    var showActiveObj: Map<String, Boolean?>? = null,
     @SerialName("my_title")
     val myTitle: String?,
     @SerialName("my_index")
@@ -225,12 +225,6 @@ data class CQGroupHonorInfoData(
     @SerialName("hw_excellent_list")
     val hwExcellentList: List<Actor?>? = null
 ) : CQResponseDataDTO() {
-    @Serializable
-    data class PlaceHolder(
-        @SerialName("placeHolder")
-        val place_holder: String? = null
-    )
-
     @Serializable
     data class Language(
         @SerialName("code")

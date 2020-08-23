@@ -578,6 +578,16 @@ class MiraiApi(val bot: Bot) {
                 finalData = finalData?.apply { emotionList = cqData?.emotionList } ?: cqData?.let { cqData }
             }
 
+            if (type == "active") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.ACTIVE)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = finalData?.apply {
+                    activeObj = cqData?.activeObj
+                    showActiveObj = cqData?.showActiveObj
+                } ?: cqData?.let { cqData }
+            }
+
             if (type == "exclusive") {
                 val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.EXCLUSIVE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
