@@ -46,16 +46,15 @@ fun String.runCommand(workingDir: File): String? {
 dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
 //    compileOnly("net.mamoe:mirai-core:$miraiCoreVersion")
-    compileOnly("net.mamoe:mirai-console:$miraiConsoleVersion")
+//    compileOnly("net.mamoe:mirai-console:$miraiConsoleVersion")
     compileOnly(kotlin("serialization", kotlinVersion))
 
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
     implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("com.google.code.gson:gson:2.8.6")
 
     api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
-    implementation("org.slf4j:slf4j-simple:1.7.9")
-    implementation("com.google.code.gson:gson:2.8.6")
     api("com.github.ajalt:clikt:2.6.0")
     api("net.mamoe:mirai-console:$miraiConsoleVersion")
     api(ktor("server-cio"))
