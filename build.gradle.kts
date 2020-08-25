@@ -53,7 +53,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
     api(ktor("server-cio"))
-    api(ktor("client-cio"))
+    api(ktor("client-okhttp"))
     api(ktor("websockets"))
     api(ktor("client-websockets"))
 
