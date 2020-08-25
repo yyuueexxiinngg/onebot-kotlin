@@ -62,7 +62,14 @@ class ReportService(
 
     private suspend fun startReportService() {
         if (serviceConfig.postUrl != null && serviceConfig.postUrl != "") {
-            report(
+            if (serviceConfig.secret != "") {
+                val mac = Mac.getInstance("HmacSHA1")
+                val secret = SecretKeySpec(serviceConfig.secret.toByteArray(), "HmacSHA1")
+                mac.init(secret)
+                sha1Util = mac
+            }
+
+                report(
                 session.cqApiImpl,
                 serviceConfig.postUrl!!,
                 session.bot.id,
@@ -72,13 +79,6 @@ class ReportService(
             )
 
             subscription = session.bot.subscribeAlways {
-                if (serviceConfig.secret != "") {
-                    val mac = Mac.getInstance("HmacSHA1")
-                    val secret = SecretKeySpec(serviceConfig.secret.toByteArray(), "HmacSHA1")
-                    mac.init(secret)
-                    sha1Util = mac
-                }
-
                 this.toCQDTO(isRawMessage = serviceConfig.postMessageFormat == "string")
                     .takeIf { it !is CQIgnoreEventDTO }?.apply {
                         val eventDTO = this
