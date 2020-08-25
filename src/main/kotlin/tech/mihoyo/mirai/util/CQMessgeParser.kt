@@ -378,7 +378,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
             }
 
             val timeoutSecond = (if (args.containsKey("timeout")) args["timeout"]?.toIntOrNull() else null) ?: 0
-
+            val useProxy = (if (args.containsKey("proxy")) args["proxy"]?.toIntOrNull() == 1 else null) ?: false
             val urlHash = md5(mediaUrl!!).toUHexString("")
 
             when (type) {
@@ -388,7 +388,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     }
 
                     if (media == null || !useCache) {
-                        mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L)
+                        mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
 
                         media = mediaBytes?.let {
                             contact!!.uploadImage(ByteArrayInputStream(it))
@@ -415,7 +415,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         media = tryResolveCachedRecord(urlHash, contact)
                     }
                     if (media == null || !useCache) {
-                        mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L)
+                        mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
                         media = mediaBytes?.let {
                             contact?.let { (it as Group).uploadVoice(ByteArrayInputStream(mediaBytes)) }
                         }

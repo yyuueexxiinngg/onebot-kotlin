@@ -58,7 +58,7 @@ dependencies {
     api("com.github.ajalt:clikt:2.6.0")
     api("net.mamoe:mirai-console:$miraiConsoleVersion")
     api(ktor("server-cio"))
-    api(ktor("client-cio"))
+    api(ktor("client-okhttp"))
     api(ktor("websockets"))
     api(ktor("client-websockets"))
 

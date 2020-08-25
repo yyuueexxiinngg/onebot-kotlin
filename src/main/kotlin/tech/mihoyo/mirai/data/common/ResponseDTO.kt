@@ -10,6 +10,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonElement
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
+import yyuueexxiinngg.cqhttp_mirai.BuildConfig
 
 @Serializable
 sealed class CQResponseDataDTO
@@ -163,10 +164,35 @@ data class CQCanSendRecordData(val yes: Boolean = false) : CQResponseDataDTO()
 data class CQPluginStatusData(
     val app_initialized: Boolean = true,
     val app_enabled: Boolean = true,
-    val plugins_good: Boolean = true,
+    val plugins_good: PluginsGoodData = PluginsGoodData(),
     val app_good: Boolean = true,
     val online: Boolean = true,
     val good: Boolean = true
+) : CQResponseDataDTO()
+
+@Serializable
+@SerialName("PluginsGoodData")
+data class PluginsGoodData(
+    val asyncActions: Boolean = true,
+    val backwardCompatibility: Boolean = true,
+    val defaultConfigGenerator: Boolean = true,
+    val eventDataPatcher: Boolean = true,
+    val eventFilter: Boolean = true,
+    val experimentalActions: Boolean = true,
+    val extensionLoader: Boolean = true,
+    val heartbeatGenerator: Boolean = true,
+    val http: Boolean = true,
+    val iniConfigLoader: Boolean = true,
+    val jsonConfigLoader: Boolean = true,
+    val loggers: Boolean = true,
+    val messageEnhancer: Boolean = true,
+    val postMessageFormatter: Boolean = true,
+    val rateLimitedActions: Boolean = true,
+    val restarter: Boolean = true,
+    val updater: Boolean = true,
+    val websocket: Boolean = true,
+    val websocketReverse: Boolean = true,
+    val workerPoolResizer: Boolean = true,
 ) : CQResponseDataDTO()
 
 @Serializable
@@ -174,9 +200,13 @@ data class CQPluginStatusData(
 data class CQVersionInfoData(
     val coolq_directory: String = "",
     val coolq_edition: String = "pro",
-    val plugin_version: String,
-    val plugin_build_number: String,
-    val plugin_build_configuration: String = "debug"
+    val plugin_version: String = "4.15.0",
+    val plugin_build_number: Int = 99,
+    val plugin_build_configuration: String = "release",
+    val app_name: String = "cqhttp-mirai",
+    val app_version: String = BuildConfig.VERSION,
+    val app_version_build_version: String = BuildConfig.COMMIT_HASH,
+    val protocol_version: String = "v10",
 ) : CQResponseDataDTO()
 
 @SerialName("HonorInfoData")

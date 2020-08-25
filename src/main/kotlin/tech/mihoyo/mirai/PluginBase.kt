@@ -21,6 +21,7 @@ import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.SessionManager.allSession
 import tech.mihoyo.mirai.SessionManager.closeSession
 import tech.mihoyo.mirai.util.HttpClient
+import tech.mihoyo.mirai.util.HttpClient.Companion.initHTTPClientProxy
 import tech.mihoyo.mirai.util.toUHexString
 import java.io.File
 import kotlin.reflect.jvm.isAccessible
@@ -30,6 +31,7 @@ object PluginBase : PluginBase() {
     private lateinit var config: Config
     var debug = false
     var initialSubscription: Listener<BotEvent>? = null
+    var proxy = ""
     override fun onLoad() {
     }
 
@@ -37,10 +39,11 @@ object PluginBase : PluginBase() {
     override fun onEnable() {
         config = loadConfig("setting.yml")
         debug = if (config.exist("debug")) config.getBoolean("debug") else false
+        proxy = if (config.exist("proxy")) config.getString("proxy") else ""
         logger.info("Plugin loaded! ${BuildConfig.VERSION}")
         logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
         if (debug) logger.debug("开发交流群: 1143274864")
-
+        initHTTPClientProxy()
         Bot.forEachInstance {
             if (!allSession.containsKey(it.id)) {
                 if (config.exist(it.id.toString())) {

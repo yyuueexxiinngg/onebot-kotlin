@@ -16,7 +16,7 @@ import kotlinx.serialization.json.jsonObject
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.utils.currentTimeMillis
+import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.MiraiApi
 import tech.mihoyo.mirai.data.common.*
@@ -62,23 +62,23 @@ class ReportService(
 
     private suspend fun startReportService() {
         if (serviceConfig.postUrl != null && serviceConfig.postUrl != "") {
+            if (serviceConfig.secret != "") {
+                val mac = Mac.getInstance("HmacSHA1")
+                val secret = SecretKeySpec(serviceConfig.secret.toByteArray(), "HmacSHA1")
+                mac.init(secret)
+                sha1Util = mac
+            }
+
             report(
                 session.cqApiImpl,
                 serviceConfig.postUrl!!,
                 session.bot.id,
-                CQLifecycleMetaEventDTO(session.botId, "enable", currentTimeMillis).toJson(),
+                CQLifecycleMetaEventDTO(session.botId, "enable", currentTimeSeconds).toJson(),
                 serviceConfig.secret,
                 false
             )
 
             subscription = session.bot.subscribeAlways {
-                if (serviceConfig.secret != "") {
-                    val mac = Mac.getInstance("HmacSHA1")
-                    val secret = SecretKeySpec(serviceConfig.secret.toByteArray(), "HmacSHA1")
-                    mac.init(secret)
-                    sha1Util = mac
-                }
-
                 this.toCQDTO(isRawMessage = serviceConfig.postMessageFormat == "string")
                     .takeIf { it !is CQIgnoreEventDTO }?.apply {
                         val eventDTO = this
@@ -105,12 +105,12 @@ class ReportService(
                             session.bot.id,
                             CQHeartbeatMetaEventDTO(
                                 session.botId,
-                                currentTimeMillis,
+                                currentTimeSeconds,
                                 CQPluginStatusData(
                                     good = session.bot.isOnline,
-                                    plugins_good = session.bot.isOnline,
                                     online = session.bot.isOnline
-                                )
+                                ),
+                                session.heartbeatInterval
                             ).toJson(),
                             serviceConfig.secret,
                             false
@@ -168,7 +168,7 @@ class ReportService(
                 session.cqApiImpl,
                 serviceConfig.postUrl!!,
                 session.bot.id,
-                CQLifecycleMetaEventDTO(session.botId, "disable", currentTimeMillis).toJson(),
+                CQLifecycleMetaEventDTO(session.botId, "disable", currentTimeSeconds).toJson(),
                 serviceConfig.secret,
                 false
             )

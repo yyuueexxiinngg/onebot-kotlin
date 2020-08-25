@@ -19,7 +19,7 @@ import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.console.plugins.ToBeRemoved
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.utils.currentTimeMillis
+import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.data.common.CQHeartbeatMetaEventDTO
 import tech.mihoyo.mirai.data.common.CQIgnoreEventDTO
@@ -154,12 +154,12 @@ private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Fra
                 Frame.Text(
                     CQHeartbeatMetaEventDTO(
                         session.botId,
-                        currentTimeMillis,
+                        currentTimeSeconds,
                         CQPluginStatusData(
                             good = session.bot.isOnline,
-                            plugins_good = session.bot.isOnline,
                             online = session.bot.isOnline
-                        )
+                        ),
+                        session.heartbeatInterval
                     ).toJson()
                 )
             )

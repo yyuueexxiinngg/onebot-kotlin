@@ -5,6 +5,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
+import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.contact.PermissionDeniedException
 import net.mamoe.mirai.data.GroupHonorListData
 import net.mamoe.mirai.data.GroupHonorType
@@ -15,7 +17,6 @@ import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.data.recall
 import tech.mihoyo.mirai.PluginBase.saveImage
-import tech.mihoyo.mirai.PluginBase.saveImageAsync
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.*
 import tech.mihoyo.mirai.web.queue.CacheSourceQueue
@@ -295,14 +296,35 @@ class MiraiApi(val bot: Bot) {
         }
     }
 
-    fun cqGetGroupMemberInfo(params: Map<String, JsonElement>): CQResponseDTO {
+    @LowLevelAPI
+    suspend fun cqGetGroupMemberInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
 
         return if (groupId != null && memberId != null) {
-            val member = bot.getGroup(groupId)[memberId]
-            CQResponseDTO.CQMemberInfo(CQMemberInfoData(member))
+            val group = bot.getGroup(groupId)
+            if (noCache) {
+                val groupUin = Group.calculateGroupUinByGroupCode(groupId)
+                val members = bot._lowLevelQueryGroupMemberList(groupUin, groupId, group.owner.id)
+                val member = members.find { m -> m.uin == memberId }
+                member?.let {
+                    CQResponseDTO.CQMemberInfo(
+                        CQMemberInfoData(
+                            group.id,
+                            it.uin,
+                            nickname = it.nameCard,
+                            card = it.nameCard,
+                            role = if (it.permission == MemberPermission.ADMINISTRATOR) "admin" else it.permission.name.toLowerCase(),
+                            title = it.specialTitle,
+                            card_changeable = group.botPermission == MemberPermission.OWNER
+                        )
+                    )
+                } ?: CQResponseDTO.CQMiraiFailure()
+            } else {
+                val member = bot.getGroup(groupId)[memberId]
+                CQResponseDTO.CQMemberInfo(CQMemberInfoData(member))
+            }
         } else {
             CQResponseDTO.CQInvalidRequest()
         }
@@ -498,9 +520,7 @@ class MiraiApi(val bot: Bot) {
     fun cqGetVersionInfo(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQVersionInfo(
             CQVersionInfoData(
-                coolq_directory = PluginBase.dataFolder.absolutePath,
-                plugin_version = "",
-                plugin_build_number = ""
+                coolq_directory = PluginBase.dataFolder.absolutePath
             )
         )
     }

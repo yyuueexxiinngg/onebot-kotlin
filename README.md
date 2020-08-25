@@ -34,6 +34,9 @@ __CQHTTP runs on Mirai__
 ```yaml
 # Debug日志输出选项
 debug: false
+# 下载图片/语音时使用的Proxy, 配置后, 发送图片/语音时指定`proxy=1`以通过Proxy下载, 如[CQ:image,proxy=1,url=http://***]
+# 支持HTTP及Sock5两种Proxy, 设置举例 proxy: "http=http://127.0.0.1:8888", proxy : "sock=127.0.0.1:1088"
+proxy: "http=http://127.0.0.1:8888"
 # 要进行配置的QQ号 (Mirai支持多帐号登录, 故需要对每个帐号进行单独设置)
 '1234567890':
   # 是否缓存所有收到的图片, 默认为否 (仅包含图片信息, 不包含图片本身,  < 0.5KB)
@@ -82,6 +85,8 @@ debug: false
       reverseEventPath: /event
       # 是否使用Universal客户端 默认为true
       useUniversal: true
+      # 可选, 是否通过HTTPS连接, 默认为false
+      useTLS: false
       # 反向 WebSocket 客户端断线重连间隔，单位毫秒
       reconnectInterval: 3000
     - enable: true # 这里是第二个连接, 相当于CQHTTP分身版

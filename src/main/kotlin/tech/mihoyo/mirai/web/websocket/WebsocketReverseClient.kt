@@ -1,12 +1,10 @@
 package tech.mihoyo.mirai.web.websocket
 
 import io.ktor.client.HttpClient
-import io.ktor.client.features.websocket.DefaultClientWebSocketSession
-import io.ktor.client.features.websocket.ws
+import io.ktor.client.features.websocket.*
 import io.ktor.client.request.header
 
 import io.ktor.http.cio.websocket.Frame
-import io.ktor.client.features.websocket.WebSockets
 import io.ktor.http.cio.websocket.readText
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
@@ -18,7 +16,7 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.utils.currentTimeMillis
+import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.logger
@@ -54,11 +52,15 @@ class WebSocketReverseClient(
             serviceConfig.forEach {
                 logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}, Use Universal: ${it.useUniversal}")
                 if (it.enable) {
-                    scope.launch {
-                        if (it.useUniversal) {
+                    if (it.useUniversal) {
+                        scope.launch {
                             startGeneralWebsocketClient(session.bot, it, "Universal")
-                        } else {
+                        }
+                    } else {
+                        scope.launch {
                             startGeneralWebsocketClient(session.bot, it, "Api")
+                        }
+                        scope.launch {
                             startGeneralWebsocketClient(session.bot, it, "Event")
                         }
                     }
@@ -69,6 +71,8 @@ class WebSocketReverseClient(
         }
     }
 
+    @OptIn(KtorExperimentalAPI::class)
+    @Suppress("DuplicatedCode")
     private suspend fun startGeneralWebsocketClient(
         bot: Bot,
         config: WebSocketReverseServiceConfig,
@@ -88,41 +92,77 @@ class WebSocketReverseClient(
         }
 
         try {
-            httpClients[httpClientKey]!!.ws(
-                host = config.reverseHost,
-                port = config.reversePort,
-                path = path,
-                request = {
-                    header("User-Agent", "CQHttp/4.15.0")
-                    header("X-Self-ID", bot.id.toString())
-                    header("X-Client-Role", clientType)
-                    config.accessToken?.let {
-                        if (it != "") {
-                            header(
-                                "Authorization",
-                                "Token ${config.accessToken}"
-                            )
+            if (!config.useTLS) {
+                httpClients[httpClientKey]!!.ws(
+                    host = config.reverseHost,
+                    port = config.reversePort,
+                    path = path,
+                    request = {
+                        header("User-Agent", "CQHttp/4.15.0")
+                        header("X-Self-ID", bot.id.toString())
+                        header("X-Client-Role", clientType)
+                        config.accessToken?.let {
+                            if (it != "") {
+                                header(
+                                    "Authorization",
+                                    "Token ${config.accessToken}"
+                                )
+                            }
                         }
+                    }
+                ) {
+                    // 用来检测Websocket连接是否关闭
+                    websocketSessions[httpClientKey] = this
+                    if (!subscriptions.containsKey(httpClientKey)) {
+                        startWebsocketConnectivityCheck(bot, config, clientType)
+                        logger.debug("$httpClientKey Websocket Client启动完毕")
+                        when (clientType) {
+                            "Api" -> listenApi(incoming, outgoing)
+                            "Event" -> listenEvent(httpClientKey, config, incoming, outgoing)
+                            "Universal" -> {
+                                listenEvent(httpClientKey, config, incoming, outgoing)
+                                listenApi(incoming, outgoing)
+                            }
+                        }
+                    } else {
+                        logger.warning("Websocket session alredy exist, $httpClientKey")
                     }
                 }
-            ) {
-                // 用来检测Websocket连接是否关闭
-                websocketSessions[httpClientKey] = this
-                if (!subscriptions.containsKey(httpClientKey)) {
-                    // 通知服务方链接建立
-                    send(Frame.Text(CQLifecycleMetaEventDTO(bot.id, "connect", currentTimeMillis).toJson()))
-                    startWebsocketConnectivityCheck(bot, config, clientType)
-                    logger.debug("$httpClientKey Websocket Client启动完毕")
-                    when (clientType) {
-                        "Api" -> listenApi(incoming, outgoing)
-                        "Event" -> listenEvent(httpClientKey, config, outgoing)
-                        "Universal" -> {
-                            listenEvent(httpClientKey, config, outgoing)
-                            listenApi(incoming, outgoing)
+            } else {
+                httpClients[httpClientKey]!!.wss(
+                    host = config.reverseHost,
+                    port = config.reversePort,
+                    path = path,
+                    request = {
+                        header("User-Agent", "CQHttp/4.15.0")
+                        header("X-Self-ID", bot.id.toString())
+                        header("X-Client-Role", clientType)
+                        config.accessToken?.let {
+                            if (it != "") {
+                                header(
+                                    "Authorization",
+                                    "Token ${config.accessToken}"
+                                )
+                            }
                         }
                     }
-                } else {
-                    logger.warning("Websocket session alredy exist, $httpClientKey")
+                ) {
+                    // 用来检测Websocket连接是否关闭
+                    websocketSessions[httpClientKey] = this
+                    if (!subscriptions.containsKey(httpClientKey)) {
+                        startWebsocketConnectivityCheck(bot, config, clientType)
+                        logger.debug("$httpClientKey Websocket Client启动完毕")
+                        when (clientType) {
+                            "Api" -> listenApi(incoming, outgoing)
+                            "Event" -> listenEvent(httpClientKey, config, incoming, outgoing)
+                            "Universal" -> {
+                                listenEvent(httpClientKey, config, incoming, outgoing)
+                                listenApi(incoming, outgoing)
+                            }
+                        }
+                    } else {
+                        logger.warning("Websocket session alredy exist, $httpClientKey")
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -136,7 +176,10 @@ class WebSocketReverseClient(
                 is IOException -> {
                     logger.warning("Websocket连接出错, 可能被服务器关闭, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey Path: $path")
                 }
-                is CancellationException -> logger.info("Websocket连接关闭中, Host: $httpClientKey Path: $path")
+                is CancellationException -> {
+                    closing = true
+                    logger.info("Websocket连接关闭中, Host: $httpClientKey Path: $path")
+                }
                 else -> {
                     logger.warning("Websocket连接出错, 未知错误, 请检查配置, 如配置错误请修正后重启mirai " + e.message + e.javaClass.name)
                 }
@@ -145,7 +188,10 @@ class WebSocketReverseClient(
             httpClients.remove(httpClientKey)
             delay(config.reconnectInterval)
             if (!closing) startGeneralWebsocketClient(session.bot, config, clientType)
-            else logger.info("反向WWebsocket连接关闭中, Host: $httpClientKey Path: $path")
+            else {
+                logger.info("反向WWebsocket连接关闭中, Host: $httpClientKey Path: $path")
+                closing = false
+            }
         }
     }
 
@@ -166,8 +212,11 @@ class WebSocketReverseClient(
     private suspend fun listenEvent(
         httpClientKey: String,
         config: WebSocketReverseServiceConfig,
+        incoming: ReceiveChannel<Frame>,
         outgoing: SendChannel<Frame>
     ) {
+        // 通知服务方链接建立
+        outgoing.send(Frame.Text(CQLifecycleMetaEventDTO(session.bot.id, "connect", currentTimeSeconds).toJson()))
         val isRawMessage = config.postMessageFormat != "array"
         subscriptions[httpClientKey] = session.bot.subscribeAlways {
             // 保存Event以便在WebsocketSession Block中使用
@@ -185,12 +234,12 @@ class WebSocketReverseClient(
                         Frame.Text(
                             CQHeartbeatMetaEventDTO(
                                 session.botId,
-                                currentTimeMillis,
+                                currentTimeSeconds,
                                 CQPluginStatusData(
                                     good = session.bot.isOnline,
-                                    plugins_good = session.bot.isOnline,
                                     online = session.bot.isOnline
-                                )
+                                ),
+                                session.heartbeatInterval
                             ).toJson()
                         )
                     )
@@ -198,6 +247,7 @@ class WebSocketReverseClient(
                 }
             }
         }
+        incoming.receive()
     }
 
     @OptIn(KtorExperimentalAPI::class, ExperimentalCoroutinesApi::class)
@@ -224,7 +274,7 @@ class WebSocketReverseClient(
                             }
                             subscriptions.remove(httpClientKey)
                             httpClients[httpClientKey].apply {
-                                this!!.close()
+                                this?.close()
                             }
                             logger.warning("Websocket连接已断开, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
                             delay(config.reconnectInterval)
