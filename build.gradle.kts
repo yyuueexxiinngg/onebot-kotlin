@@ -6,7 +6,7 @@ plugins {
     id("com.github.gmazzo.buildconfig") version "2.0.2"
 }
 
-val projectVersion = "0.2.2.6-embedded"
+val projectVersion = "0.2.3-embedded"
 version = projectVersion
 group = "yyuueexxiinngg"
 
