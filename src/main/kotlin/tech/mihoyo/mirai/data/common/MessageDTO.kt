@@ -20,7 +20,7 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.*
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.currentTimeMillis
+import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.util.toCQString
 import java.net.URL
 
@@ -226,7 +226,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             raw_message = rawMessage.value,
             font = 0,
             sender = CQMemberDTO(sender),
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is FriendMessageEvent -> CQPrivateMessagePacketDTO(
             self_id = bot.id,
@@ -237,7 +237,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             raw_message = rawMessage.value,
             font = 0,
             sender = CQQQDTO(sender),
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is TempMessageEvent -> CQPrivateMessagePacketDTO(
             self_id = bot.id,
@@ -248,7 +248,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             raw_message = rawMessage.value,
             font = 0,
             sender = CQQQDTO(sender),
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         else -> CQIgnoreEventDTO(sender.id)
     }

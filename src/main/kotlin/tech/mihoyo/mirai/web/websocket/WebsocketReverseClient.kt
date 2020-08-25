@@ -18,7 +18,7 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.utils.currentTimeMillis
+import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.logger
@@ -179,7 +179,7 @@ class WebSocketReverseClient(
         outgoing: SendChannel<Frame>
     ) {
         // 通知服务方链接建立
-        outgoing.send(Frame.Text(CQLifecycleMetaEventDTO(session.bot.id, "connect", currentTimeMillis).toJson()))
+        outgoing.send(Frame.Text(CQLifecycleMetaEventDTO(session.bot.id, "connect", currentTimeSeconds).toJson()))
         val isRawMessage = config.postMessageFormat != "array"
         subscriptions[httpClientKey] = session.bot.subscribeAlways {
             // 保存Event以便在WebsocketSession Block中使用
@@ -197,12 +197,12 @@ class WebSocketReverseClient(
                         Frame.Text(
                             CQHeartbeatMetaEventDTO(
                                 session.botId,
-                                currentTimeMillis,
+                                currentTimeSeconds,
                                 CQPluginStatusData(
                                     good = session.bot.isOnline,
-                                    plugins_good = session.bot.isOnline,
                                     online = session.bot.isOnline
-                                )
+                                ),
+                                session.heartbeatInterval
                             ).toJson()
                         )
                     )

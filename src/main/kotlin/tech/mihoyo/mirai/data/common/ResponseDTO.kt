@@ -161,10 +161,35 @@ data class CQCanSendRecordData(val yes: Boolean = false) : CQResponseDataDTO()
 data class CQPluginStatusData(
     val app_initialized: Boolean = true,
     val app_enabled: Boolean = true,
-    val plugins_good: Boolean = true,
+    val plugins_good: PluginsGoodData = PluginsGoodData(),
     val app_good: Boolean = true,
     val online: Boolean = true,
     val good: Boolean = true
+) : CQResponseDataDTO()
+
+@Serializable
+@SerialName("PluginsGoodData")
+data class PluginsGoodData(
+    val asyncActions: Boolean = true,
+    val backwardCompatibility: Boolean = true,
+    val defaultConfigGenerator: Boolean = true,
+    val eventDataPatcher: Boolean = true,
+    val eventFilter: Boolean = true,
+    val experimentalActions: Boolean = true,
+    val extensionLoader: Boolean = true,
+    val heartbeatGenerator: Boolean = true,
+    val http: Boolean = true,
+    val iniConfigLoader: Boolean = true,
+    val jsonConfigLoader: Boolean = true,
+    val loggers: Boolean = true,
+    val messageEnhancer: Boolean = true,
+    val postMessageFormatter: Boolean = true,
+    val rateLimitedActions: Boolean = true,
+    val restarter: Boolean = true,
+    val updater: Boolean = true,
+    val websocket: Boolean = true,
+    val websocketReverse: Boolean = true,
+    val workerPoolResizer: Boolean = true,
 ) : CQResponseDataDTO()
 
 @Serializable
