@@ -494,9 +494,7 @@ class MiraiApi(val bot: Bot) {
     fun cqGetVersionInfo(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQVersionInfo(
             CQVersionInfoData(
-                coolq_directory = PluginBase.dataFolder.absolutePath,
-                plugin_version = "",
-                plugin_build_number = ""
+                coolq_directory = PluginBase.dataFolder.absolutePath
             )
         )
     }

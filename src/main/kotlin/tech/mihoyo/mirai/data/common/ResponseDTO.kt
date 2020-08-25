@@ -9,6 +9,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonElement
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
+import yyuueexxiinngg.cqhttp_mirai.BuildConfig
 
 @Serializable
 sealed class CQResponseDataDTO
@@ -171,7 +172,11 @@ data class CQPluginStatusData(
 data class CQVersionInfoData(
     val coolq_directory: String = "",
     val coolq_edition: String = "pro",
-    val plugin_version: String,
-    val plugin_build_number: String,
-    val plugin_build_configuration: String = "debug"
+    val plugin_version: String = "4.15.0",
+    val plugin_build_number: Int = 99,
+    val plugin_build_configuration: String = "release",
+    val app_name: String = "cqhttp-mirai",
+    val app_version: String = BuildConfig.VERSION,
+    val app_version_build_version: String = BuildConfig.COMMIT_HASH,
+    val protocol_version: String = "v10",
 ) : CQResponseDataDTO()
