@@ -53,4 +53,9 @@ class WebSocketReverseServiceConfig(serviceConfig: ConfigSection) {
      */
     val reconnectInterval: Long by serviceConfig.withDefault { 3000 }
 
+    /**
+     * 反向 WebSocket 客户端是否通过HTTPS连接
+     */
+    val useTLS: Boolean by serviceConfig.withDefault { false }
+
 }

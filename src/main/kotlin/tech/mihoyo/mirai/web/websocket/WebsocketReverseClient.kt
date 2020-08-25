@@ -1,12 +1,10 @@
 package tech.mihoyo.mirai.web.websocket
 
 import io.ktor.client.HttpClient
-import io.ktor.client.features.websocket.DefaultClientWebSocketSession
-import io.ktor.client.features.websocket.ws
+import io.ktor.client.features.websocket.*
 import io.ktor.client.request.header
 
 import io.ktor.http.cio.websocket.Frame
-import io.ktor.client.features.websocket.WebSockets
 import io.ktor.http.cio.websocket.readText
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
@@ -74,6 +72,7 @@ class WebSocketReverseClient(
     }
 
     @OptIn(KtorExperimentalAPI::class)
+    @Suppress("DuplicatedCode")
     private suspend fun startGeneralWebsocketClient(
         bot: Bot,
         config: WebSocketReverseServiceConfig,
@@ -93,39 +92,77 @@ class WebSocketReverseClient(
         }
 
         try {
-            httpClients[httpClientKey]!!.ws(
-                host = config.reverseHost,
-                port = config.reversePort,
-                path = path,
-                request = {
-                    header("User-Agent", "CQHttp/4.15.0")
-                    header("X-Self-ID", bot.id.toString())
-                    header("X-Client-Role", clientType)
-                    config.accessToken?.let {
-                        if (it != "") {
-                            header(
-                                "Authorization",
-                                "Token ${config.accessToken}"
-                            )
+            if (!config.useTLS) {
+                httpClients[httpClientKey]!!.ws(
+                    host = config.reverseHost,
+                    port = config.reversePort,
+                    path = path,
+                    request = {
+                        header("User-Agent", "CQHttp/4.15.0")
+                        header("X-Self-ID", bot.id.toString())
+                        header("X-Client-Role", clientType)
+                        config.accessToken?.let {
+                            if (it != "") {
+                                header(
+                                    "Authorization",
+                                    "Token ${config.accessToken}"
+                                )
+                            }
                         }
+                    }
+                ) {
+                    // 用来检测Websocket连接是否关闭
+                    websocketSessions[httpClientKey] = this
+                    if (!subscriptions.containsKey(httpClientKey)) {
+                        startWebsocketConnectivityCheck(bot, config, clientType)
+                        logger.debug("$httpClientKey Websocket Client启动完毕")
+                        when (clientType) {
+                            "Api" -> listenApi(incoming, outgoing)
+                            "Event" -> listenEvent(httpClientKey, config, incoming, outgoing)
+                            "Universal" -> {
+                                listenEvent(httpClientKey, config, incoming, outgoing)
+                                listenApi(incoming, outgoing)
+                            }
+                        }
+                    } else {
+                        logger.warning("Websocket session alredy exist, $httpClientKey")
                     }
                 }
-            ) {
-                // 用来检测Websocket连接是否关闭
-                websocketSessions[httpClientKey] = this
-                if (!subscriptions.containsKey(httpClientKey)) {
-                    startWebsocketConnectivityCheck(bot, config, clientType)
-                    logger.debug("$httpClientKey Websocket Client启动完毕")
-                    when (clientType) {
-                        "Api" -> listenApi(incoming, outgoing)
-                        "Event" -> listenEvent(httpClientKey, config, incoming, outgoing)
-                        "Universal" -> {
-                            listenEvent(httpClientKey, config, incoming, outgoing)
-                            listenApi(incoming, outgoing)
+            } else {
+                httpClients[httpClientKey]!!.wss(
+                    host = config.reverseHost,
+                    port = config.reversePort,
+                    path = path,
+                    request = {
+                        header("User-Agent", "CQHttp/4.15.0")
+                        header("X-Self-ID", bot.id.toString())
+                        header("X-Client-Role", clientType)
+                        config.accessToken?.let {
+                            if (it != "") {
+                                header(
+                                    "Authorization",
+                                    "Token ${config.accessToken}"
+                                )
+                            }
                         }
                     }
-                } else {
-                    logger.warning("Websocket session alredy exist, $httpClientKey")
+                ) {
+                    // 用来检测Websocket连接是否关闭
+                    websocketSessions[httpClientKey] = this
+                    if (!subscriptions.containsKey(httpClientKey)) {
+                        startWebsocketConnectivityCheck(bot, config, clientType)
+                        logger.debug("$httpClientKey Websocket Client启动完毕")
+                        when (clientType) {
+                            "Api" -> listenApi(incoming, outgoing)
+                            "Event" -> listenEvent(httpClientKey, config, incoming, outgoing)
+                            "Universal" -> {
+                                listenEvent(httpClientKey, config, incoming, outgoing)
+                                listenApi(incoming, outgoing)
+                            }
+                        }
+                    } else {
+                        logger.warning("Websocket session alredy exist, $httpClientKey")
+                    }
                 }
             }
         } catch (e: Exception) {

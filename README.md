@@ -21,6 +21,8 @@ debug: false
 '1234567890':
   # 是否缓存所有收到的图片, 默认为否 (仅包含图片信息, 不包含图片本身,  < 0.5KB)
   cacheImage: false
+  # 是否缓存所有收到的语音, 默认为否 (将下载完整语音进行保存)
+  cacheRecord: false
   # 心跳包相关配置
   heartbeat:
     # 是否发送心跳包, 默认为否
@@ -63,6 +65,8 @@ debug: false
       reverseEventPath: /event
       # 是否使用Universal客户端 默认为true
       useUniversal: true
+      # 可选, 是否通过HTTPS连接, 默认为false
+      useTLS: false
       # 反向 WebSocket 客户端断线重连间隔，单位毫秒
       reconnectInterval: 3000
     - enable: true # 这里是第二个连接, 相当于CQHTTP分身版
