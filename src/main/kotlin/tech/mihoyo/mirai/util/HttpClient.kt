@@ -1,6 +1,7 @@
 package tech.mihoyo.mirai.util
 
 import io.ktor.client.engine.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -11,7 +12,7 @@ import java.io.InputStream
 
 class HttpClient {
     companion object {
-        private val http = io.ktor.client.HttpClient {
+        private val http = io.ktor.client.HttpClient(OkHttp) {
             install(HttpTimeout)
         }
         var httpProxied: io.ktor.client.HttpClient? = null
@@ -64,7 +65,7 @@ class HttpClient {
                                 httpProxied?.close()
                                 httpProxied = null
                             }
-                            httpProxied = io.ktor.client.HttpClient {
+                            httpProxied = io.ktor.client.HttpClient(OkHttp) {
                                 install(HttpTimeout)
                                 engine {
                                     proxy = httpProxy
@@ -80,7 +81,7 @@ class HttpClient {
                                     httpProxied?.close()
                                     httpProxied = null
                                 }
-                                httpProxied = io.ktor.client.HttpClient {
+                                httpProxied = io.ktor.client.HttpClient(OkHttp) {
                                     install(HttpTimeout)
                                     engine {
                                         proxy = sockProxy
