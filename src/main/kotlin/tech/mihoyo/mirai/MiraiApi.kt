@@ -544,7 +544,7 @@ class MiraiApi(val bot: Bot) {
 
     fun cqSetGroupName(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
-        val name = params["name"]?.jsonPrimitive?.content
+        val name = params["group_name"]?.jsonPrimitive?.content
 
         return if (groupId != null && name != null && name != "") {
             bot.getGroup(groupId).name = name

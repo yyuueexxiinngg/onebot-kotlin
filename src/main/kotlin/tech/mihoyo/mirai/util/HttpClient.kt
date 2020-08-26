@@ -14,6 +14,11 @@ class HttpClient {
     companion object {
         private val http = io.ktor.client.HttpClient(OkHttp) {
             install(HttpTimeout)
+            engine {
+                config {
+                    retryOnConnectionFailure(true)
+                }
+            }
         }
         var httpProxied: io.ktor.client.HttpClient? = null
         private val ua =
@@ -69,6 +74,9 @@ class HttpClient {
                                 install(HttpTimeout)
                                 engine {
                                     proxy = httpProxy
+                                    config {
+                                        retryOnConnectionFailure(true)
+                                    }
                                 }
                             }
                         }
@@ -85,6 +93,9 @@ class HttpClient {
                                     install(HttpTimeout)
                                     engine {
                                         proxy = sockProxy
+                                        config {
+                                            retryOnConnectionFailure(true)
+                                        }
                                     }
                                 }
                             }

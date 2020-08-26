@@ -35,8 +35,8 @@ __CQHTTP runs on Mirai__
 # Debug日志输出选项
 debug: false
 # 下载图片/语音时使用的Proxy, 配置后, 发送图片/语音时指定`proxy=1`以通过Proxy下载, 如[CQ:image,proxy=1,url=http://***]
-# 支持HTTP及Sock5两种Proxy, 设置举例 proxy: "http=http://127.0.0.1:8888", proxy : "sock=127.0.0.1:1088"
-proxy: "http=http://127.0.0.1:8888"
+# 支持HTTP及Sock两种Proxy, 设置举例 proxy: "http=http://127.0.0.1:8888", proxy : "sock=127.0.0.1:1088"
+proxy: ""
 # 要进行配置的QQ号 (Mirai支持多帐号登录, 故需要对每个帐号进行单独设置)
 '1234567890':
   # 是否缓存所有收到的图片, 默认为否 (仅包含图片信息, 不包含图片本身,  < 0.5KB)
@@ -152,28 +152,28 @@ proxy: "http=http://127.0.0.1:8888"
 
 | API                      | 功能                                                         | 备注                        |
 | ------------------------ | ------------------------------------------------------------ | -------------------------- |
-| /send_private_msg        | [发送私聊消息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#send_private_msg-发送私聊消息) | |
-| /send_group_msg          | [发送群消息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#send_group_msg-发送群消息) | |
-| /send_msg                | [发送消息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#send_msg-发送消息) | (不包含讨论组消息) |
-| /delete_msg              | [撤回信息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#delete_msg-撤回消息) | |
-| /set_group_kick          | [群组T人](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_kick-群组踢人) | |
-| /set_group_ban           | [群组单人禁言](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_ban-群组单人禁言) | |
-| /set_group_whole_ban     | [群组全员禁言](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_whole_ban-群组全员禁言) | |
-| /set_group_card          | [设置群名片(群备注)](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_card-设置群名片（群备注）) | |
-| /set_group_leave         | [退出群组](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_leave-退出群组) | |
-| /set_group_special_title | [设置群组专属头衔](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_special_title-设置群组专属头衔) | |
-| /set_friend_add_request  | [处理加好友请求](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_friend_add_request-处理加好友请求) | |
-| /set_group_add_request   | [处理加群请求/邀请](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_add_request-处理加群请求／邀请) | |
-| /get_login_info          | [获取登录号信息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_login_info-获取登录号信息) | |
-| /get_friend_list         | [获取好友列表](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_friend_list-获取好友列表) | |
-| /get_group_list          | [获取群列表](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_group_list-获取群列表) | |
-| /get_group_info          | [获取群信息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_group_info-获取群信息) | |
-| /get_group_member_info   | [获取群成员信息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_group_member_info-获取群成员信息) | |
-| /get_group_member_list   | [获取群成员列表](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_group_member_list-获取群成员列表) | |
-| /can_send_image          | [检查是否可以发送图片](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#can_send_image-检查是否可以发送图片) | (恒为true) |
-| /can_send_record         | [检查是否可以发送语音](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#can_send_record-检查是否可以发送语音) | |
-| /get_status              | [获取插件运行状态](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_status-获取插件运行状态) | (不完全支持, 仅返回`online`和`good`两项) |
-| /get_version_info        | [获取 酷Q 及 CQHTTP插件的版本信息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_version_info-获取-酷q-及-cqhttp-插件的版本信息) | |
+| /send_private_msg        | [发送私聊消息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#send_private_msg-发送私聊消息) | |
+| /send_group_msg          | [发送群消息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#send_group_msg-发送群消息) | |
+| /send_msg                | [发送消息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#send_msg-发送消息) | (不包含讨论组消息) |
+| /delete_msg              | [撤回信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#delete_msg-撤回消息) | |
+| /set_group_kick          | [群组T人](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_kick-群组踢人) | |
+| /set_group_ban           | [群组单人禁言](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_ban-群组单人禁言) | |
+| /set_group_whole_ban     | [群组全员禁言](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_whole_ban-群组全员禁言) | |
+| /set_group_card          | [设置群名片(群备注)](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_card-设置群名片（群备注）) | |
+| /set_group_leave         | [退出群组](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_leave-退出群组) | |
+| /set_group_special_title | [设置群组专属头衔](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_special_title-设置群组专属头衔) | |
+| /set_friend_add_request  | [处理加好友请求](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_friend_add_request-处理加好友请求) | |
+| /set_group_add_request   | [处理加群请求/邀请](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_add_request-处理加群请求／邀请) | |
+| /get_login_info          | [获取登录号信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_login_info-获取登录号信息) | |
+| /get_friend_list         | [获取好友列表](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_friend_list-获取好友列表) | |
+| /get_group_list          | [获取群列表](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_group_list-获取群列表) | |
+| /get_group_info          | [获取群信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_group_info-获取群信息) | |
+| /get_group_member_info   | [获取群成员信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_group_member_info-获取群成员信息) | |
+| /get_group_member_list   | [获取群成员列表](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_group_member_list-获取群成员列表) | |
+| /can_send_image          | [检查是否可以发送图片](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#can_send_image-检查是否可以发送图片) | (恒为true) |
+| /can_send_record         | [检查是否可以发送语音](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#can_send_record-检查是否可以发送语音) | |
+| /get_status              | [获取插件运行状态](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_status-获取插件运行状态) | (不完全支持, 仅返回`online`和`good`两项) |
+| /get_version_info        | [获取 酷Q 及 CQHTTP插件的版本信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_version_info-获取-酷q-及-cqhttp-插件的版本信息) | |
 | /set_group_name          | 设置群组名(拓展API)                                         |
 
 </details>
@@ -183,20 +183,20 @@ proxy: "http=http://127.0.0.1:8888"
 
 | API                      | 功能                                                         | 备注                        |
 | ------------------------ | ------------------------------------------------------------ | -------------------------- |
-| /get_image               | [获取图片](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_image-获取图片) | |
-| /get_record              | [获取语音](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_record-获取语音) | |
-| /send_discuss_msg        | [发送讨论组消息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#send_discuss_msg-发送讨论组消息) | 已无讨论组 |
-| /set_discuss_leave       | [退出讨论组](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_discuss_leave-退出讨论组) | 已无讨论组 |
-| /get_stranger_info       | [获取陌生人信息](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_stranger_info-获取陌生人信息) | |
-| /set_group_anonymous_ban | [群组匿名用户禁言](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_anonymous_ban-群组匿名用户禁言) | |
-| /set_group_admin         | [群组设置管理员](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_group_admin-群组设置管理员) | |
-| /send_like               | [发送好友赞](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#end_like-发送好友赞) | Mirai不会支持 |
-| /get_cookies             | [获取 Cookies](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_cookies-获取-cookies) | Mirai不会支持 |
-| /get_csrf_token          | [获取 CSRF Token](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_csrf_token-获取-csrf-token) | Mirai不会支持 |
-| /get_credentials         | [获取 QQ 相关接口凭证](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#get_credentials-获取-qq-相关接口凭证) | Mirai不会支持 |
-| /set_restart_plugin      | [重启 CQHTTP](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#set_restart_plugin-重启-cqhttp) | |
-| /clean_data_dir          | [清理数据目录](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#clean_data_dir-清理数据目录) | |
-| /clean_plugin_log        | [清理日志](https://github.com/richardchien/cqhttp-protocol/blob/master/specs/api/public.md#clean_plugin_log-清理日志) | |
+| /get_image               | [获取图片](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_image-获取图片) | |
+| /get_record              | [获取语音](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_record-获取语音) | |
+| /send_discuss_msg        | [发送讨论组消息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#send_discuss_msg-发送讨论组消息) | 已无讨论组 |
+| /set_discuss_leave       | [退出讨论组](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_discuss_leave-退出讨论组) | 已无讨论组 |
+| /get_stranger_info       | [获取陌生人信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_stranger_info-获取陌生人信息) | |
+| /set_group_anonymous_ban | [群组匿名用户禁言](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_anonymous_ban-群组匿名用户禁言) | |
+| /set_group_admin         | [群组设置管理员](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_admin-群组设置管理员) | |
+| /send_like               | [发送好友赞](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#end_like-发送好友赞) | Mirai不会支持 |
+| /get_cookies             | [获取 Cookies](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_cookies-获取-cookies) | Mirai不会支持 |
+| /get_csrf_token          | [获取 CSRF Token](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_csrf_token-获取-csrf-token) | Mirai不会支持 |
+| /get_credentials         | [获取 QQ 相关接口凭证](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_credentials-获取-qq-相关接口凭证) | Mirai不会支持 |
+| /set_restart_plugin      | [重启 CQHTTP](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_restart_plugin-重启-cqhttp) | |
+| /clean_data_dir          | [清理数据目录](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#clean_data_dir-清理数据目录) | |
+| /clean_plugin_log        | [清理日志](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#clean_plugin_log-清理日志) | |
 
 </details>
 

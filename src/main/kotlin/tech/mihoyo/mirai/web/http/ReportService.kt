@@ -1,6 +1,7 @@
 package tech.mihoyo.mirai.web.http
 
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.headers
 import io.ktor.client.request.request
 import io.ktor.client.request.url
@@ -39,7 +40,13 @@ class ReportService(
     val session: BotSession
 ) {
 
-    private val http = HttpClient()
+    private val http = HttpClient(OkHttp) {
+        engine {
+            config {
+                retryOnConnectionFailure(true)
+            }
+        }
+    }
 
     private var sha1Util: Mac? = null
 
