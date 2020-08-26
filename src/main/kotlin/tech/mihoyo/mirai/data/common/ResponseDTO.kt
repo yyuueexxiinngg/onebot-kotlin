@@ -157,7 +157,7 @@ data class CQCanSendImageData(val yes: Boolean = true) : CQResponseDataDTO()
 
 @Serializable
 @SerialName("CanSendRecordData")
-data class CQCanSendRecordData(val yes: Boolean = false) : CQResponseDataDTO()
+data class CQCanSendRecordData(val yes: Boolean = true) : CQResponseDataDTO()
 
 @Serializable
 @SerialName("PluginStatusData")

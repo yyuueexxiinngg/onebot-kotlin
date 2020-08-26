@@ -449,7 +449,7 @@ class MiraiApi(val bot: Bot) {
                     when {
                         startsWith("2321414D52") -> "amr"
                         startsWith("02232153494C4B5F5633") -> "silk"
-                        else -> "cqrecord"
+                        else -> "unknown"
                     }
                 }
                 CQResponseDTO.CQRecordInfo(
@@ -484,7 +484,7 @@ class MiraiApi(val bot: Bot) {
                             startsWith("89504E47") -> "png"
                             startsWith("47494638") -> "gif"
                             startsWith("424D") -> "bmp"
-                            else -> "cqimg"
+                            else -> "unknown"
                         }
                     }
                     CQResponseDTO.CQImageInfo(
