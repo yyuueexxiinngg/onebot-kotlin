@@ -62,7 +62,7 @@ fun main(args: Array<String>) {
 
 
 fun runMirai() {
-    MiraiConsolePureLoader.load("1.2.0", "0.5.2") // 启动 console
+    MiraiConsolePureLoader.load("1.2.2", "0.5.2") // 启动 console
 
     val selfMiraiPluginClass = PluginBase.javaClass.asSubclass(net.mamoe.mirai.console.plugins.PluginBase::class.java)
 
@@ -108,8 +108,12 @@ fun runMirai() {
             }
             if (stateCommand) {
                 val cmd = it.trim()
-                if (cmd != "" && !cmd.startsWith("#"))
+                if (cmd != "" && !cmd.startsWith("#")) {
+                    CQHTTPKtCli.account?.let { account ->
+                        if (cmd.startsWith("login") && cmd.contains(account)) return@forEachLine
+                    }
                     CommandManager.runCommand(ConsoleCommandSender, cmd)
+                }
             }
         }
     }
