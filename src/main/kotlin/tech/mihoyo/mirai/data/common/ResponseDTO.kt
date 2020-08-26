@@ -205,7 +205,7 @@ data class CQVersionInfoData(
     val plugin_build_configuration: String = "release",
     val app_name: String = "cqhttp-mirai",
     val app_version: String = BuildConfig.VERSION,
-    val app_version_build_version: String = BuildConfig.COMMIT_HASH,
+    val app_build_version: String = BuildConfig.COMMIT_HASH,
     val protocol_version: String = "v10",
 ) : CQResponseDataDTO()
 
