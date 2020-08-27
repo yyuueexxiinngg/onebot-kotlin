@@ -87,7 +87,9 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
             logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /event 开始监听事件")
             val listener = _session.bot.subscribeAlways<BotEvent> {
                 this.toCQDTO(isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
-                    send(Frame.Text(this.toJson()))
+                    val jsonToSend = this.toJson()
+                    logger.debug("WS Server将要发送事件: $jsonToSend")
+                    send(Frame.Text(jsonToSend))
                 }
             }
 
