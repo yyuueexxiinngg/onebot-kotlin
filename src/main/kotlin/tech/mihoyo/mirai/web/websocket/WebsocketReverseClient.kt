@@ -222,7 +222,9 @@ class WebSocketReverseClient(
             // 保存Event以便在WebsocketSession Block中使用
             if (this.bot.id == session.botId) {
                 this.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
-                    outgoing.send(Frame.Text(this.toJson()))
+                    val jsonToSend = this.toJson()
+                    logger.debug("WS Reverse将要发送事件: $jsonToSend")
+                    outgoing.send(Frame.Text(jsonToSend))
                 }
             }
         }

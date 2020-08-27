@@ -90,6 +90,7 @@ class ReportService(
                     .takeIf { it !is CQIgnoreEventDTO }?.apply {
                         val eventDTO = this
                         val jsonToSend = this.toJson()
+                        logger.debug("HTTP Report将要发送事件: $jsonToSend")
                         scope.launch(Dispatchers.IO) {
                             report(
                                 session.cqApiImpl,
