@@ -71,7 +71,7 @@ class WebSocketReverseClient(
         }
     }
 
-    @OptIn(KtorExperimentalAPI::class)
+    @OptIn(KtorExperimentalAPI::class, ExperimentalCoroutinesApi::class)
     @Suppress("DuplicatedCode")
     private suspend fun startGeneralWebsocketClient(
         bot: Bot,
@@ -118,9 +118,9 @@ class WebSocketReverseClient(
                         logger.debug("$httpClientKey Websocket Client启动完毕")
                         when (clientType) {
                             "Api" -> listenApi(incoming, outgoing)
-                            "Event" -> listenEvent(httpClientKey, config, incoming, outgoing)
+                            "Event" -> listenEvent(httpClientKey, config, this, clientType)
                             "Universal" -> {
-                                listenEvent(httpClientKey, config, incoming, outgoing)
+                                listenEvent(httpClientKey, config, this, clientType)
                                 listenApi(incoming, outgoing)
                             }
                         }
@@ -154,9 +154,9 @@ class WebSocketReverseClient(
                         logger.debug("$httpClientKey Websocket Client启动完毕")
                         when (clientType) {
                             "Api" -> listenApi(incoming, outgoing)
-                            "Event" -> listenEvent(httpClientKey, config, incoming, outgoing)
+                            "Event" -> listenEvent(httpClientKey, config, this, clientType)
                             "Universal" -> {
-                                listenEvent(httpClientKey, config, incoming, outgoing)
+                                listenEvent(httpClientKey, config, this, clientType)
                                 listenApi(incoming, outgoing)
                             }
                         }
@@ -189,13 +189,13 @@ class WebSocketReverseClient(
             delay(config.reconnectInterval)
             if (!closing) startGeneralWebsocketClient(session.bot, config, clientType)
             else {
-                logger.info("反向WWebsocket连接关闭中, Host: $httpClientKey Path: $path")
+                logger.info("反向Websocket连接关闭中, Host: $httpClientKey Path: $path")
                 closing = false
             }
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @ExperimentalCoroutinesApi
     private suspend fun listenApi(incoming: ReceiveChannel<Frame>, outgoing: SendChannel<Frame>) {
         incoming.consumeEach {
             when (it) {
@@ -209,14 +209,23 @@ class WebSocketReverseClient(
         }
     }
 
+    @ExperimentalCoroutinesApi
     private suspend fun listenEvent(
         httpClientKey: String,
         config: WebSocketReverseServiceConfig,
-        incoming: ReceiveChannel<Frame>,
-        outgoing: SendChannel<Frame>
+        websocketSession: DefaultClientWebSocketSession,
+        clientType: String
     ) {
         // 通知服务方链接建立
-        outgoing.send(Frame.Text(CQLifecycleMetaEventDTO(session.bot.id, "connect", currentTimeSeconds).toJson()))
+        websocketSession.outgoing.send(
+            Frame.Text(
+                CQLifecycleMetaEventDTO(
+                    session.bot.id,
+                    "connect",
+                    currentTimeSeconds
+                ).toJson()
+            )
+        )
         val isRawMessage = config.postMessageFormat != "array"
         subscriptions[httpClientKey] = session.bot.subscribeAlways {
             // 保存Event以便在WebsocketSession Block中使用
@@ -224,7 +233,13 @@ class WebSocketReverseClient(
                 this.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
                     val jsonToSend = this.toJson()
                     logger.debug("WS Reverse将要发送事件: $jsonToSend")
-                    outgoing.send(Frame.Text(jsonToSend))
+                    if (websocketSession.isActive) {
+                        websocketSession.outgoing.send(Frame.Text(jsonToSend))
+                    } else {
+                        logger.warning("WS Reverse事件发送失败, 连接已被关闭, 尝试重连中 $httpClientKey")
+                        subscriptions[httpClientKey]?.complete()
+                        startGeneralWebsocketClient(session.bot, config, clientType)
+                    }
                 }
             }
         }
@@ -232,24 +247,32 @@ class WebSocketReverseClient(
         if (session.heartbeatEnabled) {
             heartbeatJobs[httpClientKey] = HeartbeatScope(EmptyCoroutineContext).launch {
                 while (true) {
-                    outgoing.send(
-                        Frame.Text(
-                            CQHeartbeatMetaEventDTO(
-                                session.botId,
-                                currentTimeSeconds,
-                                CQPluginStatusData(
-                                    good = session.bot.isOnline,
-                                    online = session.bot.isOnline
-                                ),
-                                session.heartbeatInterval
-                            ).toJson()
+                    if (websocketSession.isActive) {
+                        websocketSession.outgoing.send(
+                            Frame.Text(
+                                CQHeartbeatMetaEventDTO(
+                                    session.botId,
+                                    currentTimeSeconds,
+                                    CQPluginStatusData(
+                                        good = session.bot.isOnline,
+                                        online = session.bot.isOnline
+                                    ),
+                                    session.heartbeatInterval
+                                ).toJson()
+                            )
                         )
-                    )
-                    delay(session.heartbeatInterval)
+                        delay(session.heartbeatInterval)
+                    } else {
+                        logger.warning("WS Reverse事件发送失败, 连接已被关闭, 尝试重连中 $httpClientKey")
+                        subscriptions[httpClientKey]?.complete()
+                        startGeneralWebsocketClient(session.bot, config, clientType)
+                        break
+                    }
                 }
             }
         }
-        incoming.receive()
+
+        if (clientType != "Universal") websocketSession.incoming.consumeEach { logger.warning("WS Reverse Event 路由只负责发送事件, 不响应收到的请求") }
     }
 
     @OptIn(KtorExperimentalAPI::class, ExperimentalCoroutinesApi::class)
