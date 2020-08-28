@@ -96,7 +96,7 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
             val heartbeatJob = if (session.heartbeatEnabled) emitHeartbeat(session, outgoing) else null
 
             try {
-                incoming.consumeEach {}
+                incoming.consumeEach { logger.warning("WS Server Event 路由只负责发送事件, 不响应收到的请求") }
             } finally {
                 logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /event 连接被关闭")
                 listener.complete()
