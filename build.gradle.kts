@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "1.4.0"
     kotlin("plugin.serialization") version "1.4.0"
+    kotlin("kapt") version "1.4.0"
     java
     id("com.github.johnrengelman.shadow") version "6.0.0"
     id("com.github.gmazzo.buildconfig") version "2.0.2"
@@ -19,10 +20,11 @@ repositories {
 }
 
 val miraiCoreVersion = "1.2.0"
-val miraiConsoleVersion = "0.5.2"
+val miraiConsoleVersion = "1.0-M4"
 val ktorVersion = "1.4.0"
 val kotlinVersion = "1.4.0"
 val kotlinSerializationVersion = "1.0.0-RC"
+val snakeyamlVersion = "1.26"
 
 fun ktor(id: String, version: String = this@Build_gradle.ktorVersion) = "io.ktor:ktor-$id:$version"
 fun kotlinx(id: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$id:$version"
@@ -48,6 +50,7 @@ dependencies {
     compileOnly("net.mamoe:mirai-core:$miraiCoreVersion")
     compileOnly("net.mamoe:mirai-console:$miraiConsoleVersion")
     compileOnly(kotlin("serialization", kotlinVersion))
+    compile("org.yaml:snakeyaml:$snakeyamlVersion")
 
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
     implementation("ch.qos.logback:logback-classic:1.2.3")
@@ -59,15 +62,25 @@ dependencies {
 
     api(kotlin("reflect", kotlinVersion))
 
+    val autoService = "1.0-rc7"
+    kapt("com.google.auto.service", "auto-service", autoService)
+    compileOnly("com.google.auto.service", "auto-service-annotations", autoService)
+
     testImplementation(kotlin("stdlib-jdk8"))
     testImplementation("net.mamoe:mirai-core:$miraiCoreVersion")
     testImplementation("net.mamoe:mirai-core-qqandroid:$miraiCoreVersion")
     testImplementation("net.mamoe:mirai-console:$miraiConsoleVersion")
+    testImplementation("net.mamoe:mirai-console-pure:$miraiConsoleVersion")
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+kotlin.target.compilations.all {
+    kotlinOptions.freeCompilerArgs += "-Xjvm-default=enable"
+    kotlinOptions.jvmTarget = "1.8"
 }
 
 tasks {
@@ -97,48 +110,5 @@ tasks {
     shadowJar {
         dependsOn(generateBuildConfig)
         dependsOn(injectVersionToPluginDesc)
-    }
-
-    val runMiraiConsole by creating(JavaExec::class.java) {
-        group = "mirai"
-        main = "mirai.RunMirai"
-        dependsOn(shadowJar)
-        dependsOn(testClasses)
-
-        val testConsoleDir = "test"
-
-        doFirst {
-            fun removeOldVersions() {
-                File("$testConsoleDir/plugins/").walk()
-                    .filter { it.name.matches(Regex("""${project.name}-.*-all.jar""")) }
-                    .forEach {
-                        it.delete()
-                        println("deleting old files: ${it.name}")
-                    }
-            }
-
-            fun copyBuildOutput() {
-                File("build/libs/").walk()
-                    .filter { it.name.contains("-all") }
-                    .maxBy { it.lastModified() }
-                    ?.let {
-                        println("Coping ${it.name}")
-                        it.inputStream()
-                            .transferTo(File("$testConsoleDir/plugins/${it.name}").apply { createNewFile() }
-                                .outputStream())
-                        println("Copied ${it.name}")
-                    }
-            }
-
-            workingDir = File(testConsoleDir)
-            workingDir.mkdir()
-            File(workingDir, "plugins").mkdir()
-            removeOldVersions()
-            copyBuildOutput()
-
-            classpath = sourceSets["test"].runtimeClasspath
-            standardInput = System.`in`
-            args(miraiCoreVersion, miraiConsoleVersion)
-        }
     }
 }

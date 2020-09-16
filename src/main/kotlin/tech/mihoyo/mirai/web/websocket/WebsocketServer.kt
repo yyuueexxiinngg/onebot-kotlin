@@ -16,7 +16,7 @@ import io.ktor.websocket.WebSockets
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
-import net.mamoe.mirai.console.plugins.ToBeRemoved
+import tech.mihoyo.mirai.util.ToBeRemoved
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeSeconds

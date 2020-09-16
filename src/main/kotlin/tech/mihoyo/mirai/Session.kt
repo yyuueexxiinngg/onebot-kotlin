@@ -2,8 +2,8 @@ package tech.mihoyo.mirai
 
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.console.plugins.ConfigSection
-import net.mamoe.mirai.console.plugins.ToBeRemoved
+import tech.mihoyo.mirai.util.ConfigSection
+import tech.mihoyo.mirai.util.ToBeRemoved
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.http.HttpApiServer
 import tech.mihoyo.mirai.web.http.ReportService

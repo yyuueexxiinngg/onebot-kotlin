@@ -1,6 +1,6 @@
 package tech.mihoyo.mirai.web.http
 
-import net.mamoe.mirai.console.plugins.ConfigSection
+import tech.mihoyo.mirai.util.ConfigSection
 
 class HttpApiServerServiceConfig(serviceConfig: ConfigSection) {
     val enable: Boolean by serviceConfig.withDefault { false }

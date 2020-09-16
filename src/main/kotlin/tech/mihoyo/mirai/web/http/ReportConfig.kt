@@ -1,6 +1,6 @@
 package tech.mihoyo.mirai.web.http
 
-import net.mamoe.mirai.console.plugins.ConfigSection
+import tech.mihoyo.mirai.util.ConfigSection
 
 class ReportServiceConfig(serviceConfig: ConfigSection) {
     /**

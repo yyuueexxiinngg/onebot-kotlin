@@ -1,12 +1,17 @@
 package tech.mihoyo.mirai
 
+import com.google.auto.service.AutoService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
-import net.mamoe.mirai.console.plugins.Config
-import net.mamoe.mirai.console.plugins.PluginBase
+import net.mamoe.mirai.console.command.CommandOwner
+import net.mamoe.mirai.console.plugin.jvm.JvmPlugin
+import tech.mihoyo.mirai.util.Config
+import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
+import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.console.plugin.loader.PluginLoader
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
@@ -26,18 +31,29 @@ import tech.mihoyo.mirai.util.toUHexString
 import java.io.File
 import kotlin.reflect.jvm.isAccessible
 import yyuueexxiinngg.cqhttp_mirai.BuildConfig
+import tech.mihoyo.mirai.util.loadAsConfig
 
-object PluginBase : PluginBase() {
+@AutoService(JvmPlugin::class)
+object PluginBase : KotlinPlugin(
+    JvmPluginDescription(
+        "yyuueexxiinngg.cqhttp-mirai",
+        "0.2.3"
+    ) {
+        name("CQHTTP-Mirai")
+    }
+) {
     private lateinit var config: Config
     var debug = false
     var initialSubscription: Listener<BotEvent>? = null
     var proxy = ""
-    override fun onLoad() {
+
+    fun onLoad() {
+        logger.info("Welcome to use CQHTTP-Mirai")
     }
 
     @OptIn(LowLevelAPI::class)
     override fun onEnable() {
-        config = loadConfig("setting.yml")
+        config = File("plugins/CQHTTPMirai/setting.yml").loadAsConfig()
         debug = if (config.exist("debug")) config.getBoolean("debug") else false
         proxy = if (config.exist("proxy")) config.getString("proxy") else ""
         logger.info("Plugin loaded! ${BuildConfig.VERSION}")
