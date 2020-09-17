@@ -59,8 +59,8 @@ class ReportService(
     private val scope = ReportServiceScope(EmptyCoroutineContext)
 
     init {
-        if (session.config.exist("http")) {
-            serviceConfig = ReportServiceConfig(session.config.getConfigSection("http"))
+        if (session.config.http.enable) {
+            serviceConfig = ReportServiceConfig(session.config)
             scope.launch {
                 startReportService()
             }
@@ -118,12 +118,12 @@ class ReportService(
                                     good = session.bot.isOnline,
                                     online = session.bot.isOnline
                                 ),
-                                session.heartbeatInterval
+                                session.heartbeatInterval.toLong()
                             ).toJson(),
                             serviceConfig.secret,
                             false
                         )
-                        delay(session.heartbeatInterval)
+                        delay(session.heartbeatInterval.toLong())
                     }
                 }
             }

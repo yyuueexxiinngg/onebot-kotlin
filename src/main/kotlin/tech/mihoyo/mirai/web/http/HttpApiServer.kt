@@ -16,8 +16,8 @@ class HttpApiServer(
     private lateinit var serviceConfig: HttpApiServerServiceConfig
 
     init {
-        if (session.config.exist("http")) {
-            serviceConfig = HttpApiServerServiceConfig(session.config.getConfigSection("http"))
+        if (session.config.http.enable) {
+            serviceConfig = HttpApiServerServiceConfig(session.config)
             logger.info("Bot: ${session.bot.id} HTTP API服务端是否配置开启: ${serviceConfig.enable}")
             if (serviceConfig.enable) {
                 try {

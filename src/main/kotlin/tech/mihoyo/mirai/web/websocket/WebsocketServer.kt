@@ -16,11 +16,11 @@ import io.ktor.websocket.WebSockets
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
-import tech.mihoyo.mirai.util.ToBeRemoved
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.WsConfig
 import tech.mihoyo.mirai.data.common.CQHeartbeatMetaEventDTO
 import tech.mihoyo.mirai.data.common.CQIgnoreEventDTO
 import tech.mihoyo.mirai.data.common.CQPluginStatusData
@@ -37,16 +37,14 @@ class WebsocketServerScope(coroutineContext: CoroutineContext) : CoroutineScope 
     } + SupervisorJob()
 }
 
-@OptIn(ToBeRemoved::class)
 class WebSocketServer(
     val session: BotSession
 ) {
     lateinit var server: ApplicationEngine
-    private lateinit var serviceConfig: WebSocketServerServiceConfig
 
     init {
-        if (session.config.exist("ws")) {
-            serviceConfig = WebSocketServerServiceConfig(session.config.getConfigSection("ws"))
+        if (session.config.ws.enable) {
+            val serviceConfig = session.config.ws
             logger.info("Bot: ${session.bot.id} 正向Websocket服务端是否配置开启: ${serviceConfig.enable}")
             if (serviceConfig.enable) {
                 try {
@@ -75,7 +73,7 @@ class WebSocketServer(
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("DuplicatedCode")
-fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketServerServiceConfig) {
+fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WsConfig) {
     val scope = WebsocketServerScope(EmptyCoroutineContext)
     logger.debug("Bot: ${session.bot.id} 尝试开启正向Websocket服务端于端口: ${serviceConfig.wsPort}")
     install(DefaultHeaders)
@@ -161,11 +159,11 @@ private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Fra
                             good = session.bot.isOnline,
                             online = session.bot.isOnline
                         ),
-                        session.heartbeatInterval
+                        session.heartbeatInterval.toLong()
                     ).toJson()
                 )
             )
-            delay(session.heartbeatInterval)
+            delay(session.heartbeatInterval.toLong())
         }
     }
 }
@@ -174,7 +172,7 @@ private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Fra
 private inline fun Route.cqWebsocket(
     path: String,
     session: BotSession,
-    serviceConfig: WebSocketServerServiceConfig,
+    serviceConfig: WsConfig,
     crossinline body: suspend DefaultWebSocketServerSession.(BotSession) -> Unit
 ) {
     webSocket(path) {

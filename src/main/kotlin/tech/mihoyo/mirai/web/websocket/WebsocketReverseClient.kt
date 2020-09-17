@@ -18,6 +18,8 @@ import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.Settings
+import tech.mihoyo.mirai.WsReverseConfig
 import tech.mihoyo.mirai.data.common.*
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
@@ -38,7 +40,6 @@ class WebSocketReverseClient(
     val session: BotSession
 ) {
     private val httpClients: MutableMap<String, HttpClient> = mutableMapOf()
-    private var serviceConfig: List<WebSocketReverseServiceConfig> = mutableListOf()
     private var subscriptions: MutableMap<String, Listener<BotEvent>?> = mutableMapOf()
     private var websocketSessions: MutableMap<String, DefaultClientWebSocketSession> = mutableMapOf()
     private var heartbeatJobs: MutableMap<String, Job> = mutableMapOf()
@@ -47,25 +48,23 @@ class WebSocketReverseClient(
     private val scope = WebsocketReverseClientScope(EmptyCoroutineContext)
 
     init {
-        if (session.config.exist("ws_reverse")) {
-            serviceConfig = session.config.getConfigSectionList("ws_reverse").map { WebSocketReverseServiceConfig(it) }
-            serviceConfig.forEach {
-                logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}, Use Universal: ${it.useUniversal}")
-                if (it.enable) {
-                    if (it.useUniversal) {
+        if (session.config.ws_reverse.enable) {
+            val serviceConfig = session.config.ws_reverse
+            logger.debug("Host: ${serviceConfig.reverseHost}, Port: ${serviceConfig.reversePort}, Enable: ${serviceConfig.enable}, Use Universal: ${serviceConfig.useUniversal}")
+                if (serviceConfig.enable) {
+                    if (serviceConfig.useUniversal) {
                         scope.launch {
-                            startGeneralWebsocketClient(session.bot, it, "Universal")
+                            startGeneralWebsocketClient(session.bot, serviceConfig, "Universal")
                         }
                     } else {
                         scope.launch {
-                            startGeneralWebsocketClient(session.bot, it, "Api")
+                            startGeneralWebsocketClient(session.bot, serviceConfig, "Api")
                         }
                         scope.launch {
-                            startGeneralWebsocketClient(session.bot, it, "Event")
+                            startGeneralWebsocketClient(session.bot, serviceConfig, "Event")
                         }
                     }
                 }
-            }
         } else {
             logger.debug("${session.bot.id}未对ws_reverse进行配置")
         }
@@ -75,7 +74,7 @@ class WebSocketReverseClient(
     @Suppress("DuplicatedCode")
     private suspend fun startGeneralWebsocketClient(
         bot: Bot,
-        config: WebSocketReverseServiceConfig,
+        config: WsReverseConfig,
         clientType: String
     ) {
         val httpClientKey = "${config.reverseHost}:${config.reversePort}-Client-$clientType"
@@ -186,7 +185,7 @@ class WebSocketReverseClient(
             }
             httpClients[httpClientKey]?.apply { this.close() }
             httpClients.remove(httpClientKey)
-            delay(config.reconnectInterval)
+            delay(config.reconnectInterval.toLong())
             if (!closing) startGeneralWebsocketClient(session.bot, config, clientType)
             else {
                 logger.info("反向Websocket连接关闭中, Host: $httpClientKey Path: $path")
@@ -212,7 +211,7 @@ class WebSocketReverseClient(
     @ExperimentalCoroutinesApi
     private suspend fun listenEvent(
         httpClientKey: String,
-        config: WebSocketReverseServiceConfig,
+        config: WsReverseConfig,
         websocketSession: DefaultClientWebSocketSession,
         clientType: String
     ) {
@@ -257,11 +256,11 @@ class WebSocketReverseClient(
                                         good = session.bot.isOnline,
                                         online = session.bot.isOnline
                                     ),
-                                    session.heartbeatInterval
+                                    session.heartbeatInterval.toLong()
                                 ).toJson()
                             )
                         )
-                        delay(session.heartbeatInterval)
+                        delay(session.heartbeatInterval.toLong())
                     } else {
                         logger.warning("WS Reverse事件发送失败, 连接已被关闭, 尝试重连中 $httpClientKey")
                         subscriptions[httpClientKey]?.complete()
@@ -276,7 +275,7 @@ class WebSocketReverseClient(
     }
 
     @OptIn(KtorExperimentalAPI::class, ExperimentalCoroutinesApi::class)
-    private fun startWebsocketConnectivityCheck(bot: Bot, config: WebSocketReverseServiceConfig, clientType: String) {
+    private fun startWebsocketConnectivityCheck(bot: Bot, config: WsReverseConfig, clientType: String) {
         val httpClientKey = "${config.reverseHost}:${config.reversePort}-Client-$clientType"
         if (httpClientKey !in connectivityChecks) {
             connectivityChecks.add(httpClientKey)
@@ -302,7 +301,7 @@ class WebSocketReverseClient(
                                 this?.close()
                             }
                             logger.warning("Websocket连接已断开, 将在${config.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey")
-                            delay(config.reconnectInterval)
+                            delay(config.reconnectInterval.toLong())
                             httpClients.remove(httpClientKey)
                             httpClients[httpClientKey] = HttpClient {
                                 install(WebSockets)

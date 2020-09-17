@@ -1,61 +1,61 @@
 package tech.mihoyo.mirai.web.websocket
 
-import tech.mihoyo.mirai.util.ConfigSection
+import tech.mihoyo.mirai.WsReverseConfig
 
-class WebSocketReverseServiceConfig(serviceConfig: ConfigSection) {
+class WebSocketReverseServiceConfig(serviceConfig: WsReverseConfig) {
     /**
      * 是否开启
      */
-    val enable: Boolean by serviceConfig.withDefault { false }
+    val enable: Boolean by lazy {serviceConfig.enable}
 
     /**
      * 上报消息格式
      */
-    val postMessageFormat: String by serviceConfig.withDefault { "string" }
+    val postMessageFormat: String by lazy {serviceConfig.postMessageFormat}
 
     /**
      * 反向Websocket主机
      */
-    val reverseHost: String by serviceConfig.withDefault { "127.0.0.1" }
+    val reverseHost: String by lazy {serviceConfig.reverseHost}
 
     /**
      * 反向Websocket口令
      */
-    val accessToken: String? by serviceConfig.withDefault { "" }
+    val accessToken: String? by lazy {serviceConfig.accessToken}
 
     /**
      * 反向Websocket端口
      */
-    val reversePort: Int by serviceConfig.withDefault { 8080 }
+    val reversePort: Int by lazy {serviceConfig.reversePort}
 
     /**
      * 反向Websocket路径
      */
-    val reversePath: String by serviceConfig.withDefault { "/ws" }
+    val reversePath: String by lazy {serviceConfig.reversePath}
 
     /**
      * 反向Websocket Api路径  尚未实现
      */
-    val reverseApiPath: String by serviceConfig.withDefault { reversePath }
+    val reverseApiPath: String by lazy {serviceConfig.reversePath}
 
     /**
      * 反向Websocket Event路径 尚未实现
      */
-    val reverseEventPath: String by serviceConfig.withDefault { reversePath }
+    val reverseEventPath: String by lazy {serviceConfig.reversePath}
 
     /**
      * 是否使用Universal客户端
      */
-    val useUniversal: Boolean by serviceConfig.withDefault { true }
+    val useUniversal: Boolean by lazy {serviceConfig.useUniversal}
 
     /**
      * 反向 WebSocket 客户端断线重连间隔
      */
-    val reconnectInterval: Long by serviceConfig.withDefault { 3000 }
+    val reconnectInterval: Long by lazy {serviceConfig.reconnectInterval.toLong()}
 
     /**
      * 反向 WebSocket 客户端是否通过HTTPS连接
      */
-    val useTLS: Boolean by serviceConfig.withDefault { false }
+    val useTLS: Boolean by lazy {serviceConfig.useTLS}
 
 }

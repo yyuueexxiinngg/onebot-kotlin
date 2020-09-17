@@ -1,15 +1,15 @@
 package tech.mihoyo.mirai.web.websocket
 
-import tech.mihoyo.mirai.util.ConfigSection
+import tech.mihoyo.mirai.WsConfig
 
-class WebSocketServerServiceConfig(serviceConfig: ConfigSection) {
-    val enable: Boolean by serviceConfig.withDefault { false }
+class WebSocketServerServiceConfig(serviceConfig: WsConfig) {
+    val enable: Boolean by lazy {serviceConfig.enable}
 
-    val postMessageFormat: String by serviceConfig.withDefault { "string" }
+    val postMessageFormat: String by lazy {serviceConfig.postMessageFormat}
 
-    val wsHost: String by serviceConfig.withDefault { "0.0.0.0" }
+    val wsHost: String by lazy {serviceConfig.wsHost}
 
-    val wsPort: Int by serviceConfig.withDefault { 6700 }
+    val wsPort: Int by lazy {serviceConfig.wsPort}
 
-    val accessToken: String? by serviceConfig.withDefault { "" }
+    val accessToken: String? by lazy {serviceConfig.accessToken}
 }
