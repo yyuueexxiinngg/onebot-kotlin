@@ -124,6 +124,7 @@ interface Config {
         @ToBeRemoved
         fun load(file: File): Config {
             if (!file.exists()) {
+                file.parentFile.mkdirs()
                 file.createNewFile()
             }
             return when (file.extension.toLowerCase()) {
