@@ -1,26 +1,17 @@
 package tech.mihoyo.mirai
 
-/*
- * This file is modified from Mirai-Console 0.5.2 APIs, to keep minimum change to the plugin and make it up with
- * Mirai-Console 1.0-M4.
- * This is not the way to solve the issue, but I have little to no experience of developing a Mirai Console
- * plugin. The only I can do is try to refactor this and tweak the imports.
- * This is a TEMPORARY solution. The plugin should be refactor to Mirai-Console 1.0-M4 ways.
- * Comment by: XZhouQD
- */
-
 import com.google.auto.service.AutoService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
-import net.mamoe.mirai.console.command.CommandOwner
+import net.mamoe.mirai.console.data.AutoSavePluginConfig
+import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPlugin
-import tech.mihoyo.mirai.util.Config
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.console.plugin.loader.PluginLoader
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
@@ -40,18 +31,17 @@ import tech.mihoyo.mirai.util.toUHexString
 import java.io.File
 import kotlin.reflect.jvm.isAccessible
 import yyuueexxiinngg.cqhttp_mirai.BuildConfig
-import tech.mihoyo.mirai.util.loadAsConfig
 
 @AutoService(JvmPlugin::class)
 object PluginBase : KotlinPlugin(
     JvmPluginDescription(
         "yyuueexxiinngg.cqhttp-mirai",
-        "0.2.4-SNAPSHOT-1.0-M4"
+        "0.2.4-SNAPSHOT-1.0-M4-dev"
     ) {
         name("CQHTTP-Mirai")
     }
 ) {
-    private lateinit var config: Config
+    // private lateinit var config: Config
     var debug = false
     var initialSubscription: Listener<BotEvent>? = null
     var proxy = ""
@@ -61,18 +51,24 @@ object PluginBase : KotlinPlugin(
     }
 
     @OptIn(LowLevelAPI::class)
+    @kotlin.ExperimentalUnsignedTypes
     override fun onEnable() {
-        config = File("plugins/CQHTTPMirai/setting.yml").loadAsConfig()
-        debug = if (config.exist("debug")) config.getBoolean("debug") else false
-        proxy = if (config.exist("proxy")) config.getString("proxy") else ""
+        Settings.reload()
+
+        //config = File("plugins/CQHTTPMirai/setting.yml").loadAsConfig()
+        //debug = if (config.exist("debug")) config.getBoolean("debug") else false
+        debug = Settings.debug
+        //proxy = if (config.exist("proxy")) config.getString("proxy") else ""
+        proxy = Settings.proxy
         logger.info("Plugin loaded! ${BuildConfig.VERSION}")
         logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
         if (debug) logger.debug("开发交流群: 1143274864")
         initHTTPClientProxy()
         Bot.forEachInstance {
             if (!allSession.containsKey(it.id)) {
-                if (config.exist(it.id.toString())) {
-                    SessionManager.createBotSession(it, config.getConfigSection(it.id.toString()))
+                //if (config.exist(it.id.toString())) {
+                if (it.id == Settings.user.toLong()) {
+                    SessionManager.createBotSession(it, Settings)
                 } else {
                     logger.debug("${it.id}未对CQHTTPMirai进行配置")
                 }
@@ -85,8 +81,8 @@ object PluginBase : KotlinPlugin(
             when (this) {
                 is BotOnlineEvent -> {
                     if (!allSession.containsKey(bot.id)) {
-                        if (config.exist(bot.id.toString())) {
-                            SessionManager.createBotSession(bot, config.getConfigSection(bot.id.toString()))
+                        if (Settings.user.toLong() == bot.id) {
+                            SessionManager.createBotSession(bot, Settings)
                         } else {
                             logger.debug("${bot.id}未对CQHTTPMirai进行配置")
                         }
@@ -206,3 +202,57 @@ object PluginBase : KotlinPlugin(
             image(name).apply { writeText(data) }
         }
 }
+
+// Plugin Config Object - 1.0-M4
+object Settings : AutoSavePluginConfig() {
+    val debug: Boolean by value(false)
+    val proxy: String by value()
+    val user: Int by value(111111111)
+    val cacheImage: Boolean by value(false)
+    val cacheRecord: Boolean by value(false)
+    val heartbeat: HeartBeatConfig by value()
+    val http: HttpConfig by value()
+    val ws_reverse: WsReverseConfig by value()
+    val ws: WsConfig by value()
+}
+
+@Serializable
+data class HeartBeatConfig(
+    val enable: Boolean = true,
+    val interval: Int = 15000
+)
+
+@Serializable
+data class HttpConfig(
+    val enable: Boolean = false,
+    val host: String = "0.0.0.0",
+    val port: Int = 5700,
+    val accessToken: String = "",
+    val postUrl: String = "",
+    val postMessageFormat: String = "string",
+    val secret: String = ""
+)
+
+@Serializable
+data class WsReverseConfig(
+    val enable: Boolean = true,
+    val postMessageFormat: String = "string",
+    val reverseHost: String = "127.0.0.1",
+    val reversePort: Int = 10676,
+    val accessToken: String = "",
+    val reversePath: String = "/ws",
+    val reverseApiPath: String = "/api",
+    val reverseEventPath: String = "/event",
+    val useUniversal: Boolean = true,
+    val useTLS: Boolean = false,
+    val reconnectInterval: Int = 3000
+)
+
+@Serializable
+data class WsConfig(
+    val enable: Boolean = false,
+    val postMessageFormat: String = "string",
+    val accessToken: String = "",
+    val wsHost: String = "0.0.0.0",
+    val wsPort: Int = 8080
+)

@@ -25,7 +25,7 @@ internal object SessionManager {
     fun closeSession(session: Session) = closeSession(session.botId)
 
     @OptIn(ToBeRemoved::class)
-    fun createBotSession(bot: Bot, config: ConfigSection): BotSession =
+    fun createBotSession(bot: Bot, config: Settings): BotSession =
         BotSession(bot, config, EmptyCoroutineContext).also { session -> allSession[bot.id] = session }
 }
 
@@ -49,15 +49,15 @@ abstract class Session internal constructor(
 }
 
 @OptIn(ToBeRemoved::class)
-class BotSession internal constructor(val bot: Bot, val config: ConfigSection, coroutineContext: CoroutineContext) :
+class BotSession internal constructor(val bot: Bot, val config: Settings, coroutineContext: CoroutineContext) :
     Session(coroutineContext, bot.id) {
-    private val heartbeatConfig = if (config.containsKey("heartbeat")) config.getConfigSection("heartbeat") else null
-    val shouldCacheImage = if (config.containsKey("cacheImage")) config.getBoolean("cacheImage") else false
-    val shouldCacheRecord = if (config.containsKey("cacheRecord")) config.getBoolean("cacheRecord") else false
+    private val heartbeatConfig = config.heartbeat
+    val shouldCacheImage = config.cacheImage
+    val shouldCacheRecord = config.cacheRecord
     val heartbeatEnabled =
-        heartbeatConfig?.let { if (it.containsKey("enable")) it.getBoolean("enable") else false } ?: false
+        heartbeatConfig.enable
     val heartbeatInterval =
-        heartbeatConfig?.let { if (it.containsKey("interval")) it.getLong("interval") else 15000L } ?: 15000L
+        heartbeatConfig.interval
     val cqApiImpl = MiraiApi(bot)
     private val httpApiServer = HttpApiServer(this)
     private val websocketClient = WebSocketReverseClient(this)

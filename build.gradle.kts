@@ -7,7 +7,7 @@ plugins {
     id("com.github.gmazzo.buildconfig") version "2.0.2"
 }
 
-val projectVersion = "0.2.4-SNAPSHOT-1.0-M4"
+val projectVersion = "0.2.4-SNAPSHOT-1.0-M4-dev"
 version = projectVersion
 group = "yyuueexxiinngg"
 
