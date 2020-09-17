@@ -24,7 +24,6 @@ val miraiConsoleVersion = "1.0-M4"
 val ktorVersion = "1.4.0"
 val kotlinVersion = "1.4.0"
 val kotlinSerializationVersion = "1.0.0-RC"
-val snakeyamlVersion = "1.26"
 
 fun ktor(id: String, version: String = this@Build_gradle.ktorVersion) = "io.ktor:ktor-$id:$version"
 fun kotlinx(id: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$id:$version"
@@ -50,7 +49,6 @@ dependencies {
     compileOnly("net.mamoe:mirai-core:$miraiCoreVersion")
     compileOnly("net.mamoe:mirai-console:$miraiConsoleVersion")
     compileOnly(kotlin("serialization", kotlinVersion))
-    compile("org.yaml:snakeyaml:$snakeyamlVersion")
 
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
     implementation("ch.qos.logback:logback-classic:1.2.3")

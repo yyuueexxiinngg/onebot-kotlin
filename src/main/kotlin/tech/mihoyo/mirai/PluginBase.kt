@@ -1,5 +1,14 @@
 package tech.mihoyo.mirai
 
+/*
+ * This file is modified from Mirai-Console 0.5.2 APIs, to keep minimum change to the plugin and make it up with
+ * Mirai-Console 1.0-M4.
+ * This is not the way to solve the issue, but I have little to no experience of developing a Mirai Console
+ * plugin. The only I can do is try to refactor this and tweak the imports.
+ * This is a TEMPORARY solution. The plugin should be refactor to Mirai-Console 1.0-M4 ways.
+ * Comment by: XZhouQD
+ */
+
 import com.google.auto.service.AutoService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

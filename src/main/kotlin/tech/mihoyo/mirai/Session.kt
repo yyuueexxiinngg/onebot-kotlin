@@ -2,8 +2,6 @@ package tech.mihoyo.mirai
 
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
-import tech.mihoyo.mirai.util.ConfigSection
-import tech.mihoyo.mirai.util.ToBeRemoved
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.web.http.HttpApiServer
 import tech.mihoyo.mirai.web.http.ReportService
@@ -18,13 +16,8 @@ internal object SessionManager {
 
     operator fun get(botId: Long) = allSession[botId]
 
-    fun containSession(botId: Long): Boolean = allSession.containsKey(botId)
-
     fun closeSession(botId: Long) = allSession.remove(botId)?.also { it.close() }
 
-    fun closeSession(session: Session) = closeSession(session.botId)
-
-    @OptIn(ToBeRemoved::class)
     fun createBotSession(bot: Bot, config: Settings): BotSession =
         BotSession(bot, config, EmptyCoroutineContext).also { session -> allSession[bot.id] = session }
 }
@@ -48,7 +41,6 @@ abstract class Session internal constructor(
     }
 }
 
-@OptIn(ToBeRemoved::class)
 class BotSession internal constructor(val bot: Bot, val config: Settings, coroutineContext: CoroutineContext) :
     Session(coroutineContext, bot.id) {
     private val heartbeatConfig = config.heartbeat

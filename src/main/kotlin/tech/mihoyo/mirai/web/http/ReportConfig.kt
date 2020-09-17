@@ -1,7 +1,6 @@
 package tech.mihoyo.mirai.web.http
 
 import tech.mihoyo.mirai.Settings
-import tech.mihoyo.mirai.util.ConfigSection
 
 class ReportServiceConfig(serviceConfig: Settings) {
     /**
