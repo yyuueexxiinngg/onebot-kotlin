@@ -14,8 +14,7 @@ import kotlinx.serialization.Serializable
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.*
-import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.currentTimeMillis
+import net.mamoe.mirai.utils.currentTimeSeconds
 
 @Serializable
 sealed class BotEventDTO : EventDTO()
@@ -34,7 +33,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = 0L, // Not available in Mirai
                     user_id = member.id,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
                 )
                 is MemberJoinEvent.Invite -> CQMemberJoinEventDTO(
                     self_id = bot.id,
@@ -42,7 +41,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = 0L, // Not available in Mirai
                     user_id = member.id,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
                 )
                 else -> CQIgnoreEventDTO(bot.id)
             }
@@ -55,7 +54,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = member.id,
                     user_id = member.id,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
                 )
                 is MemberLeaveEvent.Kick -> CQMemberLeaveEventDTO(
                     self_id = bot.id,
@@ -63,11 +62,28 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = operator?.id ?: bot.id,
                     user_id = member.id,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
                 )
                 else -> CQIgnoreEventDTO(bot.id)
             }
         }
+        is BotJoinGroupEvent.Active -> CQMemberJoinEventDTO(
+            self_id = bot.id,
+            sub_type = "approve",
+            group_id = group.id,
+            operator_id = 0L, // Not available in Mirai
+            user_id = bot.id,
+            time = currentTimeSeconds
+        )
+        is BotJoinGroupEvent.Invite -> CQMemberJoinEventDTO(
+            self_id = bot.id,
+            sub_type = "invite",
+            group_id = group.id,
+            operator_id = 0L, // Not available in Mirai
+            user_id = bot.id,
+            time = currentTimeSeconds
+        )
+
         is BotLeaveEvent -> {
             when (this) {
                 is BotLeaveEvent.Kick -> CQMemberLeaveEventDTO(
@@ -76,7 +92,15 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = 0L, // Retrieve operator is currently not supported
                     user_id = bot.id,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
+                )
+                is BotLeaveEvent.Active -> CQMemberLeaveEventDTO(
+                    self_id = bot.id,
+                    sub_type = "kick_me",
+                    group_id = group.id,
+                    operator_id = 0L, // Retrieve operator is currently not supported
+                    user_id = bot.id,
+                    time = currentTimeSeconds
                 )
                 else -> CQIgnoreEventDTO(bot.id)
             }
@@ -88,14 +112,14 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     sub_type = "unset",
                     group_id = group.id,
                     user_id = member.id,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
                 )
                 else -> CQGroupAdministratorChangeEventDTO(
                     self_id = bot.id,
                     sub_type = "set",
                     group_id = group.id,
                     user_id = member.id,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
                 )
             }
         is MemberMuteEvent -> CQGroupMuteChangeEventDTO(
@@ -105,7 +129,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             operator_id = operator?.id ?: bot.id,
             user_id = member.id,
             duration = durationSeconds,
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is GroupMuteAllEvent -> {
             if (new) {
@@ -116,7 +140,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     operator_id = operator?.id ?: bot.id,
                     user_id = 0L,
                     duration = 0,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
                 )
             } else {
                 CQGroupMuteChangeEventDTO(
@@ -126,7 +150,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     operator_id = operator?.id ?: bot.id,
                     user_id = 0L,
                     duration = 0,
-                    time = currentTimeMillis
+                    time = currentTimeSeconds
                 )
             }
         }
@@ -137,7 +161,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             operator_id = operator.id,
             user_id = bot.id,
             duration = durationSeconds,
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is MemberUnmuteEvent -> CQGroupMuteChangeEventDTO(
             self_id = bot.id,
@@ -146,7 +170,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             operator_id = operator?.id ?: bot.id,
             user_id = member.id,
             duration = 0,
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is BotUnmuteEvent -> CQGroupMuteChangeEventDTO(
             self_id = bot.id,
@@ -155,28 +179,37 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             operator_id = operator.id,
             user_id = bot.id,
             duration = 0,
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is FriendAddEvent -> CQFriendAddEventDTO(
             self_id = bot.id,
             user_id = friend.id,
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is NewFriendRequestEvent -> CQFriendRequestEventDTO(
             self_id = bot.id,
             user_id = fromId,
             comment = message,
             flag = eventId.toString(),
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is MemberJoinRequestEvent -> CQGroupMemberAddRequestEventDTO(
             self_id = bot.id,
-            sub_type = "add", // Invite not support by Mirai
+            sub_type = "add",
             group_id = groupId,
             user_id = fromId,
             comment = message,
             flag = eventId.toString(),
-            time = currentTimeMillis
+            time = currentTimeSeconds
+        )
+        is BotInvitedJoinGroupRequestEvent -> CQGroupMemberAddRequestEventDTO(
+            self_id = bot.id,
+            sub_type = "invite",
+            group_id = groupId,
+            user_id = invitorId,
+            comment = "",
+            flag = eventId.toString(),
+            time = currentTimeSeconds
         )
         else -> CQIgnoreEventDTO(bot.id)
     }
@@ -184,14 +217,26 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
 
 
 @Serializable
-@SerialName("CQMetaEvent")
-data class CQMetaEventDTO(
+@SerialName("CQLifecycleMetaEvent")
+data class CQLifecycleMetaEventDTO(
     override var self_id: Long,
     val sub_type: String, // enable、disable、connect
     override var time: Long
 ) : CQBotEventDTO() {
     override var post_type: String = "meta_event"
     val meta_event_type: String = "lifecycle"
+}
+
+@Serializable
+@SerialName("CQHeartbeatMetaEvent")
+data class CQHeartbeatMetaEventDTO(
+    override var self_id: Long,
+    override var time: Long,
+    val status: CQPluginStatusData,
+    val interval: Long,
+) : CQBotEventDTO() {
+    override var post_type: String = "meta_event"
+    val meta_event_type: String = "heartbeat"
 }
 
 @Serializable
@@ -271,7 +316,7 @@ data class CQFriendRequestEventDTO(
     val flag: String,
     override var time: Long
 ) : CQBotEventDTO() {
-    override var post_type: String = "notice"
+    override var post_type: String = "request"
     val request_type: String = "friend"
 }
 
@@ -286,6 +331,6 @@ data class CQGroupMemberAddRequestEventDTO(
     val flag: String,
     override var time: Long
 ) : CQBotEventDTO() {
-    override var post_type: String = "notice"
+    override var post_type: String = "request"
     val request_type: String = "group"
 }

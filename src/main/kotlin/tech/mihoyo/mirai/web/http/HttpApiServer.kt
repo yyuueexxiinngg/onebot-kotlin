@@ -4,13 +4,11 @@ import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.util.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.serialization.InternalSerializationApi
 import net.mamoe.mirai.LowLevelAPI
-import tech.mihoyo.mirai.web.BotSession
+import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.util.logger
 
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
-@LowLevelAPI
 class HttpApiServer(
     val session: BotSession
 ) {
@@ -43,5 +41,4 @@ class HttpApiServer(
     fun close() {
         server.stop(5000, 5000)
     }
-
 }

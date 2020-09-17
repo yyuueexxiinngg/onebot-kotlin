@@ -25,7 +25,7 @@
 package tech.mihoyo.mirai.util
 
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.get
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.serialization.json.*
@@ -33,7 +33,13 @@ import net.mamoe.mirai.message.data.Message
 
 @OptIn(KtorExperimentalAPI::class)
 abstract class MusicProvider {
-    val http = HttpClient(CIO)
+    val http = HttpClient(OkHttp) {
+        engine {
+            config {
+                retryOnConnectionFailure(true)
+            }
+        }
+    }
 
     abstract suspend fun send(id: String): Message
 }
@@ -113,7 +119,35 @@ object QQMusic : MusicProvider() {
 }
 
 object NeteaseMusic : MusicProvider() {
+    suspend fun getSongInfo(id: String = ""): JsonObject {
+        val result = http.get<String>("http://music.163.com/api/song/detail/?id=$id&ids=%5B$id%5D")
+        return Json.parseToJsonElement(result).jsonObject.getValue("songs").jsonArray[0].jsonObject
+    }
+
+    fun toXmlMessage(song: String, singer: String, songId: String, coverUrl: String): XmlMessage {
+        return XmlMessage(
+            "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
+                    "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] $song\" sourceMsgId=\"0\" " +
+                    "url=\"http://music.163.com/m/song/$songId\" " +
+                    "flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\">" +
+                    "<audio cover=\"$coverUrl?param=90y90\" " +
+                    "src=\"https://music.163.com/song/media/outer/url?id=$songId.mp3\" /><title>$song</title><summary>$singer</summary></item><source name=\"网易云音乐\" " +
+                    "icon=\"https://pic.rmb.bdstatic.com/911423bee2bef937975b29b265d737b3.png\" " +
+                    "url=\"http://web.p.qq.com/qqmpmobile/aio/app.html?id=100495085\" action=\"app\" " +
+                    "a_actionData=\"com.netease.cloudmusic\" i_actionData=\"tencent100495085://\" appid=\"100495085\" /></msg>"
+        )
+    }
+
     override suspend fun send(id: String): XmlMessage {
-        TODO("Not yet implemented")
+        val info = getSongInfo(id)
+        val song = info.getValue("name").jsonPrimitive.content
+        val artists = info.getValue("artists").jsonArray
+        val albumInfo = info.getValue("album").jsonObject
+        return toXmlMessage(
+            song,
+            artists[0].jsonObject.getValue("name").jsonPrimitive.content,
+            id,
+            albumInfo.getValue("picUrl").jsonPrimitive.content
+        )
     }
 }

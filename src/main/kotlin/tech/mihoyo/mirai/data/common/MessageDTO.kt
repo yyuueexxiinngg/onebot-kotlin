@@ -20,8 +20,8 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.*
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.MiraiExperimentalAPI
-import net.mamoe.mirai.utils.currentTimeMillis
+import net.mamoe.mirai.utils.currentTimeSeconds
+import tech.mihoyo.mirai.util.toCQString
 import java.net.URL
 
 /*
@@ -64,29 +64,6 @@ data class CQPrivateMessagePacketDTO(
     override var post_type: String = "message"
     val message_type: String = "private"
 }
-
-
-// Message toCQString
-@MiraiExperimentalAPI
-suspend fun Message.toCQString(): String {
-    return when (this) {
-        is PlainText -> content
-        is At -> "[CQ:at,qq=$target]"
-        is Face -> "[CQ:face,id=$id]"
-        is VipFace -> "[CQ:vipface,id=${kind.id},name=${kind.name},count=${count}]"
-        is PokeMessage -> "[CQ:poke,id=${id},type=${type},name=${name}]"
-        is AtAll -> "[CQ:at,qq=all]"
-        is Image -> {
-            "[CQ:image,file=$imageId,url=${queryUrl()}]"
-        }
-        is RichMessage -> "[CQ:rich,data=${content}]"
-        is MessageSource -> ""
-        is QuoteReply -> ""
-        is Voice -> "[CQ:voice,url=${url},md5=${md5},file=${fileName}]"
-        else -> "此处消息的转义尚未被插件支持"
-    }
-}
-
 
 // Message DTO
 @Serializable
@@ -249,7 +226,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             raw_message = rawMessage.value,
             font = 0,
             sender = CQMemberDTO(sender),
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is FriendMessageEvent -> CQPrivateMessagePacketDTO(
             self_id = bot.id,
@@ -260,7 +237,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             raw_message = rawMessage.value,
             font = 0,
             sender = CQQQDTO(sender),
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         is TempMessageEvent -> CQPrivateMessagePacketDTO(
             self_id = bot.id,
@@ -271,7 +248,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             raw_message = rawMessage.value,
             font = 0,
             sender = CQQQDTO(sender),
-            time = currentTimeMillis
+            time = currentTimeSeconds
         )
         else -> CQIgnoreEventDTO(sender.id)
     }

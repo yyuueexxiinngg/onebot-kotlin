@@ -1,33 +1,20 @@
 package tech.mihoyo.mirai.web.http
 
-import net.mamoe.mirai.Bot
-import net.mamoe.mirai.console.plugins.Config
+import tech.mihoyo.mirai.util.ConfigSection
 
-class ReportServiceConfig(config: Config, bot: Bot) {
-    /**
-     * 当前Bot的总配置
-     */
-    @Suppress("UNCHECKED_CAST")
-    private val  botConfig = config[bot.id.toString()] as? Map<String, Any> ?: emptyMap()
-
-    /**
-     * Bot对应HTTP服务配置
-     */
-    @Suppress("UNCHECKED_CAST")
-    private val httpServiceConfig = botConfig["http"] as? Map<String, Any> ?: emptyMap()
-
+class ReportServiceConfig(serviceConfig: ConfigSection) {
     /**
      * 上报消息格式
      */
-    val postMessageFormat: String by httpServiceConfig.withDefault { "string" }
+    val postMessageFormat: String by serviceConfig.withDefault { "string" }
 
     /**
      * 上报消息格式至URL
      */
-    val postUrl: String by httpServiceConfig.withDefault { "" }
+    val postUrl: String? by serviceConfig.withDefault { "" }
 
     /**
      * 上报数据签名密钥
      */
-    val secret: String by httpServiceConfig.withDefault { "" }
+    val secret: String by serviceConfig.withDefault { "" }
 }

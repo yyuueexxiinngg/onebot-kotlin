@@ -10,6 +10,7 @@
 package tech.mihoyo.mirai.web.http
 
 import io.ktor.application.*
+import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -19,19 +20,19 @@ import io.ktor.util.pipeline.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.LowLevelAPI
-import tech.mihoyo.mirai.web.BotSession
+import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.callMiraiApi
 import tech.mihoyo.mirai.data.common.CQResponseDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
+import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
-@LowLevelAPI
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
 fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServerServiceConfig) {
+    install(CallLogging)
     // it.second -> if is async call
     routing {
         cqHttpApi("/send_msg", serviceConfig) {
@@ -186,8 +187,22 @@ fun Application.cqHttpApiServer(session: BotSession, serviceConfig: HttpApiServe
             val responseDTO = callMiraiApi(".handle_quick_operation", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/_get_group_active_data", serviceConfig) {
-            val responseDTO = callMiraiApi("_get_group_active_data", it.first, session.cqApiImpl)
+
+        ////////////////
+        ////  v11  ////
+        //////////////
+
+        cqHttpApi("/set_group_name", serviceConfig) {
+            val responseDTO = callMiraiApi("set_group_name", it.first, session.cqApiImpl)
+            if (!it.second) call.responseDTO(responseDTO)
+        }
+
+        /////////////////
+        //// hidden ////
+        ///////////////
+
+        cqHttpApi("/_set_group_announcement", serviceConfig) {
+            val responseDTO = callMiraiApi("_set_group_announcement", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
     }
@@ -201,7 +216,10 @@ internal suspend fun ApplicationCall.responseDTO(dto: CQResponseDTO) {
 
 suspend fun checkAccessToken(call: ApplicationCall, serviceConfig: HttpApiServerServiceConfig): Boolean {
     if (serviceConfig.accessToken != null && serviceConfig.accessToken != "") {
-        val accessToken = call.parameters["access_token"] ?: call.request.headers["Authorization"]
+        val accessToken =
+            call.parameters["access_token"] ?: call.request.headers["Authorization"]?.let {
+                Regex("""(?:[Tt]oken|Bearer)\s+(.*)""").find(it)?.groupValues?.get(1)
+            }
         if (accessToken != null) {
             if (accessToken != serviceConfig.accessToken) {
                 call.respond(HttpStatusCode.Forbidden)
@@ -237,9 +255,6 @@ fun paramsToJson(params: Parameters): JsonObject {
     return Json.parseToJsonElement(parsed).jsonObject
 }
 
-@KtorExperimentalAPI
-@ExperimentalCoroutinesApi
-@ContextDsl
 internal inline fun Route.cqHttpApi(
     path: String,
     serviceConfig: HttpApiServerServiceConfig,
@@ -253,7 +268,18 @@ internal inline fun Route.cqHttpApi(
         }
         post {
             if (checkAccessToken(call, serviceConfig)) {
-                body(Pair(Json.parseToJsonElement(call.receiveText()).jsonObject, false))
+                val contentType = call.request.contentType()
+                when {
+                    contentType.contentSubtype.contains("form-urlencoded") -> {
+                        body(Pair(paramsToJson(call.receiveParameters()), false))
+                    }
+                    contentType.contentSubtype.contains("json") -> {
+                        body(Pair(Json.parseToJsonElement(call.receiveTextWithCorrectEncoding()).jsonObject, false))
+                    }
+                    else -> {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
+                }
             }
         }
     }
@@ -270,12 +296,40 @@ internal inline fun Route.cqHttpApi(
         }
         post {
             if (checkAccessToken(call, serviceConfig)) {
-                val req = call.receiveText()
-                call.responseDTO(CQResponseDTO.CQAsyncStarted())
-                CoroutineScope(EmptyCoroutineContext).launch {
-                    body(Pair(Json.parseToJsonElement(req).jsonObject, true))
+                val contentType = call.request.contentType()
+                when {
+                    contentType.contentSubtype.contains("form-urlencoded") -> {
+                        body(Pair(paramsToJson(call.receiveParameters()), true))
+                    }
+                    contentType.contentSubtype.contains("json") -> {
+                        val req = call.receiveTextWithCorrectEncoding()
+                        call.responseDTO(CQResponseDTO.CQAsyncStarted())
+                        CoroutineScope(EmptyCoroutineContext).launch {
+                            body(Pair(Json.parseToJsonElement(req).jsonObject, true))
+                        }
+                    }
+                    else -> {
+                        call.respond(HttpStatusCode.BadRequest)
+                    }
                 }
             }
         }
     }
+}
+
+// https://github.com/ktorio/ktor/issues/384#issuecomment-458542686
+/**
+ * Receive the request as String.
+ * If there is no Content-Type in the HTTP header specified use ISO_8859_1 as default charset, see https://www.w3.org/International/articles/http-charset/index#charset.
+ * But use UTF-8 as default charset for application/json, see https://tools.ietf.org/html/rfc4627#section-3
+ */
+private suspend fun ApplicationCall.receiveTextWithCorrectEncoding(): String {
+    fun ContentType.defaultCharset(): Charset = when (this) {
+        ContentType.Application.Json -> Charsets.UTF_8
+        else -> Charsets.ISO_8859_1
+    }
+
+    val contentType = request.contentType()
+    val suitableCharset = contentType.charset() ?: contentType.defaultCharset()
+    return receiveStream().bufferedReader(charset = suitableCharset).readText()
 }

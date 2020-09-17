@@ -1,6 +1,6 @@
 package tech.mihoyo.mirai.web.websocket
 
-import net.mamoe.mirai.console.plugins.ConfigSection
+import tech.mihoyo.mirai.util.ConfigSection
 
 class WebSocketReverseServiceConfig(serviceConfig: ConfigSection) {
     /**
@@ -52,5 +52,10 @@ class WebSocketReverseServiceConfig(serviceConfig: ConfigSection) {
      * 反向 WebSocket 客户端断线重连间隔
      */
     val reconnectInterval: Long by serviceConfig.withDefault { 3000 }
+
+    /**
+     * 反向 WebSocket 客户端是否通过HTTPS连接
+     */
+    val useTLS: Boolean by serviceConfig.withDefault { false }
 
 }

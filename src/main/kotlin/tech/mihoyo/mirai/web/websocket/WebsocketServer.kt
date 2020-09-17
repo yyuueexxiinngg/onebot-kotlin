@@ -11,24 +11,33 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
-import io.ktor.util.KtorExperimentalAPI
-import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
 import io.ktor.websocket.WebSockets
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
-import net.mamoe.mirai.LowLevelAPI
+import tech.mihoyo.mirai.util.ToBeRemoved
 import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
-import tech.mihoyo.mirai.web.BotSession
+import net.mamoe.mirai.utils.currentTimeSeconds
+import tech.mihoyo.mirai.BotSession
+import tech.mihoyo.mirai.data.common.CQHeartbeatMetaEventDTO
 import tech.mihoyo.mirai.data.common.CQIgnoreEventDTO
+import tech.mihoyo.mirai.data.common.CQPluginStatusData
 import tech.mihoyo.mirai.data.common.toCQDTO
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
+import tech.mihoyo.mirai.web.HeartbeatScope
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
-@LowLevelAPI
+class WebsocketServerScope(coroutineContext: CoroutineContext) : CoroutineScope {
+    override val coroutineContext: CoroutineContext = coroutineContext + CoroutineExceptionHandler { _, throwable ->
+        logger.error("Exception in WebsocketServer", throwable)
+    } + SupervisorJob()
+}
+
+@OptIn(ToBeRemoved::class)
 class WebSocketServer(
     val session: BotSession
 ) {
@@ -64,9 +73,10 @@ class WebSocketServer(
 
 }
 
-@LowLevelAPI
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("DuplicatedCode")
 fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketServerServiceConfig) {
+    val scope = WebsocketServerScope(EmptyCoroutineContext)
     logger.debug("Bot: ${session.bot.id} 尝试开启正向Websocket服务端于端口: ${serviceConfig.wsPort}")
     install(DefaultHeaders)
     install(WebSockets)
@@ -77,25 +87,36 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
             logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /event 开始监听事件")
             val listener = _session.bot.subscribeAlways<BotEvent> {
                 this.toCQDTO(isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
-                    send(Frame.Text(this.toJson()))
+                    val jsonToSend = this.toJson()
+                    logger.debug("WS Server将要发送事件: $jsonToSend")
+                    send(Frame.Text(jsonToSend))
                 }
             }
+
+            val heartbeatJob = if (session.heartbeatEnabled) emitHeartbeat(session, outgoing) else null
+
             try {
-                for (frame in incoming) {
-                    outgoing.send(frame)
-                }
+                incoming.consumeEach { logger.warning("WS Server Event 路由只负责发送事件, 不响应收到的请求") }
             } finally {
+                logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /event 连接被关闭")
                 listener.complete()
+                heartbeatJob?.cancel()
             }
         }
         cqWebsocket("/api", session, serviceConfig) {
-            logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /api 开始处理API请求")
-            incoming.consumeEach {
-                when (it) {
-                    is Frame.Text -> {
-                        handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+            try {
+                logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /api 开始处理API请求")
+                incoming.consumeEach {
+                    when (it) {
+                        is Frame.Text -> {
+                            scope.launch {
+                                handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                            }
+                        }
                     }
                 }
+            } finally {
+                logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /api 连接被关闭")
             }
         }
         cqWebsocket("/", session, serviceConfig) { _session ->
@@ -105,27 +126,51 @@ fun Application.cqWebsocketServer(session: BotSession, serviceConfig: WebSocketS
                     send(Frame.Text(this.toJson()))
                 }
             }
+
+            val heartbeatJob = if (session.heartbeatEnabled) emitHeartbeat(session, outgoing) else null
+
             try {
-                for (frame in incoming) {
-                    outgoing.send(frame)
-                }
-            } finally {
-                listener.complete()
-            }
-            logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 开始处理API请求")
-            incoming.consumeEach {
-                when (it) {
-                    is Frame.Text -> {
-                        handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 开始处理API请求")
+                incoming.consumeEach {
+                    when (it) {
+                        is Frame.Text -> {
+                            scope.launch {
+                                handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                            }
+                        }
                     }
                 }
+            } finally {
+                logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 连接被关闭")
+                listener.complete()
+                heartbeatJob?.cancel()
             }
         }
     }
 }
 
-@LowLevelAPI
-@ContextDsl
+private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Frame>): Job {
+    return HeartbeatScope(EmptyCoroutineContext).launch {
+        while (true) {
+            outgoing.send(
+                Frame.Text(
+                    CQHeartbeatMetaEventDTO(
+                        session.botId,
+                        currentTimeSeconds,
+                        CQPluginStatusData(
+                            good = session.bot.isOnline,
+                            online = session.bot.isOnline
+                        ),
+                        session.heartbeatInterval
+                    ).toJson()
+                )
+            )
+            delay(session.heartbeatInterval)
+        }
+    }
+}
+
+
 private inline fun Route.cqWebsocket(
     path: String,
     session: BotSession,
@@ -134,7 +179,10 @@ private inline fun Route.cqWebsocket(
 ) {
     webSocket(path) {
         if (serviceConfig.accessToken != null && serviceConfig.accessToken != "") {
-            val accessToken = call.parameters["access_token"]
+            val accessToken =
+                call.parameters["access_token"] ?: call.request.headers["Authorization"]?.let {
+                    Regex("""(?:[Tt]oken|Bearer)\s+(.*)""").find(it)?.groupValues?.get(1)
+                }
             if (accessToken != serviceConfig.accessToken) {
                 close(CloseReason(CloseReason.Codes.NORMAL, "accessToken不正确"))
                 return@webSocket

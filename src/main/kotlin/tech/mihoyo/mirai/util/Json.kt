@@ -25,7 +25,7 @@ else CQJson.json.encodeToString(serializer, this)
  * Json解析规则，需要注册支持的多态的类
  */
 object CQJson {
-    @OptIn(UnsafeSerializationApi::class)
+    @OptIn(InternalSerializationApi::class)
     val json = Json {
 
         isLenient = true
@@ -34,28 +34,14 @@ object CQJson {
         @Suppress("UNCHECKED_CAST")
         serializersModule = SerializersModule {
             polymorphic(CQEventDTO::class) {
-                this.subclass(CQGroupMessagePacketDTO.serializer())
-                this.subclass(CQPrivateMessagePacketDTO.serializer())
-                this.subclass(CQIgnoreEventDTO.serializer())
+                this.subclass(CQGroupMessagePacketDTO::class)
+                this.subclass(CQPrivateMessagePacketDTO::class)
+                this.subclass(CQIgnoreEventDTO::class)
+            }
 
-                /*
-                 * BotEventDTO为sealed Class，以BotEventDTO为接收者的函数可以自动进行多态序列化
-                 * 这里通过向EventDTO为接收者的方法进行所有事件类型的多态注册
-                 */
-                CQBotEventDTO::class.sealedSubclasses.forEach {
-                    val clazz = it as KClass<CQBotEventDTO>
-                    this.subclass(clazz.serializer())
-                }
-
-                CQResponseDTO::class.sealedSubclasses.forEach {
-                    val clazz = it as KClass<CQBotEventDTO>
-                    this.subclass(clazz.serializer())
-                }
-
-                CQResponseDataDTO::class.sealedSubclasses.forEach {
-                    val clazz = it as KClass<CQBotEventDTO>
-                    this.subclass(clazz.serializer())
-                }
+            CQBotEventDTO::class.sealedSubclasses.forEach {
+                val clazz = it as KClass<CQBotEventDTO>
+                polymorphic(CQEventDTO::class, clazz, clazz.serializer())
             }
         }
     }

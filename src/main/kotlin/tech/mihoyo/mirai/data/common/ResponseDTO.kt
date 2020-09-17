@@ -6,8 +6,11 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonElement
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
+import yyuueexxiinngg.cqhttp_mirai.BuildConfig
+
 @Serializable
 sealed class CQResponseDataDTO
 
@@ -15,8 +18,8 @@ sealed class CQResponseDataDTO
 open class CQResponseDTO(
     val status: String,
     val retcode: Int,
-    val data: @Serializable(with = ResponseDataSerializer::class) Any?,
-    var echo:  @Contextual Any? = null
+    @Serializable(with = ResponseDataSerializer::class) val data: Any?,
+    var echo: JsonElement? = null
 ) {
     class CQGeneralSuccess : CQResponseDTO("ok", 0, null)
     class CQAsyncStarted : CQResponseDTO("async", 1, null)
@@ -31,6 +34,8 @@ open class CQResponseDTO(
     class CQGroupInfo(group_id: Long, group_name: String, member_count: Int, max_member_count: Int) :
         CQResponseDTO("ok", 0, CQGroupInfoData(group_id, group_name, member_count, max_member_count))
 
+    class CQImageInfo(image: CQImageInfoData) : CQResponseDTO("ok", 0, image)
+    class CQRecordInfo(record: CQRecordInfoData) : CQResponseDTO("ok", 0, record)
     class CQMemberInfo(member: CQMemberInfoData) : CQResponseDTO("ok", 0, member)
     class CQMemberList(memberList: List<CQMemberInfoData>) : CQResponseDTO("ok", 0, memberList)
     class CQCanSendImage(data: CQCanSendImageData = CQCanSendImageData()) : CQResponseDTO("ok", 0, data)
@@ -123,22 +128,68 @@ data class CQMemberInfoData(
 }
 
 @Serializable
+@SerialName("ImageInfoData")
+data class CQImageInfoData(
+    val file: String,
+    @SerialName("filename") val fileName: String,
+    val md5: String,
+    val size: Int,
+    val url: String,
+    @SerialName("add_time") val addTime: Long,
+    @SerialName("file_type") val fileType: String,
+) : CQResponseDataDTO()
+
+@Serializable
+@SerialName("RecordInfoData")
+data class CQRecordInfoData(
+    val file: String,
+    @SerialName("filename") val fileName: String,
+    val md5: String,
+    @SerialName("file_type") val fileType: String,
+) : CQResponseDataDTO()
+
+@Serializable
 @SerialName("CanSendImageData")
 data class CQCanSendImageData(val yes: Boolean = true) : CQResponseDataDTO()
 
 @Serializable
 @SerialName("CanSendRecordData")
-data class CQCanSendRecordData(val yes: Boolean = false) : CQResponseDataDTO()
+data class CQCanSendRecordData(val yes: Boolean = true) : CQResponseDataDTO()
 
 @Serializable
 @SerialName("PluginStatusData")
 data class CQPluginStatusData(
     val app_initialized: Boolean = true,
     val app_enabled: Boolean = true,
-    val plugins_good: Boolean = true,
+    val plugins_good: PluginsGoodData = PluginsGoodData(),
     val app_good: Boolean = true,
     val online: Boolean = true,
     val good: Boolean = true
+) : CQResponseDataDTO()
+
+@Serializable
+@SerialName("PluginsGoodData")
+data class PluginsGoodData(
+    val asyncActions: Boolean = true,
+    val backwardCompatibility: Boolean = true,
+    val defaultConfigGenerator: Boolean = true,
+    val eventDataPatcher: Boolean = true,
+    val eventFilter: Boolean = true,
+    val experimentalActions: Boolean = true,
+    val extensionLoader: Boolean = true,
+    val heartbeatGenerator: Boolean = true,
+    val http: Boolean = true,
+    val iniConfigLoader: Boolean = true,
+    val jsonConfigLoader: Boolean = true,
+    val loggers: Boolean = true,
+    val messageEnhancer: Boolean = true,
+    val postMessageFormatter: Boolean = true,
+    val rateLimitedActions: Boolean = true,
+    val restarter: Boolean = true,
+    val updater: Boolean = true,
+    val websocket: Boolean = true,
+    val websocketReverse: Boolean = true,
+    val workerPoolResizer: Boolean = true,
 ) : CQResponseDataDTO()
 
 @Serializable
@@ -146,7 +197,11 @@ data class CQPluginStatusData(
 data class CQVersionInfoData(
     val coolq_directory: String = "",
     val coolq_edition: String = "pro",
-    val plugin_version: String,
-    val plugin_build_number: String,
-    val plugin_build_configuration: String = "debug"
+    val plugin_version: String = "4.15.0",
+    val plugin_build_number: Int = 99,
+    val plugin_build_configuration: String = "release",
+    val app_name: String = "cqhttp-mirai",
+    val app_version: String = BuildConfig.VERSION,
+    val app_build_version: String = BuildConfig.COMMIT_HASH,
+    val protocol_version: String = "v10",
 ) : CQResponseDataDTO()
