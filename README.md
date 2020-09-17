@@ -12,6 +12,24 @@ __CQHTTP runs on Mirai__
 2. 编辑`plugins/CQHTTPMirai/setting.yml`配置文件, 将以下给出配置复制并修改
 3. 再次启动[Mirai-console](https://github.com/mamoe/mirai-console)相关客户端
 
+## 为什么会有这个Repo，为什么只有1个Release
+0. 自Mirai-Console更新到1.0-M4版本后，由于启动机制的变更，cqhttp-mirai无法在1.0-M4启动了
+1. 此外，截止本日（2020.09.17），cqhttp-mirai依赖的console仍为0.5.2版本
+2. 这个repo对cqhttp-mirai进行了无比难受的调整，勉强让cqhttp-mirai能在1.0-M4启动使用了
+3. 实现方式：启动类改为1.0-M4写法，被移除的API（集中在Config部分）从Console-0.5.2获取并直接加入包内
+4. 总之看起来能用了，但是真正的稳定版，一定是原作者将Config部分完全改为1.0写法的版本，因此此Repo的版本只视为SNAPSHOT，不提供任何保证
+5. 我只测试了最基础的ws-reverse连接和基础的对话，是否有API失效我也不知道
+6. 测试使用环境：MiraiOK, Mirai-Core-QQAndroid 1.2.3, Mirai-Console 1.0-M4
+
+——XZhouQD
+
+## 改动似乎不只是上面那些？
+0. 是的，最初尝试setup就遇到了很多麻烦，因此移除了一个总是导致我编译失败的gradle task
+1. 原repo没有带着gradle/wrapper，导致很可能需要自己拿一份gradle 6.5的gradle-wrapper.jar，这里直接加上
+2. 由于我用idea而且还用的不熟练，因此多了全局的.gitignore
+
+——XZhouQD
+
 ## 配置相关
 
 ```yaml

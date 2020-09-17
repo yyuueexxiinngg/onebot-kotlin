@@ -7,6 +7,15 @@
  * https://github.com/mamoe/mirai/blob/master/LICENSE
  */
 
+/*
+ * This file is added from Mirai-Console 0.5.2, to keep minimum change to the plugin and make it up with
+ * Mirai-Console 1.0-M4.
+ * This is not the way to solve the issue, but I have little to no experience of developing a Mirai Console
+ * plugin. The only I can do is move this back and tweak the imports.
+ * This is a TEMPORARY solution. The plugin config part should be refactor to Mirai-Console 1.0-M4 ways.
+ * Comment by: XZhouQD
+ */
+
 @file:Suppress("MemberVisibilityCanBePrivate")
 
 package tech.mihoyo.mirai.util
