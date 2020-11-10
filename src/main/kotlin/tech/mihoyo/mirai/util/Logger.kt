@@ -2,6 +2,7 @@ package tech.mihoyo.mirai.util
 
 import net.mamoe.mirai.utils.MiraiLoggerPlatformBase
 import tech.mihoyo.mirai.PluginBase
+import tech.mihoyo.mirai.PluginSettings
 
 class Logger(override val identity: String?) : MiraiLoggerPlatformBase() {
     private val consoleLogger = PluginBase.logger
@@ -14,11 +15,11 @@ class Logger(override val identity: String?) : MiraiLoggerPlatformBase() {
     }
 
     override fun debug0(message: String?) {
-        if (PluginBase.debug) consoleLogger.debug(message)
+        if (PluginSettings.debug) consoleLogger.debug(message)
     }
 
     override fun debug0(message: String?, e: Throwable?) {
-        if (PluginBase.debug) consoleLogger.debug(message, e)
+        if (PluginSettings.debug) consoleLogger.debug(message, e)
     }
 
     override fun info0(message: String?) {

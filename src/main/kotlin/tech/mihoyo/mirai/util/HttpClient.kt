@@ -7,7 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.network.sockets.*
 import io.ktor.util.*
-import tech.mihoyo.mirai.PluginBase
+import tech.mihoyo.mirai.PluginSettings
 import java.io.InputStream
 
 class HttpClient {
@@ -58,9 +58,10 @@ class HttpClient {
         }
 
         @OptIn(KtorExperimentalAPI::class)
+        @Suppress("DuplicatedCode")
         fun initHTTPClientProxy() {
-            if (PluginBase.proxy != "") {
-                val parts = PluginBase.proxy.split("=", limit = 2)
+            if (PluginSettings.proxy != "") {
+                val parts = PluginSettings.proxy.split("=", limit = 2)
                 if (parts.size == 2) {
                     when (parts[0].trim()) {
                         "http" -> {

@@ -3,10 +3,10 @@ package tech.mihoyo.mirai
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
-import net.mamoe.mirai.console.plugins.Config
-import net.mamoe.mirai.console.plugins.PluginBase
+import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
@@ -27,27 +27,29 @@ import java.io.File
 import kotlin.reflect.jvm.isAccessible
 import yyuueexxiinngg.cqhttp_mirai.BuildConfig
 
-object PluginBase : PluginBase() {
-    private lateinit var config: Config
-    var debug = false
+object PluginBase : KotlinPlugin() {
     var initialSubscription: Listener<BotEvent>? = null
-    var proxy = ""
     override fun onLoad() {
+        logger.info("Plugin loaded! ${BuildConfig.VERSION}")
+        logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
     }
 
     @OptIn(LowLevelAPI::class)
     override fun onEnable() {
-        config = loadConfig("setting.yml")
-        debug = if (config.exist("debug")) config.getBoolean("debug") else false
-        proxy = if (config.exist("proxy")) config.getString("proxy") else ""
-        logger.info("Plugin loaded! ${BuildConfig.VERSION}")
-        logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
-        if (debug) logger.debug("开发交流群: 1143274864")
+        PluginSettings.reload()
+        if (PluginSettings.debug) logger.debug("开发交流群: 1143274864")
+        println(PluginSettings.debug)
+        println(PluginSettings.bots)
         initHTTPClientProxy()
         Bot.forEachInstance {
             if (!allSession.containsKey(it.id)) {
-                if (config.exist(it.id.toString())) {
-                    SessionManager.createBotSession(it, config.getConfigSection(it.id.toString()))
+                if (PluginSettings.bots?.containsKey(it.id.toString()) == true) {
+                    PluginSettings.bots!![it.id.toString()]?.let { settings ->
+                        SessionManager.createBotSession(
+                            it,
+                            settings
+                        )
+                    }
                 } else {
                     logger.debug("${it.id}未对CQHTTPMirai进行配置")
                 }
@@ -60,8 +62,13 @@ object PluginBase : PluginBase() {
             when (this) {
                 is BotOnlineEvent -> {
                     if (!allSession.containsKey(bot.id)) {
-                        if (config.exist(bot.id.toString())) {
-                            SessionManager.createBotSession(bot, config.getConfigSection(bot.id.toString()))
+                        if (PluginSettings.bots?.containsKey(bot.id.toString()) == true) {
+                            PluginSettings.bots!![bot.id.toString()]?.let { settings ->
+                                SessionManager.createBotSession(
+                                    bot,
+                                    settings
+                                )
+                            }
                         } else {
                             logger.debug("${bot.id}未对CQHTTPMirai进行配置")
                         }
@@ -89,7 +96,7 @@ object PluginBase : PluginBase() {
                             session.cqApiImpl.cachedTempContact[this.sender.id] = this.group.id
                         }
 
-                        if (session.shouldCacheImage) {
+                        if (session.settings.cacheImage) {
                             message.filterIsInstance<Image>().forEach { image ->
                                 val delegate = image::class.members.find { it.name == "delegate" }?.call(image)
                                 var imageMD5 = ""
@@ -132,7 +139,7 @@ object PluginBase : PluginBase() {
                             }
                         }
 
-                        if (session.shouldCacheRecord) {
+                        if (session.settings.cacheRecord) {
                             message.filterIsInstance<Voice>().forEach { voice ->
                                 val voiceUrl = if (voice.url != null) voice.url else {
                                     val voiceUrlFiled = voice::class.members.find { it.name == "_url" }
@@ -156,8 +163,12 @@ object PluginBase : PluginBase() {
         allSession.forEach { (sessionId, _) -> closeSession(sessionId) }
     }
 
-    private val imageFold: File = File(dataFolder, "image").apply { mkdirs() }
-    private val recordFold: File = File(dataFolder, "record").apply { mkdirs() }
+    private val imageFold: File by lazy {
+        File(dataFolder, "image").apply { mkdirs() }
+    }
+    private val recordFold: File by lazy {
+        File(dataFolder, "record").apply { mkdirs() }
+    }
 
     internal fun image(imageName: String) = File(imageFold, imageName)
     internal fun record(recordName: String) = File(recordFold, recordName)
