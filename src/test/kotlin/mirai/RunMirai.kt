@@ -1,6 +1,6 @@
 package mirai
 
-import net.mamoe.mirai.console.pure.MiraiConsolePureLoader
+import net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader
 import net.mamoe.mirai.utils.DefaultLogger
 import net.mamoe.mirai.utils.LoggerAdapters
 
@@ -10,6 +10,6 @@ object RunMirai {
     @JvmStatic
     fun main(args: Array<String>) {
         // 默认在 /test 目录下运行
-        MiraiConsolePureLoader.main(emptyArray())
+        MiraiConsoleTerminalLoader.main(emptyArray())
     }
 }

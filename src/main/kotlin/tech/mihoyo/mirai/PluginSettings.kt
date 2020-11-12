@@ -1,66 +1,65 @@
 package tech.mihoyo.mirai
 
+import kotlinx.serialization.SerialName
 import net.mamoe.mirai.console.data.*
 import kotlinx.serialization.Serializable
-import net.mamoe.mirai.console.util.ConsoleExperimentalAPI
 
-@OptIn(ExperimentalPluginConfig::class, ConsoleExperimentalAPI::class)
-@Serializable
-object PluginSettings : AutoSavePluginConfig() {
+object PluginSettings : AutoSavePluginConfig("settings") {
     var debug by value(false)
     var proxy by value("")
-    var bots: MutableMap<String, BotSettings>? by value()
+    var bots: MutableMap<String, BotSettings>? by value(mutableMapOf("12345654321" to BotSettings()))
 
     @Serializable
-    object BotSettings {
-        var cacheImage by value(false)
-        var cacheRecord by value(false)
-        var heartbeat: HeartbeatSettings by value()
-        var http: HTTPSettings by value()
-        @ValueName("ws_reverse")
-        var wsReverse: MutableList<WebsocketReverseClientSettings>? by value()
-        var ws: WebsocketServerSettings by value()
-    }
+    data class BotSettings(
+        var cacheImage: Boolean = false,
+        var cacheRecord: Boolean = false,
+        var heartbeat: HeartbeatSettings = HeartbeatSettings(),
+        var http: HTTPSettings = HTTPSettings(),
+        @SerialName("ws_reverse")
+        var wsReverse: MutableList<WebsocketReverseClientSettings> = mutableListOf(),
+        var ws: WebsocketServerSettings = WebsocketServerSettings()
+    )
 
     @Serializable
-    object HeartbeatSettings {
-        var enable by value(false)
-        var interval by value(15000L)
-    }
+    data class HeartbeatSettings(
+        var enable: Boolean = false,
+        var interval: Long = 1500L
+    )
 
     @Serializable
-    object HTTPSettings {
-        var enable by value(false)
-        var host by value("0.0.0.0")
-        var port by value(5700)
-        var accessToken by value("")
+    data class HTTPSettings(
+        var enable: Boolean = false,
+        var host: String = "0.0.0.0",
+        var port: Int = 5700,
 
-        var postMessageFormat by value("string")
-        var postUrl by value("")
-        var secret by value("")
-    }
-
-    @Serializable
-    object WebsocketReverseClientSettings {
-        var enable by value(false)
-        var postMessageFormat by value("string")
-        var reverseHost by value("127.0.0.1")
-        var reversePort by value(8080)
-        var accessToken by value("")
-        var reversePath by value("/ws")
-        var reverseApiPath by value(reversePath)
-        var reverseEventPath by value(reversePath)
-        var useUniversal by value(true)
-        var reconnectInterval by value(3000L)
-        var useTLS by value(false)
-    }
+        var accessToken: String = "",
+        var postMessageFormat: String = "string",
+        var postUrl: String = "",
+        var secret: String = ""
+    )
 
     @Serializable
-    object WebsocketServerSettings {
-        var enable by value(false)
-        var postMessageFormat by value("string")
-        var wsHost by value("0.0.0.0")
-        var wsPort by value(6700)
-        var accessToken by value("")
-    }
+    data class WebsocketReverseClientSettings(
+        var enable: Boolean = false,
+        var postMessageFormat: String = "string",
+        var reverseHost: String = "127.0.0.1",
+        var reversePort: Int = 8080,
+
+        var accessToken: String = "",
+        var reversePath: String = "/ws",
+        var reverseApiPath: String = "/api",
+        var reverseEventPath: String = "/event",
+        var useUniversal: Boolean = true,
+        var reconnectInterval: Long = 3000L,
+        var useTLS: Boolean = false
+    )
+
+    @Serializable
+    data class WebsocketServerSettings(
+        var enable: Boolean = false,
+        var postMessageFormat: String = "string",
+        var wsHost: String = "0.0.0.0",
+        var wsPort: Int = 6700,
+        var accessToken: String = ""
+    )
 }

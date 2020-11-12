@@ -1,11 +1,13 @@
 package tech.mihoyo.mirai
 
+import com.google.auto.service.AutoService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
+import net.mamoe.mirai.console.plugin.jvm.JvmPlugin
+import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
@@ -27,19 +29,25 @@ import java.io.File
 import kotlin.reflect.jvm.isAccessible
 import yyuueexxiinngg.cqhttp_mirai.BuildConfig
 
-object PluginBase : KotlinPlugin() {
-    var initialSubscription: Listener<BotEvent>? = null
-    override fun onLoad() {
-        logger.info("Plugin loaded! ${BuildConfig.VERSION}")
-        logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
+@AutoService(JvmPlugin::class)
+object PluginBase : KotlinPlugin(
+    JvmPluginDescription(
+        id = "tech.mihoyo.onebot",
+        version = BuildConfig.VERSION,
+    ) {
+        name("OneBot")
+        author("yyuueexxiinngg")
+        info("OneBot Standard Kotlin implementation. ")
     }
+) {
+    var initialSubscription: Listener<BotEvent>? = null
 
     @OptIn(LowLevelAPI::class)
     override fun onEnable() {
+        logger.info("Plugin loaded! ${BuildConfig.VERSION}")
+        logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
         PluginSettings.reload()
         if (PluginSettings.debug) logger.debug("开发交流群: 1143274864")
-        println(PluginSettings.debug)
-        println(PluginSettings.bots)
         initHTTPClientProxy()
         Bot.forEachInstance {
             if (!allSession.containsKey(it.id)) {
@@ -51,7 +59,7 @@ object PluginBase : KotlinPlugin() {
                         )
                     }
                 } else {
-                    logger.debug("${it.id}未对CQHTTPMirai进行配置")
+                    logger.debug("${it.id}未对OneBot进行配置")
                 }
             } else {
                 logger.debug("${it.id}已存在")
@@ -70,7 +78,7 @@ object PluginBase : KotlinPlugin() {
                                 )
                             }
                         } else {
-                            logger.debug("${bot.id}未对CQHTTPMirai进行配置")
+                            logger.debug("${bot.id}未对OneBot进行配置")
                         }
                     }
                 }
