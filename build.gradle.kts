@@ -21,7 +21,7 @@ repositories {
 
 val miraiCoreVersion = "1.3.3"
 val miraiConsoleVersion = "1.0-RC-1"
-val ktorVersion = "1.4.0"
+val ktorVersion = "1.4.1"
 val kotlinVersion = "1.4.0"
 val kotlinSerializationVersion = "1.0.1"
 val autoService = "1.0-rc7"

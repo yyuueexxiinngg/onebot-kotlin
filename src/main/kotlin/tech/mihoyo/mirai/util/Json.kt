@@ -27,7 +27,7 @@ else CQJson.json.encodeToString(serializer, this)
 object CQJson {
     @OptIn(InternalSerializationApi::class)
     val json = Json {
-
+        encodeDefaults = true
         isLenient = true
         ignoreUnknownKeys = true
 

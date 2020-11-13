@@ -15,10 +15,12 @@ import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.subscribeAlways
+import net.mamoe.mirai.message.GroupMessageEvent
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Voice
+import net.mamoe.mirai.message.data.source
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.SessionManager.allSession
 import tech.mihoyo.mirai.SessionManager.closeSession
@@ -100,6 +102,11 @@ object PluginBase : KotlinPlugin(
                 is MessageEvent -> {
                     allSession[bot.id]?.let { s ->
                         val session = s as BotSession
+
+                        if (this is GroupMessageEvent) {
+                            session.cqApiImpl.cachedSourceQueue[message.source.id] = message.source
+                        }
+
                         if (this is TempMessageEvent) {
                             session.cqApiImpl.cachedTempContact[this.sender.id] = this.group.id
                         }

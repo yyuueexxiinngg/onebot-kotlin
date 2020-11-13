@@ -88,7 +88,7 @@ class MiraiApi(val bot: Bot) {
     // QQ : GroupId
     val cachedTempContact: MutableMap<Long, Long> = mutableMapOf()
     val cacheRequestQueue = CacheRequestQueue()
-    private val cachedSourceQueue = CacheSourceQueue()
+    val cachedSourceQueue = CacheSourceQueue()
 
     suspend fun cqSendMessage(params: Map<String, JsonElement>): CQResponseDTO {
         if (params.contains("message_type")) {
