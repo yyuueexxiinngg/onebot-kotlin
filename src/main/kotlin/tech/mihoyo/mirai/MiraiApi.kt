@@ -98,9 +98,9 @@ class MiraiApi(val bot: Bot) {
             }
         } else {
             when {
-                params["user_id"] != null -> return cqSendPrivateMessage(params)
                 params["group_id"] != null -> return cqSendGroupMessage(params)
                 params["discuss_id"] != null -> return cqSendGroupMessage(params)
+                params["user_id"] != null -> return cqSendPrivateMessage(params)
             }
         }
         return CQResponseDTO.CQInvalidRequest()
