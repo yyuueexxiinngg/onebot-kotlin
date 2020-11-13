@@ -1,16 +1,17 @@
-# CQHTTP Mirai
+# OneBot Mirai - CQHTTP Mirai
 
 ![Gradle CI](https://github.com/yyuueexxiinngg/cqhttp-mirai/workflows/Gradle%20CI/badge.svg)
 
-__CQHTTP runs on Mirai__
+__[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mirai__
 
 ### 自0.2.0起添加临时[Embedded分支版本](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded), 与主分支单插件版并行, 支持发送语音, 请看[此说明中第一部分](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded)进行配置
 
 ## 开始使用
-0. 请首先运行[Mirai-console](https://github.com/mamoe/mirai-console)相关客户端生成plugins文件夹
-1. 将`cqhttp-mirai`生成的`jar包文件`放入`plugins`文件夹中
-2. 编辑`plugins/CQHTTPMirai/setting.yml`配置文件, 将以下给出配置复制并修改
-3. 再次启动[Mirai-console](https://github.com/mamoe/mirai-console)相关客户端
+0. 请首先运行[mirai-console](https://github.com/mamoe/mirai-console)相关客户端生成plugins文件夹
+1. 将`onebot-mirai`生成的`jar包文件`放入`plugins`文件夹中
+2. 运行`mirai-console`, 将在`config/OneBot`文件夹中自动生成样本配置文件`settings.yml`
+3. 编辑`config/OneBot/settings.yml`配置文件, 将以下给出配置复制并修改
+4. 再次启动[mirai-console](https://github.com/mamoe/mirai-console)相关客户端
 
 ## 配置相关
 
@@ -19,87 +20,88 @@ __CQHTTP runs on Mirai__
 debug: false
 # 下载图片/语音时使用的Proxy, 配置后, 发送图片/语音时指定`proxy=1`以通过Proxy下载, 如[CQ:image,proxy=1,url=http://***]
 # 支持HTTP及Sock两种Proxy, 设置举例 proxy: "http=http://127.0.0.1:8888", proxy : "sock=127.0.0.1:1088"
-proxy: ""
-# 要进行配置的QQ号 (Mirai支持多帐号登录, 故需要对每个帐号进行单独设置)
-'1234567890':
-  # 是否缓存所有收到的图片, 默认为否 (仅包含图片信息, 不包含图片本身,  < 0.5KB)
-  cacheImage: false
-  # 是否缓存所有收到的语音, 默认为否 (将下载完整语音进行保存)
-  cacheRecord: false
-  # 心跳包相关配置
-  heartbeat:
-    # 是否发送心跳包, 默认为否
-    enable: false
-    # 心跳包发送间隔, 默认为 15000毫秒
-    interval: 15000
-  # HTTP 相关配置
-  http:
-    # 可选，是否启用HTTP API服务器, 默认为不启用, 此项开始与否跟postUrl无关
-    enable: true
-    # 可选，HTTP API服务器监听地址, 默认为0.0.0.0
-    host: 0.0.0.0
-    # 可选，HTTP API服务器监听端口, 5700
-    port: 5700
-    # 可选，访问口令, 默认为空, 即不设置Token
-    accessToken: ""
-    # 可选，事件及数据上报URL, 默认为空, 即不上报
-    postUrl: ""
-    # 可选，上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
-    postMessageFormat: string
-    # 可选，上报数据签名密钥, 默认为空
-    secret: ""
-  # 可选，反向客户端服务
-  ws_reverse:
-    # 可选，是否启用反向客户端，默认不启用
-    - enable: true
-      # 上报消息格式，string 为字符串格式，array 为数组格式
+proxy: ''
+# Mirai支持多帐号登录, 故需要对每个帐号进行单独设置
+bots:
+  # 要进行配置的QQ号
+  1234567890: 
+    # 是否缓存所有收到的图片, 默认为否 (仅包含图片信息, 不包含图片本身,  < 0.5KB)
+    cacheImage: false
+    # 是否缓存所有收到的语音, 默认为否 (将下载完整语音进行保存)
+    cacheRecord: false
+    # 心跳包相关配置
+    heartbeat: 
+      # 是否发送心跳包, 默认为否
+      enable: false
+      # 心跳包发送间隔, 默认为 15000毫秒
+      interval: 1500
+    # HTTP 相关配置
+    http: 
+      # 可选，是否启用HTTP API服务器, 默认为不启用, 此项开始与否跟postUrl无关
+      enable: true
+      # 可选，HTTP API服务器监听地址, 默认为0.0.0.0
+      host: 0.0.0.0
+      # 可选，HTTP API服务器监听端口, 5700
+      port: 5700
+      # 可选，访问口令, 默认为空, 即不设置Token
+      accessToken: ''
+      # 可选，事件及数据上报URL, 默认为空, 即不上报
+      postUrl: ''
+      # 可选，上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
       postMessageFormat: string
-      # 反向Websocket主机
-      reverseHost: 127.0.0.1
-      # 反向Websocket端口
-      reversePort: 8080
-      # 访问口令, 默认为空, 即不设置Token
-      accessToken: ""
-      # 反向Websocket路径
-      reversePath: /ws
-      # 可选, 反向Websocket Api路径, 默认为reversePath
-      reverseApiPath: /api
-      # 可选, 反向Websocket Event路径, 默认为reversePath
-      reverseEventPath: /event
-      # 是否使用Universal客户端 默认为true
-      useUniversal: true
-      # 可选, 是否通过HTTPS连接, 默认为false
-      useTLS: false
-      # 反向 WebSocket 客户端断线重连间隔，单位毫秒
-      reconnectInterval: 3000
-    - enable: true # 这里是第二个连接, 相当于CQHTTP分身版
+      # 可选，上报数据签名密钥, 默认为空
+      secret: ''
+    # 可选，反向客户端服务
+    ws_reverse: 
+      # 可选，是否启用反向客户端，默认不启用
+      - enable: true
+        # 上报消息格式，string 为字符串格式，array 为数组格式
+        postMessageFormat: string
+        # 反向Websocket主机
+        reverseHost: 127.0.0.1
+        # 反向Websocket端口
+        reversePort: 8080
+        # 访问口令, 默认为空, 即不设置Token
+        accessToken: ''
+        # 反向Websocket路径
+        reversePath: /ws
+        # 可选, 反向Websocket Api路径, 默认为reversePath
+        reverseApiPath: /api
+        # 可选, 反向Websocket Event路径, 默认为reversePath
+        reverseEventPath: /event
+        # 是否使用Universal客户端 默认为true
+        useUniversal: true
+        # 可选, 是否通过HTTPS连接, 默认为false
+        useTLS: false
+        # 反向 WebSocket 客户端断线重连间隔，单位毫秒
+        reconnectInterval: 3000
+      - enable: true # 这里是第二个连接, 相当于CQHTTP分身版
+        postMessageFormat: string
+        reverseHost: 127.0.0.1
+        reversePort: 9222
+        reversePath: /ws
+        useUniversal: false
+        reconnectInterval: 3000
+    # 正向Websocket服务器
+    ws: 
+      # 可选，是否启用正向Websocket服务器，默认不启用
+      enable: true
+      # 可选，上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
       postMessageFormat: string
-      reverseHost: 127.0.0.1
-      reversePort: 9222
-      reversePath: /ws
-      useUniversal: false
-      reconnectInterval: 3000
-  # 正向Websocket服务器
-  ws:
-    # 可选，是否启用正向Websocket服务器，默认不启用
-    enable: true
-    # 可选，上报消息格式，string 为字符串格式，array 为数组格式, 默认为string
-    postMessageFormat: string
-    # 可选，访问口令, 默认为空, 即不设置Token
-    accessToken: ""
-    # 监听主机
-    wsHost: "0.0.0.0"
-    # 监听端口
-    wsPort: 8080
-
-'0987654321': # 这里是第二个QQ Bot的配置
-  ws_reverse:
-    - enable: true
-      postMessageFormat: string
-      reverseHost: 
-      reversePort: 
-      reversePath: /ws
-      reconnectInterval: 3000
+      # 监听主机
+      wsHost: 0.0.0.0
+      # 监听端口
+      wsPort: 6700
+      # 可选，访问口令, 默认为空, 即不设置Token
+      accessToken: ''
+  0987654321: # 这里是第二个QQ Bot的配置
+    ws_reverse: 
+      - enable: true
+        postMessageFormat: string
+        reverseHost:
+        reversePort:
+        reversePath: /ws
+        reconnectInterval: 3000
 ```
 
 ## 计划
@@ -115,7 +117,7 @@ proxy: ""
 
 - [CQ:at]
 - [CQ:image]
-- [CQ:record] # 目前仅[Embedded版本](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded)支持
+- [CQ:record]
 - [CQ:face]
 - [CQ:emoji]
 - [CQ:share]
@@ -192,5 +194,5 @@ proxy: ""
 - [mirai-api-http](https://github.com/mamoe/mirai-api-http) -  [LICENSE](https://github.com/mamoe/mirai-api-http/blob/master/LICENSE)
 - [Mirai Native](https://github.com/iTXTech/mirai-native)  -  [LICENSE](https://github.com/iTXTech/mirai-native/blob/master/LICENSE)
 - [CQHTTP](https://github.com/richardchien/coolq-http-api) -  [LICENSE](https://github.com/richardchien/coolq-http-api/blob/master/LICENSE)
-- [cqhttp-protocol](https://github.com/richardchien/cqhttp-protocol) 
+- [OneBot标准](https://github.com/howmanybots/onebot) 
 - [go-cqhttp](https://github.com/Mrs4s/go-cqhttp)  -  [LICENSE](https://github.com/Mrs4s/go-cqhttp/blob/master/LICENSE)

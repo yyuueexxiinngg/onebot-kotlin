@@ -29,159 +29,159 @@ import tech.mihoyo.mirai.util.toJson
 import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
-fun Application.cqHttpApiServer(session: BotSession, settings: PluginSettings.HTTPSettings) {
+fun Application.oneBotApiServer(session: BotSession, settings: PluginSettings.HTTPSettings) {
     install(CallLogging)
     // it.second -> if is async call
     routing {
-        cqHttpApi("/send_msg", settings) {
+        oneBotApi("/send_msg", settings) {
             val responseDTO = callMiraiApi("send_msg", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/send_private_msg", settings) {
+        oneBotApi("/send_private_msg", settings) {
             val responseDTO = callMiraiApi("send_private_msg", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/send_group_msg", settings) {
+        oneBotApi("/send_group_msg", settings) {
             val responseDTO = callMiraiApi("send_group_msg", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/send_discuss_msg", settings) {
+        oneBotApi("/send_discuss_msg", settings) {
             val responseDTO = callMiraiApi("send_discuss_msg", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/delete_msg", settings) {
+        oneBotApi("/delete_msg", settings) {
             val responseDTO = callMiraiApi("delete_msg", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/send_like", settings) {
+        oneBotApi("/send_like", settings) {
             val responseDTO = callMiraiApi("send_like", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_kick", settings) {
+        oneBotApi("/set_group_kick", settings) {
             val responseDTO = callMiraiApi("set_group_kick", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_ban", settings) {
+        oneBotApi("/set_group_ban", settings) {
             val responseDTO = callMiraiApi("set_group_ban", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_anonymous_ban", settings) {
+        oneBotApi("/set_group_anonymous_ban", settings) {
             val responseDTO = callMiraiApi("set_group_anonymous_ban", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_whole_ban", settings) {
+        oneBotApi("/set_group_whole_ban", settings) {
             val responseDTO = callMiraiApi("set_group_whole_ban", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_admin", settings) {
+        oneBotApi("/set_group_admin", settings) {
             val responseDTO = callMiraiApi("set_group_admin", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_anonymous", settings) {
+        oneBotApi("/set_group_anonymous", settings) {
             val responseDTO = callMiraiApi("set_group_anonymous", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_card", settings) {
+        oneBotApi("/set_group_card", settings) {
             val responseDTO = callMiraiApi("set_group_card", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_leave", settings) {
+        oneBotApi("/set_group_leave", settings) {
             val responseDTO = callMiraiApi("set_group_leave", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_special_title", settings) {
+        oneBotApi("/set_group_special_title", settings) {
             val responseDTO = callMiraiApi("set_group_special_title", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_discuss_leave", settings) {
+        oneBotApi("/set_discuss_leave", settings) {
             val responseDTO = callMiraiApi("set_discuss_leave", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_friend_add_request", settings) {
+        oneBotApi("/set_friend_add_request", settings) {
             val responseDTO = callMiraiApi("set_friend_add_request", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_group_add_request", settings) {
+        oneBotApi("/set_group_add_request", settings) {
             val responseDTO = callMiraiApi("set_group_add_request", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_login_info", settings) {
+        oneBotApi("/get_login_info", settings) {
             val responseDTO = callMiraiApi("get_login_info", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_stranger_info", settings) {
+        oneBotApi("/get_stranger_info", settings) {
             val responseDTO = callMiraiApi("get_stranger_info", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_friend_list", settings) {
+        oneBotApi("/get_friend_list", settings) {
             val responseDTO = callMiraiApi("get_friend_list", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_group_list", settings) {
+        oneBotApi("/get_group_list", settings) {
             val responseDTO = callMiraiApi("get_group_list", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_group_info", settings) {
+        oneBotApi("/get_group_info", settings) {
             val responseDTO = callMiraiApi("get_group_info", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_group_member_info", settings) {
+        oneBotApi("/get_group_member_info", settings) {
             val responseDTO = callMiraiApi("get_group_member_info", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_group_member_list", settings) {
+        oneBotApi("/get_group_member_list", settings) {
             val responseDTO = callMiraiApi("get_group_member_list", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_cookies", settings) {
+        oneBotApi("/get_cookies", settings) {
             val responseDTO = callMiraiApi("get_cookies", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_csrf_token", settings) {
+        oneBotApi("/get_csrf_token", settings) {
             val responseDTO = callMiraiApi("get_csrf_token", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_credentials", settings) {
+        oneBotApi("/get_credentials", settings) {
             val responseDTO = callMiraiApi("get_credentials", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_record", settings) {
+        oneBotApi("/get_record", settings) {
             val responseDTO = callMiraiApi("get_record", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_image", settings) {
+        oneBotApi("/get_image", settings) {
             val responseDTO = callMiraiApi("get_image", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/can_send_image", settings) {
+        oneBotApi("/can_send_image", settings) {
             val responseDTO = callMiraiApi("can_send_image", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/can_send_record", settings) {
+        oneBotApi("/can_send_record", settings) {
             val responseDTO = callMiraiApi("can_send_record", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_status", settings) {
+        oneBotApi("/get_status", settings) {
             val responseDTO = callMiraiApi("get_status", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/get_version_info", settings) {
+        oneBotApi("/get_version_info", settings) {
             val responseDTO = callMiraiApi("get_version_info", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/set_restart_plugin", settings) {
+        oneBotApi("/set_restart_plugin", settings) {
             val responseDTO = callMiraiApi("set_restart_plugin", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/clean_data_dir", settings) {
+        oneBotApi("/clean_data_dir", settings) {
             val responseDTO = callMiraiApi("clean_data_dir", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/clean_plugin_log", settings) {
+        oneBotApi("/clean_plugin_log", settings) {
             val responseDTO = callMiraiApi("clean_plugin_log", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
-        cqHttpApi("/.handle_quick_operation", settings) {
+        oneBotApi("/.handle_quick_operation", settings) {
             val responseDTO = callMiraiApi(".handle_quick_operation", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
@@ -190,7 +190,7 @@ fun Application.cqHttpApiServer(session: BotSession, settings: PluginSettings.HT
         ////  v11  ////
         //////////////
 
-        cqHttpApi("/set_group_name", settings) {
+        oneBotApi("/set_group_name", settings) {
             val responseDTO = callMiraiApi("set_group_name", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
@@ -199,7 +199,7 @@ fun Application.cqHttpApiServer(session: BotSession, settings: PluginSettings.HT
         //// hidden ////
         ///////////////
 
-        cqHttpApi("/_set_group_announcement", settings) {
+        oneBotApi("/_set_group_announcement", settings) {
             val responseDTO = callMiraiApi("_set_group_announcement", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
@@ -253,7 +253,7 @@ fun paramsToJson(params: Parameters): JsonObject {
     return Json.parseToJsonElement(parsed).jsonObject
 }
 
-internal inline fun Route.cqHttpApi(
+internal inline fun Route.oneBotApi(
     path: String,
     settings: PluginSettings.HTTPSettings,
     crossinline body: suspend PipelineContext<Unit, ApplicationCall>.(Pair<Map<String, JsonElement>, Boolean>) -> Unit

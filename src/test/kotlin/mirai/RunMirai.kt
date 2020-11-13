@@ -1,8 +1,6 @@
 package mirai
 
 import net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader
-import net.mamoe.mirai.utils.DefaultLogger
-import net.mamoe.mirai.utils.LoggerAdapters
 
 object RunMirai {
 

@@ -47,4 +47,4 @@ class Logger(override val identity: String?) : MiraiLoggerPlatformBase() {
     }
 }
 
-val logger = Logger("CQHTTPAPI")
+val logger = Logger("ONEBOTAPI")

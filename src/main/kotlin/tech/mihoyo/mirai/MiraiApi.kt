@@ -68,7 +68,7 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
 
             "_set_group_announcement" -> responseDTO = mirai.cqSetGroupAnnouncement(params)
             else -> {
-                logger.error("未知CQHTTP API: $action")
+                logger.error("未知OneBot API: $action")
             }
         }
     } catch (e: PermissionDeniedException) {

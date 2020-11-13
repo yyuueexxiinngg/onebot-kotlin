@@ -3,9 +3,6 @@ package tech.mihoyo.mirai.web.http
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import io.ktor.util.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.serialization.InternalSerializationApi
-import net.mamoe.mirai.LowLevelAPI
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.util.logger
 
@@ -21,7 +18,7 @@ class HttpApiServer(
         if (settings.enable) {
             try {
                 server = embeddedServer(CIO, environment = applicationEngineEnvironment {
-                    this.module { cqHttpApiServer(session, settings) }
+                    this.module { oneBotApiServer(session, settings) }
                     connector {
                         this.host = settings.host
                         this.port = settings.port

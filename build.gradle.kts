@@ -87,16 +87,6 @@ tasks {
         kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=all")
     }
 
-    val injectVersionToPluginDesc by register("injectVersionToPluginDesc") {
-        group = "cqhttp-mirai"
-        doLast {
-            val pluginDescFile = File(projectDir, "src/main/resources/plugin.yml")
-            val lines = pluginDescFile.readLines().toMutableList()
-            lines[2] = "version: \"$projectVersion\""
-            pluginDescFile.writeText(lines.joinToString(separator = "\n"))
-        }
-    }
-
     buildConfig {
         val commitHash = "git rev-parse --short HEAD".runCommand(projectDir)
         buildConfigField("String", "VERSION", "\"$projectVersion\"")
@@ -105,7 +95,6 @@ tasks {
 
     shadowJar {
         dependsOn(generateBuildConfig)
-        dependsOn(injectVersionToPluginDesc)
     }
 
     val runMiraiConsole by creating(JavaExec::class.java) {

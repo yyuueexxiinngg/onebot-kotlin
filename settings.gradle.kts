@@ -16,4 +16,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "cqhttp-mirai"
+rootProject.name = "onebot-mirai"
