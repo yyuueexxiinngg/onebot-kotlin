@@ -57,7 +57,8 @@ dependencies {
 
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
     implementation(kotlinx("serialization-json", kotlinSerializationVersion))
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.3")
+    implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("com.google.code.gson:gson:2.8.6")
 
     api(ktor("server-cio"))
     api(ktor("client-okhttp"))

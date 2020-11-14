@@ -1,5 +1,6 @@
 package tech.mihoyo.mirai
 
+import com.google.gson.Gson
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
@@ -9,6 +10,8 @@ import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.contact.PermissionDeniedException
 import net.mamoe.mirai.data.GroupAnnouncement
 import net.mamoe.mirai.data.GroupAnnouncementMsg
+import net.mamoe.mirai.data.GroupHonorListData
+import net.mamoe.mirai.data.GroupHonorType
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
@@ -65,6 +68,7 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
             ".handle_quick_operation" -> responseDTO = mirai.cqHandleQuickOperation(params)
 
             "set_group_name" -> responseDTO = mirai.cqSetGroupName(params)
+            "get_group_honor_info" -> responseDTO = mirai.cqGetGroupHonorInfo(params)
 
             "_set_group_announcement" -> responseDTO = mirai.cqSetGroupAnnouncement(params)
             else -> {
@@ -545,6 +549,80 @@ class MiraiApi(val bot: Bot) {
         return if (groupId != null && name != null && name != "") {
             bot.getGroup(groupId).name = name
             CQResponseDTO.CQGeneralSuccess()
+        } else {
+            CQResponseDTO.CQInvalidRequest()
+        }
+    }
+
+    @LowLevelAPI
+    @Suppress("DuplicatedCode")
+    suspend fun cqGetGroupHonorInfo(params: Map<String, JsonElement>): CQResponseDTO {
+        val groupId = params["group_id"]?.jsonPrimitive?.longOrNull
+        val type = params["type"]?.jsonPrimitive?.contentOrNull
+
+        return if (groupId != null && type != null) {
+            var finalData: CQGroupHonorInfoData? = null
+
+            if (type == "talkative" || type == "all") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.TALKATIVE)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = cqData?.let { cqData }
+            }
+
+            if (type == "performer" || type == "all") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.PERFORMER)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = finalData?.apply { performerList = cqData?.actorList } ?: cqData?.let { cqData }
+            }
+
+            if (type == "legend" || type == "all") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.LEGEND)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = finalData?.apply { legendList = cqData?.legendList } ?: cqData?.let { cqData }
+            }
+
+            if (type == "strong_newbie" || type == "all") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.STRONG_NEWBIE)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = finalData?.apply { strongNewbieList = cqData?.strongNewbieList } ?: cqData?.let { cqData }
+            }
+
+            if (type == "emotion" || type == "all") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.EMOTION)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = finalData?.apply { emotionList = cqData?.emotionList } ?: cqData?.let { cqData }
+            }
+
+            if (type == "active") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.ACTIVE)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = finalData?.apply {
+                    activeObj = cqData?.activeObj
+                    showActiveObj = cqData?.showActiveObj
+                } ?: cqData?.let { cqData }
+            }
+
+            if (type == "exclusive") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.EXCLUSIVE)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = finalData?.apply { exclusiveList = cqData?.exclusiveList } ?: cqData?.let { cqData }
+            }
+
+            if (type == "manage") {
+                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.MANAGE)
+                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                finalData = finalData?.apply { manageList = cqData?.manageList } ?: cqData?.let { cqData }
+            }
+
+            finalData?.let { CQResponseDTO.CQHonorInfo(it) } ?: CQResponseDTO.CQMiraiFailure()
         } else {
             CQResponseDTO.CQInvalidRequest()
         }

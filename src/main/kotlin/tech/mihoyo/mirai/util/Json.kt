@@ -28,6 +28,7 @@ object CQJson {
     @OptIn(InternalSerializationApi::class)
     val json = Json {
         encodeDefaults = true
+        classDiscriminator = "ClassType"
         isLenient = true
         ignoreUnknownKeys = true
 
