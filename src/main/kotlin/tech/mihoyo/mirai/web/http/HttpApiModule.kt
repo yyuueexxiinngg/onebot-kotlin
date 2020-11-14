@@ -195,7 +195,7 @@ fun Application.oneBotApiServer(session: BotSession, settings: PluginSettings.HT
             if (!it.second) call.responseDTO(responseDTO)
         }
 
-        cqHttpApi("/get_group_honor_info", serviceConfig) {
+        oneBotApi("/get_group_honor_info", settings) {
             val responseDTO = callMiraiApi("get_group_honor_info", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }

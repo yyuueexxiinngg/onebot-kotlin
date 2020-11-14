@@ -7,7 +7,7 @@ plugins {
     id("com.github.gmazzo.buildconfig") version "2.0.2"
 }
 
-val projectVersion = "0.3.0-embedded"
+val projectVersion = "0.3.0"
 version = projectVersion
 group = "yyuueexxiinngg"
 
@@ -55,10 +55,10 @@ dependencies {
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
     implementation(kotlinx("serialization-json", kotlinSerializationVersion))
     implementation("ch.qos.logback:logback-classic:1.2.3")
-    api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
     api("com.github.ajalt:clikt:2.6.0")
     api("net.mamoe:mirai-core:$miraiCoreVersion")
+    api("net.mamoe:mirai-core-qqandroid:$miraiCoreVersion")
     api("net.mamoe:mirai-console:$miraiConsoleVersion")
     api("net.mamoe:mirai-console-terminal:$miraiConsoleVersion")
     implementation("com.google.code.gson:gson:2.8.6")
@@ -70,9 +70,6 @@ dependencies {
     api(kotlin("reflect", kotlinVersion))
 
     testImplementation(kotlin("stdlib-jdk8"))
-//    testImplementation("net.mamoe:mirai-core:$miraiCoreVersion")
-//    testImplementation("net.mamoe:mirai-core-qqandroid:$miraiCoreVersion")
-//    testImplementation("net.mamoe:mirai-console:$miraiConsoleVersion")
 }
 
 java {
@@ -107,7 +104,7 @@ tasks {
     }
 
     val runEmbedded by creating(JavaExec::class.java) {
-        group = "onebot-mirai"
+        group = "onebot-kotlin"
         main = "tech.mihoyo.MainKt"
         workingDir = File("test")
         dependsOn(shadowJar)

@@ -29,7 +29,7 @@ import tech.mihoyo.mirai.util.HttpClient.Companion.initHTTPClientProxy
 import tech.mihoyo.mirai.util.toUHexString
 import java.io.File
 import kotlin.reflect.jvm.isAccessible
-import yyuueexxiinngg.onebot_mirai.BuildConfig
+import yyuueexxiinngg.onebot_kotlin.BuildConfig
 
 @AutoService(JvmPlugin::class)
 object PluginBase : KotlinPlugin(

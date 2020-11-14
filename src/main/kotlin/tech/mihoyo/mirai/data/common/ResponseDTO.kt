@@ -10,7 +10,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonElement
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
-import yyuueexxiinngg.onebot_mirai.BuildConfig
+import yyuueexxiinngg.onebot_kotlin.BuildConfig
 
 @Serializable
 sealed class CQResponseDataDTO

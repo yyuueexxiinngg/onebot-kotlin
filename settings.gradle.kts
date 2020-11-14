@@ -16,4 +16,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "onebot-mirai"
+rootProject.name = "onebot-kotlin"

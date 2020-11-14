@@ -1,121 +1,100 @@
 package tech.mihoyo
 
+import kotlinx.coroutines.CancellationException
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.enum
 import kotlinx.coroutines.runBlocking
-import net.mamoe.mirai.console.command.CommandManager
-import net.mamoe.mirai.console.command.ConsoleCommandSender
-import net.mamoe.mirai.console.plugins.PluginManager
-import net.mamoe.mirai.console.pure.MiraiConsolePureLoader
+import net.mamoe.mirai.console.MiraiConsole
+import net.mamoe.mirai.console.command.descriptor.ExperimentalCommandDescriptors
+import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.enable
+import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.load
+import net.mamoe.mirai.console.terminal.ConsoleTerminalExperimentalApi
+import net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader
+import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import tech.mihoyo.mirai.PluginBase
-import java.io.File
 
-object CQHTTPKtCli : CliktCommand(name = "cqhttp-kotlin") {
+object OneBotKtCli : CliktCommand(name = "onebot-kotlin") {
     enum class BackendType {
         Mirai,
         Telegram
     }
 
     private val backend: BackendType by option(
-        help = """
-        Backend client of CQHTTP. 
+        help = """```
+        Backend client of OntBot.
         "Mirai" to use mirai, a Kotlin implementation of QQ protocol;
         ------------------------------------------
         后端. "Mirai" 为使用mirai, 一个Kotlin实现的QQ协议客户端;
-    """.trimIndent(),
-        envvar = "cqhttp.backend"
+    ```""".trimIndent(),
+        envvar = "onebot.backend"
     ).enum<BackendType>().default(BackendType.Mirai)
 
     internal val account: String? by option(
-        help = """
+        help = """```
             Account to auto login.
                 QQ when using mirai backend
             ------------------------------------
             需要自动登录的帐号
                 使用mirai后段时为QQ号
-        """.trimIndent(),
-        envvar = "cqhttp.account"
+        ```""".trimIndent(),
+        envvar = "onebot.account"
     )
 
     internal val password: String? by option(
-        help = """
+        help = """```
             Account password to auto login.
             ------------------------------------
             需要自动登录的帐号密码
-        """.trimIndent(),
-        envvar = "cqhttp.password"
+        ```""".trimIndent(),
+        envvar = "onebot.password"
     )
+
+    private val args: Boolean? by option(
+        help = """```
+            Arguments pass through to backend.
+                Usage: --args -- --help
+            ------------------------------------
+            要传递给后端的参数
+                用法: --args -- --help
+       ``` """.trimIndent(),
+        envvar = "onebot.password"
+    ).flag()
+
+    private val argsToPass by argument().multiple()
 
     override fun run() {
         when (backend) {
-            BackendType.Mirai -> runMirai()
-            else -> runMirai()
+            BackendType.Mirai -> runMirai(argsToPass.toTypedArray())
+            else -> runMirai(argsToPass.toTypedArray())
         }
     }
 }
 
 fun main(args: Array<String>) {
-    CQHTTPKtCli.main(args)
+    OneBotKtCli.main(args)
 }
 
+@OptIn(ConsoleExperimentalApi::class, ExperimentalCommandDescriptors::class, ConsoleTerminalExperimentalApi::class)
+fun runMirai(args: Array<String>) {
+    MiraiConsoleTerminalLoader.parse(args, exitProcess = true)
+    MiraiConsoleTerminalLoader.startAsDaemon()
+    PluginBase.load()
+    PluginBase.enable()
 
-fun runMirai() {
-    MiraiConsolePureLoader.load("1.2.2", "0.5.2") // 启动 console
-
-    val selfMiraiPluginClass = PluginBase.javaClass.asSubclass(net.mamoe.mirai.console.plugins.PluginBase::class.java)
-
-    val plugin =
-        selfMiraiPluginClass.kotlin.objectInstance ?: selfMiraiPluginClass.getDeclaredConstructor().apply {
-            kotlin.runCatching {
-                this.isAccessible = true
-            }
-        }.newInstance()
-    plugin.dataFolder
-
-    val pluginNameFiled = plugin.javaClass.superclass.getDeclaredField("pluginName")
-    pluginNameFiled.isAccessible = true
-    pluginNameFiled.set(plugin, "CQHTTPMirai")
-
-    val pluginsSequence = PluginManager.javaClass.getDeclaredField("pluginsSequence")
-    pluginsSequence.isAccessible = true
-
-    val lockFreeLinkedListClass = Class.forName("net.mamoe.mirai.utils.LockFreeLinkedList")
-    val addLast = lockFreeLinkedListClass.getDeclaredMethod("addLast", Object::class.java)
-    addLast.isAccessible = true
-    addLast.invoke(pluginsSequence.get(PluginManager), plugin)
-
-    val load = plugin.javaClass.superclass.getDeclaredMethod("load\$mirai_console")
-    load.isAccessible = true
-    load.invoke(plugin)
-
-    val enable = plugin.javaClass.superclass.getDeclaredMethod("enable\$mirai_console")
-    enable.isAccessible = true
-    enable.invoke(plugin)
-
-    if (CQHTTPKtCli.account != null && CQHTTPKtCli.password != null) {
-        CommandManager.runCommand(ConsoleCommandSender, "login ${CQHTTPKtCli.account} ${CQHTTPKtCli.password}")
+    if (OneBotKtCli.account != null && OneBotKtCli.password != null) {
+        MiraiConsole.addBot(OneBotKtCli.account!!.toLong(), OneBotKtCli.password!!)
     }
 
-    val miraiOKConfigFile = File(System.getProperty("user.dir"), "config.txt")
-    if (miraiOKConfigFile.exists()) {
-        var stateCommand = false
-        miraiOKConfigFile.forEachLine {
-            if (it == "----------") {
-                stateCommand = true
-                return@forEachLine
-            }
-            if (stateCommand) {
-                val cmd = it.trim()
-                if (cmd != "" && !cmd.startsWith("#")) {
-                    CQHTTPKtCli.account?.let { account ->
-                        if (cmd.startsWith("login") && cmd.contains(account)) return@forEachLine
-                    }
-                    CommandManager.runCommand(ConsoleCommandSender, cmd)
-                }
-            }
+    try {
+        runBlocking {
+            MiraiConsole.job.join()
         }
+    } catch (e: CancellationException) {
+        // ignored
     }
-    runBlocking { CommandManager.join() }
 }
