@@ -72,7 +72,7 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
 
             "_set_group_announcement" -> responseDTO = mirai.cqSetGroupAnnouncement(params)
             else -> {
-                logger.error("未知CQHTTP API: $action")
+                logger.error("未知OneBot API: $action")
             }
         }
     } catch (e: PermissionDeniedException) {
@@ -92,7 +92,7 @@ class MiraiApi(val bot: Bot) {
     // QQ : GroupId
     val cachedTempContact: MutableMap<Long, Long> = mutableMapOf()
     val cacheRequestQueue = CacheRequestQueue()
-    private val cachedSourceQueue = CacheSourceQueue()
+    val cachedSourceQueue = CacheSourceQueue()
 
     suspend fun cqSendMessage(params: Map<String, JsonElement>): CQResponseDTO {
         if (params.contains("message_type")) {
@@ -102,9 +102,9 @@ class MiraiApi(val bot: Bot) {
             }
         } else {
             when {
-                params["user_id"] != null -> return cqSendPrivateMessage(params)
                 params["group_id"] != null -> return cqSendGroupMessage(params)
                 params["discuss_id"] != null -> return cqSendGroupMessage(params)
+                params["user_id"] != null -> return cqSendPrivateMessage(params)
             }
         }
         return CQResponseDTO.CQInvalidRequest()

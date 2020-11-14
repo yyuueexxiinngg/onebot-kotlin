@@ -1,8 +1,6 @@
 package mirai
 
-import kotlinx.coroutines.runBlocking
-import net.mamoe.mirai.console.command.CommandManager
-import net.mamoe.mirai.console.pure.MiraiConsolePureLoader
+import net.mamoe.mirai.console.terminal.MiraiConsoleTerminalLoader
 
 object RunMirai {
 
@@ -10,7 +8,6 @@ object RunMirai {
     @JvmStatic
     fun main(args: Array<String>) {
         // 默认在 /test 目录下运行
-        MiraiConsolePureLoader.load(args[0], args[1]) // 启动 console
-        runBlocking { CommandManager.join() } // 阻止主线程退出
+        MiraiConsoleTerminalLoader.main(emptyArray())
     }
 }

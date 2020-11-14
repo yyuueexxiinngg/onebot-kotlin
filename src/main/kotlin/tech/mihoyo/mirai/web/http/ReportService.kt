@@ -37,7 +37,7 @@ class ReportServiceScope(coroutineContext: CoroutineContext) : CoroutineScope {
 
 
 class ReportService(
-    val session: BotSession
+    private val session: BotSession
 ) {
 
     private val http = HttpClient(OkHttp) {
@@ -54,39 +54,36 @@ class ReportService(
 
     private var heartbeatJob: Job? = null
 
-    private lateinit var serviceConfig: ReportServiceConfig
-
     private val scope = ReportServiceScope(EmptyCoroutineContext)
 
+    private val settings = session.settings.http
+
     init {
-        if (session.config.exist("http")) {
-            serviceConfig = ReportServiceConfig(session.config.getConfigSection("http"))
-            scope.launch {
-                startReportService()
-            }
+        scope.launch {
+            startReportService()
         }
     }
 
     private suspend fun startReportService() {
-        if (serviceConfig.postUrl != null && serviceConfig.postUrl != "") {
-            if (serviceConfig.secret != "") {
+        if (settings.postUrl != "") {
+            if (settings.secret != "") {
                 val mac = Mac.getInstance("HmacSHA1")
-                val secret = SecretKeySpec(serviceConfig.secret.toByteArray(), "HmacSHA1")
+                val secret = SecretKeySpec(settings.secret.toByteArray(), "HmacSHA1")
                 mac.init(secret)
                 sha1Util = mac
             }
 
             report(
                 session.cqApiImpl,
-                serviceConfig.postUrl!!,
+                settings.postUrl!!,
                 session.bot.id,
                 CQLifecycleMetaEventDTO(session.botId, "enable", currentTimeSeconds).toJson(),
-                serviceConfig.secret,
+                settings.secret,
                 false
             )
 
             subscription = session.bot.subscribeAlways {
-                this.toCQDTO(isRawMessage = serviceConfig.postMessageFormat == "string")
+                this.toCQDTO(isRawMessage = settings.postMessageFormat == "string")
                     .takeIf { it !is CQIgnoreEventDTO }?.apply {
                         val eventDTO = this
                         val jsonToSend = this.toJson()
@@ -94,22 +91,22 @@ class ReportService(
                         scope.launch(Dispatchers.IO) {
                             report(
                                 session.cqApiImpl,
-                                serviceConfig.postUrl!!,
+                                settings.postUrl!!,
                                 bot.id,
                                 jsonToSend,
-                                serviceConfig.secret,
+                                settings.secret,
                                 true
                             )
                         }
                     }
             }
 
-            if (session.heartbeatEnabled) {
+            if (session.settings.heartbeat.enable) {
                 heartbeatJob = HeartbeatScope(EmptyCoroutineContext).launch {
                     while (true) {
                         report(
                             session.cqApiImpl,
-                            serviceConfig.postUrl!!,
+                            settings.postUrl!!,
                             session.bot.id,
                             CQHeartbeatMetaEventDTO(
                                 session.botId,
@@ -118,12 +115,12 @@ class ReportService(
                                     good = session.bot.isOnline,
                                     online = session.bot.isOnline
                                 ),
-                                session.heartbeatInterval
+                                session.settings.heartbeat.interval
                             ).toJson(),
-                            serviceConfig.secret,
+                            settings.secret,
                             false
                         )
-                        delay(session.heartbeatInterval)
+                        delay(session.settings.heartbeat.interval)
                     }
                 }
             }
@@ -171,13 +168,13 @@ class ReportService(
     }
 
     suspend fun close() {
-        if (serviceConfig.postUrl != null && serviceConfig.postUrl != "") {
+        if (settings.postUrl != "") {
             report(
                 session.cqApiImpl,
-                serviceConfig.postUrl!!,
+                settings.postUrl!!,
                 session.bot.id,
                 CQLifecycleMetaEventDTO(session.botId, "disable", currentTimeSeconds).toJson(),
-                serviceConfig.secret,
+                settings.secret,
                 false
             )
         }

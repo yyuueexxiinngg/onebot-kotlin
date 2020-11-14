@@ -1,12 +1,13 @@
 plugins {
     kotlin("jvm") version "1.4.0"
     kotlin("plugin.serialization") version "1.4.0"
+    kotlin("kapt") version "1.4.0"
     java
     id("com.github.johnrengelman.shadow") version "6.0.0"
     id("com.github.gmazzo.buildconfig") version "2.0.2"
 }
 
-val projectVersion = "0.2.3-embedded"
+val projectVersion = "0.3.0-embedded"
 version = projectVersion
 group = "yyuueexxiinngg"
 
@@ -18,11 +19,12 @@ repositories {
     mavenCentral()
 }
 
-val miraiCoreVersion = "1.2.0"
-val miraiConsoleVersion = "0.5.2"
-val ktorVersion = "1.4.0"
+val miraiCoreVersion = "1.3.3"
+val miraiConsoleVersion = "1.0-RC-1"
+val ktorVersion = "1.4.1"
 val kotlinVersion = "1.4.0"
-val kotlinSerializationVersion = "1.0.0-RC"
+val kotlinSerializationVersion = "1.0.1"
+val autoService = "1.0-rc7"
 
 fun ktor(id: String, version: String = this@Build_gradle.ktorVersion) = "io.ktor:ktor-$id:$version"
 fun kotlinx(id: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$id:$version"
@@ -44,24 +46,27 @@ fun String.runCommand(workingDir: File): String? {
 }
 
 dependencies {
+    kapt("com.google.auto.service", "auto-service", autoService)
+
     compileOnly(kotlin("stdlib-jdk8"))
-//    compileOnly("net.mamoe:mirai-core:$miraiCoreVersion")
-//    compileOnly("net.mamoe:mirai-console:$miraiConsoleVersion")
     compileOnly(kotlin("serialization", kotlinVersion))
+    compileOnly("com.google.auto.service", "auto-service-annotations", autoService)
 
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
+    implementation(kotlinx("serialization-json", kotlinSerializationVersion))
     implementation("ch.qos.logback:logback-classic:1.2.3")
-    implementation("com.google.code.gson:gson:2.8.6")
-
     api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
     api("com.github.ajalt:clikt:2.6.0")
+    api("net.mamoe:mirai-core:$miraiCoreVersion")
     api("net.mamoe:mirai-console:$miraiConsoleVersion")
+    api("net.mamoe:mirai-console-terminal:$miraiConsoleVersion")
+    implementation("com.google.code.gson:gson:2.8.6")
+
     api(ktor("server-cio"))
     api(ktor("client-okhttp"))
     api(ktor("websockets"))
     api(ktor("client-websockets"))
-
     api(kotlin("reflect", kotlinVersion))
 
     testImplementation(kotlin("stdlib-jdk8"))
@@ -84,19 +89,11 @@ val jar by tasks.getting(Jar::class) {
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=all")
     }
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
-    }
-
-    val injectVersionToPluginDesc by register("injectVersionToPluginDesc") {
-        group = "cqhttp-mirai"
-        doLast {
-            val pluginDescFile = File(projectDir, "src/main/resources/plugin.yml")
-            val lines = pluginDescFile.readLines().toMutableList()
-            lines[2] = "version: \"$projectVersion\""
-            pluginDescFile.writeText(lines.joinToString(separator = "\n"))
-        }
+        kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=all")
     }
 
     buildConfig {
@@ -107,11 +104,10 @@ tasks {
 
     shadowJar {
         dependsOn(generateBuildConfig)
-        dependsOn(injectVersionToPluginDesc)
     }
 
     val runEmbedded by creating(JavaExec::class.java) {
-        group = "cqhttp-mirai"
+        group = "onebot-mirai"
         main = "tech.mihoyo.MainKt"
         workingDir = File("test")
         dependsOn(shadowJar)
