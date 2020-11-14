@@ -9,6 +9,7 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.enum
 import kotlinx.coroutines.runBlocking
+import net.mamoe.mirai.alsoLogin
 import net.mamoe.mirai.console.MiraiConsole
 import net.mamoe.mirai.console.command.descriptor.ExperimentalCommandDescriptors
 import net.mamoe.mirai.console.plugin.PluginManager.INSTANCE.enable
@@ -86,12 +87,14 @@ fun runMirai(args: Array<String>) {
     PluginBase.load()
     PluginBase.enable()
 
-    if (OneBotKtCli.account != null && OneBotKtCli.password != null) {
-        MiraiConsole.addBot(OneBotKtCli.account!!.toLong(), OneBotKtCli.password!!)
-    }
-
     try {
         runBlocking {
+            if (OneBotKtCli.account != null && OneBotKtCli.password != null) {
+                MiraiConsole.addBot(OneBotKtCli.account!!.toLong(), OneBotKtCli.password!!) {
+                    fileBasedDeviceInfo()
+                }.alsoLogin()
+            }
+
             MiraiConsole.job.join()
         }
     } catch (e: CancellationException) {

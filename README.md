@@ -1,4 +1,4 @@
-# OneBot Mirai Embedded - CQHTTP Mirai Embedded
+# OneBot Kotlin - CQHTTP Mirai Embedded
 
 ![Gradle CI](https://github.com/yyuueexxiinngg/cqhttp-mirai/workflows/Gradle%20CI/badge.svg)
 
@@ -6,14 +6,13 @@ __[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mi
 
 ## 此分支版本注意事项
 
-- 此版本内置Core和Console
+- 此版本内置Mirai Core和Mirai Console
 - 请将此版本Jar包放至与`mirai-console`, `miraiOK`同级目录
-- 此版本启动方式`java -jar cqhttp-mirai-**-embedded.jar`
-- 此版本配置文件及`image`文件夹路径有所变更, 在`plugins`文件夹下, 而非`plugins/CQHTTPMirai`
-- 请不要将此版本与主分支单插件版同时使用, 即不要在`plugins`文件夹下放置`cqhttp-mirai`的Jar包
+- 此版本启动方式`java -jar onebot-kotlin-**.jar`
+- 请不要将此版本与主分支单插件版同时使用, 即不要在`plugins`文件夹下放置`onebot-mirai`的Jar包
 
 ## 开始使用
-1. 运行Jar包: `java -jar onebot-mirai-**-embedded.jar`
+1. 运行Jar包: `java -jar onebot-kotlin-**.jar`
 2. 编辑`config/OneBot/settings.yml`配置文件, 将以下给出配置复制并修改
 3. 重新运行
 
@@ -24,10 +23,8 @@ __[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mi
 
 ### 读取的环境变量
 
-- `cqhttp.account` 同`--account`参数, 但优先级低, 会被参数覆盖
-- `cqhttp.password` 同`--password`参数, 但优先级低, 会被参数覆盖
-
-#### 此外还支持读取`miraiOK`生成的`config.txt`配置文件中的命令
+- `onebot.account` 同`--account`参数, 但优先级低, 会被参数覆盖
+- `onebot.password` 同`--password`参数, 但优先级低, 会被参数覆盖
 
 ## 配置相关
 
