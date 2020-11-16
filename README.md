@@ -20,6 +20,7 @@ __[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mi
 
 - `--account 123456789` 要自动登录的账号
 - `--password *******` 要自动登录账号的密码
+- `--args -- --xx`传入参数至`mirai-console`, 如`--args -- --help`将`--help`传入获取`mirai-console`提供的帮助信息
 
 ### 读取的环境变量
 
