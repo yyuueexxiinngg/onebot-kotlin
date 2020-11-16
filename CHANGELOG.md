@@ -1,3 +1,42 @@
+## `0.3.0`  *2020/11/16*
+- 项目更名:
+  - 插件版更名为`OneBot Mirai`, `mirai-console`中名为`OneBot`
+  - Embedded版更名为`OneBot Kotlin`
+- **适配`mirai-console 1.0`** #93 #99 #106
+- 新增: [事件过滤器](https://github.com/howmanybots/onebot/blob/master/legacy/EventFilter.md) 支持, 与原版行为不一致的地方:
+  - 未增加`event_filter`配置项, 将`filter.json`放置在`config/OneBot/filter.json`既视为启用事件过滤
+  - 若文件不存在, 或过滤规则语法错误, 则不会对事件进行过滤
+- 修复: 撤回他人消息出错 #55 #98
+- 修复: `send_msg` API中群聊与私聊逻辑判断问题 #105
+- 优化: 初次启动时自动生成样本配置文件
+- 更新依赖`mirai-core`至`1.3.3`, 插件版添加获取群荣誉API `get_group_honor_info`支持
+  
+### OneBot Kotlin - [分支](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded)
+
+- 包含上述所有更新
+- **配置文件位置同步变更至`config/OneBot/settings.yml`**
+- 更新依赖`mirai-console`至`1.0-RC-1`
+- 替换前端为`mirai-console-terminal`
+- **同步`miraiOK`删除对`config.txt`的支持, 自动登录请修改`config/Console/AutoLogin.yml`使用`mirai-console`内建支持**
+- **用以自动登录的环境变量更名**: 
+  - `cqhttp.account` -> `onebot.account`
+  - `cqhttp.password` -> `onebot.password`
+
+#### 注意事项:
+`mirai-console 1.0`后配置文件路径有所变化, 现在配置文件位于`config/OneBot/settings.yml`
+
+插件数据文件夹位置 *(image, record等)* 同样有所变化, 现在位于`data/OneBot`文件夹下
+
+并且配置项中将原来的各账号移动至`bots`配置项下, 现在格式如下
+```yaml
+debug: true
+bots:
+  1234567890:
+    ws_reverse:
+  0987654321:
+    ws_reverse:
+```
+
 ## `0.2.3`  *2020/08/27*
 - **修复: 反向WS客户端非`Universal`模式下`event`路由不保持长连接的问题**, 此BUG**导致所有非`Universal`模式接入的框架无法使用**(如[cqhttp.Cyan](https://github.com/frank-bots/cqhttp.Cyan)) #69 
 - **修复: 反向WS客户端添加`TLS`支持**, 需在配置文件`ws_reverse`中新增项`useTLS: true`以使用`TLS`建立连接, 配置文件详见README.md #42 
