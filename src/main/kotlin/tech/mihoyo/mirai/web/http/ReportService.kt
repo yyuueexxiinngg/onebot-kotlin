@@ -21,6 +21,7 @@ import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.MiraiApi
 import tech.mihoyo.mirai.data.common.*
+import tech.mihoyo.mirai.util.EventFilter
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
 import tech.mihoyo.mirai.web.HeartbeatScope
@@ -85,18 +86,21 @@ class ReportService(
             subscription = session.bot.subscribeAlways {
                 this.toCQDTO(isRawMessage = settings.postMessageFormat == "string")
                     .takeIf { it !is CQIgnoreEventDTO }?.apply {
-                        val eventDTO = this
                         val jsonToSend = this.toJson()
                         logger.debug("HTTP Report将要发送事件: $jsonToSend")
-                        scope.launch(Dispatchers.IO) {
-                            report(
-                                session.cqApiImpl,
-                                settings.postUrl!!,
-                                bot.id,
-                                jsonToSend,
-                                settings.secret,
-                                true
-                            )
+                        if (!EventFilter.eval(jsonToSend)) {
+                            logger.debug("事件被Event Filter命中, 取消发送")
+                        } else {
+                            scope.launch(Dispatchers.IO) {
+                                report(
+                                    session.cqApiImpl,
+                                    settings.postUrl!!,
+                                    bot.id,
+                                    jsonToSend,
+                                    settings.secret,
+                                    true
+                                )
+                            }
                         }
                     }
             }

@@ -20,6 +20,7 @@ import net.mamoe.mirai.utils.currentTimeSeconds
 import tech.mihoyo.mirai.BotSession
 import tech.mihoyo.mirai.PluginSettings
 import tech.mihoyo.mirai.data.common.*
+import tech.mihoyo.mirai.util.EventFilter
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
 import tech.mihoyo.mirai.web.HeartbeatScope
@@ -233,8 +234,13 @@ class WebSocketReverseClient(
                 this.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
                     val jsonToSend = this.toJson()
                     logger.debug("WS Reverse将要发送事件: $jsonToSend")
+
                     if (websocketSession.isActive) {
-                        websocketSession.outgoing.send(Frame.Text(jsonToSend))
+                        if (!EventFilter.eval(jsonToSend)) {
+                            logger.debug("事件被Event Filter命中, 取消发送")
+                        } else {
+                            websocketSession.outgoing.send(Frame.Text(jsonToSend))
+                        }
                     } else {
                         logger.warning("WS Reverse事件发送失败, 连接已被关闭, 尝试重连中 $httpClientKey")
                         subscriptions[httpClientKey]?.complete()

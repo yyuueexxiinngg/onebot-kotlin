@@ -10,7 +10,7 @@ __[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mi
 0. 请首先运行[mirai-console](https://github.com/mamoe/mirai-console)相关客户端生成plugins文件夹
 1. 将`onebot-mirai`生成的`jar包文件`放入`plugins`文件夹中
 2. 运行`mirai-console`, 将在`config/OneBot`文件夹中自动生成样本配置文件`settings.yml`
-3. 编辑`config/OneBot/settings.yml`配置文件, 将以下给出配置复制并修改
+3. 编辑`config/OneBot/settings.yml`配置文件, 按照以下配置给出的注释修改保存
 4. 再次启动[mirai-console](https://github.com/mamoe/mirai-console)相关客户端
 
 ## 配置相关
@@ -131,7 +131,7 @@ bots:
 </details>
 
 <details>
-<summary>已支持的CQHTTP API</summary>
+<summary>已支持的OneBot API</summary>
 
 #### 特别注意, 很多信息Mirai不支持获取, 如群成员的年龄、性别等, 为保证兼容性, 这些项已用`Unknown`, `0`之类的信息填充占位
 
@@ -164,7 +164,7 @@ bots:
 </details>
 
 <details>
-<summary>尚未支持的CQHTTP API</summary>
+<summary>尚未支持的OneBot API</summary>
 
 | API                      | 功能                                                         | 备注                        |
 | ------------------------ | ------------------------------------------------------------ | -------------------------- |

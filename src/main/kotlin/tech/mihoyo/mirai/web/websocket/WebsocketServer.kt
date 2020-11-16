@@ -25,6 +25,7 @@ import tech.mihoyo.mirai.data.common.CQHeartbeatMetaEventDTO
 import tech.mihoyo.mirai.data.common.CQIgnoreEventDTO
 import tech.mihoyo.mirai.data.common.CQPluginStatusData
 import tech.mihoyo.mirai.data.common.toCQDTO
+import tech.mihoyo.mirai.util.EventFilter
 import tech.mihoyo.mirai.util.logger
 import tech.mihoyo.mirai.util.toJson
 import tech.mihoyo.mirai.web.HeartbeatScope
@@ -83,8 +84,12 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
             val listener = _session.bot.subscribeAlways<BotEvent> {
                 this.toCQDTO(isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
                     val jsonToSend = this.toJson()
-                    logger.debug("WS Server将要发送事件: $jsonToSend")
-                    send(Frame.Text(jsonToSend))
+                    logger.debug("WS Server /event 将要发送事件: $jsonToSend")
+                    if (!EventFilter.eval(jsonToSend)) {
+                        logger.debug("事件被Event Filter命中, 取消发送")
+                    } else {
+                        send(Frame.Text(jsonToSend))
+                    }
                 }
             }
 
@@ -118,7 +123,13 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
             logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 开始监听事件")
             val listener = _session.bot.subscribeAlways<BotEvent> {
                 this.toCQDTO(isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
-                    send(Frame.Text(this.toJson()))
+                    val jsonToSend = this.toJson()
+                    logger.debug("WS Server / 将要发送事件: $jsonToSend")
+                    if (!EventFilter.eval(jsonToSend)) {
+                        logger.debug("事件被Event Filter命中, 取消发送")
+                    } else {
+                        send(Frame.Text(jsonToSend))
+                    }
                 }
             }
 
