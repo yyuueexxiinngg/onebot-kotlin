@@ -200,7 +200,6 @@ fun Application.oneBotApiServer(session: BotSession, settings: PluginSettings.HT
             if (!it.second) call.responseDTO(responseDTO)
         }
 
-
         /////////////////
         //// hidden ////
         ///////////////

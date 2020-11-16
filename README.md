@@ -144,7 +144,7 @@ bots:
 </details>
 
 <details>
-<summary>已支持的CQHTTP API</summary>
+<summary>已支持的OneBot API</summary>
 
 #### 特别注意, 很多信息Mirai不支持获取, 如群成员的年龄、性别等, 为保证兼容性, 这些项已用`Unknown`, `0`之类的信息填充占位
 
@@ -177,7 +177,7 @@ bots:
 </details>
 
 <details>
-<summary>尚未支持的CQHTTP API</summary>
+<summary>尚未支持的OneBot API</summary>
 
 | API                      | 功能                                                         | 备注                        |
 | ------------------------ | ------------------------------------------------------------ | -------------------------- |

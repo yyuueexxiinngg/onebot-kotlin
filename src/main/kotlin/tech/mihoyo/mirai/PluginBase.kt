@@ -24,6 +24,7 @@ import net.mamoe.mirai.message.data.source
 import net.mamoe.mirai.utils.currentTimeMillis
 import tech.mihoyo.mirai.SessionManager.allSession
 import tech.mihoyo.mirai.SessionManager.closeSession
+import tech.mihoyo.mirai.util.EventFilter
 import tech.mihoyo.mirai.util.HttpClient
 import tech.mihoyo.mirai.util.HttpClient.Companion.initHTTPClientProxy
 import tech.mihoyo.mirai.util.toUHexString
@@ -49,6 +50,7 @@ object PluginBase : KotlinPlugin(
         logger.info("Plugin loaded! ${BuildConfig.VERSION}")
         logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
         PluginSettings.reload()
+        EventFilter.init()
         if (PluginSettings.debug) logger.debug("开发交流群: 1143274864")
         initHTTPClientProxy()
         Bot.forEachInstance {

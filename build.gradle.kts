@@ -55,13 +55,13 @@ dependencies {
     implementation(kotlinx("serialization-cbor", kotlinSerializationVersion))
     implementation(kotlinx("serialization-json", kotlinSerializationVersion))
     implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("com.google.code.gson:gson:2.8.6")
 
     api("com.github.ajalt:clikt:2.6.0")
     api("net.mamoe:mirai-core:$miraiCoreVersion")
     api("net.mamoe:mirai-core-qqandroid:$miraiCoreVersion")
     api("net.mamoe:mirai-console:$miraiConsoleVersion")
     api("net.mamoe:mirai-console-terminal:$miraiConsoleVersion")
-    implementation("com.google.code.gson:gson:2.8.6")
 
     api(ktor("server-cio"))
     api(ktor("client-okhttp"))
