@@ -3,8 +3,12 @@ name: Gradle CI
 on:
   push:
     branches: [ master, embedded ]
+    paths-ignore:
+      - '*.md'
   pull_request:
     branches: [ master, embedded ]
+    paths-ignore:
+      - '*.md'
 
 jobs:
   build:
