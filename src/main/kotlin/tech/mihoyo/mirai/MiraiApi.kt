@@ -8,8 +8,6 @@ import net.mamoe.mirai.LowLevelAPI
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.contact.PermissionDeniedException
-import net.mamoe.mirai.data.GroupHonorListData
-import net.mamoe.mirai.data.GroupHonorType
 import net.mamoe.mirai.data.GroupAnnouncement
 import net.mamoe.mirai.data.GroupAnnouncementMsg
 import net.mamoe.mirai.data.GroupHonorListData
