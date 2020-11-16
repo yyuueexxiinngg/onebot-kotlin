@@ -21,6 +21,7 @@
 - **用以自动登录的环境变量更名**: 
   - `cqhttp.account` -> `onebot.account`
   - `cqhttp.password` -> `onebot.password`
+- 使用`--args -- --xx`传入参数至`mirai-console`, 如`--args -- --help`将`--help`传入获取`mirai-console`提供的帮助信息
 
 #### 注意事项:
 `mirai-console 1.0`后配置文件路径有所变化, 现在配置文件位于`config/OneBot/settings.yml`
