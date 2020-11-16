@@ -6,7 +6,7 @@ labels: ''
 assignees: ''
 
 ---
-
+<!--注意, 如果是`mirai`框架本身的问题, 将会被打上`mirai`的Issue标签并关闭, 请尝试在`mirai`官方仓库提交Issue-->
 <!--在下面空白处简略描述你遇到的问题-->
 
 
@@ -28,12 +28,12 @@ assignees: ''
 
 
 #### 版本
-cqhttp-mirai- ` ` <!--在``中填写你正在使用的版本号，如`0.2.2.3-embedded`-->
+onebot-` `- ` ` <!--在``中填写你正在使用的版本，如`kotlin`-`0.3.0`-->
 
-<!--如使用Actions中下载的本, 请在下方填写插件Commit版本-->
+<!--如使用Actions中下载的版本, 请在下方填写插件Commit版本-->
 
 
-<!--如使用Embedded版本, 以下版本信息可不填-->
+<!--如使用onebot-kotlin (Embedded)版本, 以下版本信息可不填-->
 mirai-core-` `   
 
 mirai-console-` `
