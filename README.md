@@ -4,14 +4,30 @@
 
 __[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mirai__
 
-### 自0.2.0起添加临时[Embedded分支版本](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded), 与主分支单插件版并行, 支持发送语音, 请看[此说明中第一部分](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded)进行配置
-
-## 开始使用
+### 开始使用
 0. 请首先运行[mirai-console](https://github.com/mamoe/mirai-console)相关客户端生成plugins文件夹
 1. 将`onebot-mirai`生成的`jar包文件`放入`plugins`文件夹中
 2. 运行`mirai-console`, 将在`config/OneBot`文件夹中自动生成样本配置文件`settings.yml`
 3. 编辑`config/OneBot/settings.yml`配置文件, 按照以下配置给出的注释修改保存
 4. 再次启动[mirai-console](https://github.com/mamoe/mirai-console)相关客户端
+
+# OneBot Kotlin - CQHTTP Mirai Embedded
+
+### 开始使用
+1. 运行Jar包: `java -jar onebot-kotlin-**.jar`
+2. 编辑`config/OneBot/settings.yml`配置文件, 将以下配置给出的注释修改保存
+3. 重新运行
+
+### 接收的参数
+
+- `--account 123456789` 要自动登录的账号
+- `--password *******` 要自动登录账号的密码
+- `--args -- --xx`传入参数至`mirai-console`, 如`--args -- --help`将`--help`传入获取`mirai-console`提供的帮助信息
+
+#### 读取的环境变量
+
+- `onebot.account` 同`--account`参数, 但优先级低, 会被参数覆盖
+- `onebot.password` 同`--password`参数, 但优先级低, 会被参数覆盖
 
 ## 配置相关
 
@@ -104,14 +120,12 @@ bots:
         reconnectInterval: 3000
 ```
 
-## 计划
-
+#### 实现
 - [x] 反向Websocket客户端
 - [x] HTTP上报服务
 - [x] Websocket服务端
 - [x] HTTP API
 
-#### 实现
 <details>
 <summary>已实现CQ码</summary>
 

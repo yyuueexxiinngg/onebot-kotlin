@@ -38,4 +38,11 @@ jobs:
     - name: Upload articact
       uses: actions/upload-artifact@v2
       with:
-        path: build/libs
+        name: onebot-mirai
+        path: onebot-mirai/build/libs/onebot-mirai-*-all.jar
+
+    - name: Upload articact
+      uses: actions/upload-artifact@v2
+      with:
+        name: onebot-kotlin
+        path: onebot-kotlin/build/libs/onebot-kotlin-*-all.jar
