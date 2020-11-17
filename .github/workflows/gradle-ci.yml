@@ -2,11 +2,11 @@ name: Gradle CI
 
 on:
   push:
-    branches: [ master, embedded ]
+    branches: [ master ]
     paths-ignore:
       - '**.md'
   pull_request:
-    branches: [ master, embedded ]
+    branches: [ master ]
     paths-ignore:
       - '**.md'
 

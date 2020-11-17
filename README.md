@@ -2,7 +2,7 @@
 
 ![Gradle CI](https://github.com/yyuueexxiinngg/cqhttp-mirai/workflows/Gradle%20CI/badge.svg)
 
-__[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mirai__
+__[OneBot标准](https://github.com/howmanybots/onebot) mirai 插件版 *(原cqhttp-mirai)*__
 
 ### 开始使用
 0. 请首先运行[mirai-console](https://github.com/mamoe/mirai-console)相关客户端生成plugins文件夹
@@ -13,24 +13,29 @@ __[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mi
 
 # OneBot Kotlin - CQHTTP Mirai Embedded
 
+__[OneBot标准](https://github.com/howmanybots/onebot) Kotlin实现 *(原cqhttp-mirai-embedded)*__
+
+### 注意事项
+- 此版本内置`mirai-core`和`mirai-console`
+- 请将此版本Jar包放至与`mirai-console-loader`, `miraiOK`同级目录
+- 此版本启动方式`java -jar onebot-kotlin-**.jar`
+- 请不要将此版本与主分支单插件版同时使用, 即不要在`plugins`文件夹下放置`onebot-mirai`的Jar包
+
 ### 开始使用
 1. 运行Jar包: `java -jar onebot-kotlin-**.jar`
 2. 编辑`config/OneBot/settings.yml`配置文件, 将以下配置给出的注释修改保存
 3. 重新运行
 
 ### 接收的参数
-
 - `--account 123456789` 要自动登录的账号
 - `--password *******` 要自动登录账号的密码
 - `--args -- --xx`传入参数至`mirai-console`, 如`--args -- --help`将`--help`传入获取`mirai-console`提供的帮助信息
 
 #### 读取的环境变量
-
 - `onebot.account` 同`--account`参数, 但优先级低, 会被参数覆盖
 - `onebot.password` 同`--password`参数, 但优先级低, 会被参数覆盖
 
 ## 配置相关
-
 ```yaml
 # Debug日志输出选项
 debug: false
@@ -200,11 +205,9 @@ bots:
 </details>
 
 ## 开源协议
-
 [AGPL-3.0](LICENSE) © yyuueexxiinngg
 
 ## 直接或间接引用到的其他开源项目
-
 - [mirai-api-http](https://github.com/mamoe/mirai-api-http) -  [LICENSE](https://github.com/mamoe/mirai-api-http/blob/master/LICENSE)
 - [Mirai Native](https://github.com/iTXTech/mirai-native)  -  [LICENSE](https://github.com/iTXTech/mirai-native/blob/master/LICENSE)
 - [CQHTTP](https://github.com/richardchien/coolq-http-api) -  [LICENSE](https://github.com/richardchien/coolq-http-api/blob/master/LICENSE)
