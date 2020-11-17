@@ -1,5 +1,7 @@
 # OneBot Kotlin - CQHTTP Mirai Embedded
 
+# 此分支已合并至主分支, 不再更新, 仅作存档
+
 ![Gradle CI](https://github.com/yyuueexxiinngg/cqhttp-mirai/workflows/Gradle%20CI/badge.svg)
 
 __[OneBot Standard](https://github.com/howmanybots/onebot) implementation for mirai__
