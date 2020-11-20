@@ -1,4 +1,8 @@
-## `0.3.0`  *2020/11/16*
+## `0.3.0` 
+#### 0.3.0.1 *2020/11/20*
+- 更新依赖`mirai-console`至`1.0.0`, [更新日志](https://github.com/mamoe/mirai-console/releases/tag/1.0.0), **现在聊天中`/help`命令不会与`console`内建命令冲突了**
+
+#### 0.3.0 *2020/11/16*
 - 项目更名:
   - 插件版更名为`OneBot Mirai`, `mirai-console`中名为`OneBot`
   - Embedded版更名为`OneBot Kotlin`
