@@ -16,16 +16,11 @@ import io.ktor.websocket.WebSockets
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
-import net.mamoe.mirai.event.events.BotEvent
-import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.BotSession
 import com.github.yyuueexxiinngg.onebot.PluginSettings
 import com.github.yyuueexxiinngg.onebot.data.common.CQHeartbeatMetaEventDTO
-import com.github.yyuueexxiinngg.onebot.data.common.CQIgnoreEventDTO
 import com.github.yyuueexxiinngg.onebot.data.common.CQPluginStatusData
-import com.github.yyuueexxiinngg.onebot.data.common.toCQDTO
-import com.github.yyuueexxiinngg.onebot.util.EventFilter
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
@@ -81,19 +76,14 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
     routing {
         logger.debug("Bot: ${session.bot.id} 正向Websocket服务端开始创建路由")
         val isRawMessage = settings.postMessageFormat != "array"
-        cqWebsocket("/event", session, settings) { _session ->
+        cqWebsocket("/event", session, settings) { _ ->
             logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /event 开始监听事件")
-            val listener = _session.bot.subscribeAlways<BotEvent> {
-                this.toCQDTO(isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
-                    val jsonToSend = this.toJson()
-                    logger.debug("WS Server /event 将要发送事件: $jsonToSend")
-                    if (!EventFilter.eval(jsonToSend)) {
-                        logger.debug("事件被Event Filter命中, 取消发送")
-                    } else {
-                        send(Frame.Text(jsonToSend))
-                    }
-                }
-            }
+            val listener = session.subscribeEvent(
+                {
+                    send(Frame.Text(it))
+                },
+                isRawMessage
+            )
 
             val heartbeatJob = if (session.settings.heartbeat.enable) emitHeartbeat(session, outgoing) else null
 
@@ -101,7 +91,7 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
                 incoming.consumeEach { logger.warning("WS Server Event 路由只负责发送事件, 不响应收到的请求") }
             } finally {
                 logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /event 连接被关闭")
-                listener.complete()
+                session.unsubscribeEvent(listener)
                 heartbeatJob?.cancel()
             }
         }
@@ -119,19 +109,14 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
                 logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /api 连接被关闭")
             }
         }
-        cqWebsocket("/", session, settings) { _session ->
+        cqWebsocket("/", session, settings) { _ ->
             logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 开始监听事件")
-            val listener = _session.bot.subscribeAlways<BotEvent> {
-                this.toCQDTO(isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
-                    val jsonToSend = this.toJson()
-                    logger.debug("WS Server / 将要发送事件: $jsonToSend")
-                    if (!EventFilter.eval(jsonToSend)) {
-                        logger.debug("事件被Event Filter命中, 取消发送")
-                    } else {
-                        send(Frame.Text(jsonToSend))
-                    }
-                }
-            }
+            val listener = session.subscribeEvent(
+                {
+                    send(Frame.Text(it))
+                },
+                isRawMessage
+            )
 
             val heartbeatJob = if (session.settings.heartbeat.enable) emitHeartbeat(session, outgoing) else null
 
@@ -146,7 +131,7 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
                 }
             } finally {
                 logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 连接被关闭")
-                listener.complete()
+                session.unsubscribeEvent(listener)
                 heartbeatJob?.cancel()
             }
         }

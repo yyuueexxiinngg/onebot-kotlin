@@ -1,5 +1,6 @@
 package com.github.yyuueexxiinngg.onebot.web.websocket
 
+import com.github.yyuueexxiinngg.onebot.BotEventListener
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.header
@@ -13,15 +14,10 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.Bot
 
-import net.mamoe.mirai.event.Listener
-import net.mamoe.mirai.event.events.BotEvent
-import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.BotSession
-import com.github.yyuueexxiinngg.onebot.PluginBase
 import com.github.yyuueexxiinngg.onebot.PluginSettings
 import com.github.yyuueexxiinngg.onebot.data.common.*
-import com.github.yyuueexxiinngg.onebot.util.EventFilter
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
@@ -42,7 +38,7 @@ class WebSocketReverseClient(
 ) {
     private val httpClients: MutableMap<String, HttpClient> = mutableMapOf()
     private var settings: MutableList<PluginSettings.WebsocketReverseClientSettings>? = session.settings.wsReverse
-    private var subscriptions: MutableMap<String, Listener<BotEvent>?> = mutableMapOf()
+    private var subscriptions: MutableMap<String, BotEventListener> = mutableMapOf()
     private var websocketSessions: MutableMap<String, DefaultClientWebSocketSession> = mutableMapOf()
     private var heartbeatJobs: MutableMap<String, Job> = mutableMapOf()
     private var connectivityChecks: MutableList<String> = mutableListOf()
@@ -224,27 +220,19 @@ class WebSocketReverseClient(
                 ).toJson()
             )
         )
-        val isRawMessage = settings.postMessageFormat != "array"
-        subscriptions[httpClientKey] = session.bot.subscribeAlways {
-            if (this.bot.id == session.botId) {
-                this.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
-                    val jsonToSend = this.toJson()
-                    logger.debug("WS Reverse将要发送事件: $jsonToSend")
 
-                    if (websocketSession.isActive) {
-                        if (!EventFilter.eval(jsonToSend)) {
-                            logger.debug("事件被Event Filter命中, 取消发送")
-                        } else {
-                            websocketSession.outgoing.send(Frame.Text(jsonToSend))
-                        }
-                    } else {
-                        logger.warning("WS Reverse事件发送失败, 连接已被关闭, 尝试重连中 $httpClientKey")
-                        subscriptions[httpClientKey]?.complete()
-                        startGeneralWebsocketClient(session.bot, settings, clientType)
-                    }
+        subscriptions[httpClientKey] = session.subscribeEvent(
+            { jsonToSend ->
+                if (websocketSession.isActive) {
+                    websocketSession.outgoing.send(Frame.Text(jsonToSend))
+                } else {
+                    logger.warning("WS Reverse事件发送失败, 连接已被关闭, 尝试重连中 $httpClientKey")
+                    subscriptions[httpClientKey]?.let { session.unsubscribeEvent(it) }
+                    startGeneralWebsocketClient(session.bot, settings, clientType)
                 }
-            }
-        }
+            },
+            settings.postMessageFormat != "array"
+        )
 
         if (session.settings.heartbeat.enable) {
             heartbeatJobs[httpClientKey] = HeartbeatScope(EmptyCoroutineContext).launch {
@@ -266,7 +254,7 @@ class WebSocketReverseClient(
                         delay(session.settings.heartbeat.interval)
                     } else {
                         logger.warning("WS Reverse事件发送失败, 连接已被关闭, 尝试重连中 $httpClientKey")
-                        subscriptions[httpClientKey]?.complete()
+                        subscriptions[httpClientKey]?.let { session.unsubscribeEvent(it) }
                         startGeneralWebsocketClient(session.bot, settings, clientType)
                         break
                     }
@@ -301,7 +289,7 @@ class WebSocketReverseClient(
                             heartbeatJobs[httpClientKey]?.apply { this.cancel() }
                             websocketSessions.remove(httpClientKey)
                             subscriptions[httpClientKey]?.apply {
-                                this.complete()
+                                subscriptions[httpClientKey]?.let { session.unsubscribeEvent(it) }
                             }
                             subscriptions.remove(httpClientKey)
                             httpClients[httpClientKey].apply {
@@ -328,7 +316,7 @@ class WebSocketReverseClient(
         heartbeatJobs.clear()
         websocketSessions.forEach { it.value.cancel() }
         websocketSessions.clear()
-        subscriptions.forEach { it.value?.complete() }
+        subscriptions.forEach { session.unsubscribeEvent(it.value) }
         subscriptions.clear()
         httpClients.forEach { it.value.close() }
         httpClients.clear()

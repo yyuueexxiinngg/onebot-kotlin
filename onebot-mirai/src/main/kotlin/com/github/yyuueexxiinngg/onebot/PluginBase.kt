@@ -72,6 +72,10 @@ object PluginBase : KotlinPlugin(
         }
 
         initialSubscription = subscribeAlways {
+            allSession[bot.id]?.let {
+                (it as BotSession).triggerEvent(this)
+            }
+
             when (this) {
                 is BotOnlineEvent -> {
                     if (!allSession.containsKey(bot.id)) {

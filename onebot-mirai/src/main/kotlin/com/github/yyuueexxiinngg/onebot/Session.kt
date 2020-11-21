@@ -1,13 +1,20 @@
 package com.github.yyuueexxiinngg.onebot
 
+import com.github.yyuueexxiinngg.onebot.data.common.CQIgnoreEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.toCQDTO
+import com.github.yyuueexxiinngg.onebot.util.EventFilter
+import com.github.yyuueexxiinngg.onebot.util.toJson
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
 import com.github.yyuueexxiinngg.onebot.web.http.HttpApiServer
 import com.github.yyuueexxiinngg.onebot.web.http.ReportService
 import com.github.yyuueexxiinngg.onebot.web.websocket.WebSocketReverseClient
 import com.github.yyuueexxiinngg.onebot.web.websocket.WebSocketServer
+import net.mamoe.mirai.event.events.BotEvent
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+
+internal typealias BotEventListener = suspend (String) -> Unit
 
 internal object SessionManager {
 
@@ -50,6 +57,11 @@ class BotSession internal constructor(
     coroutineContext: CoroutineContext
 ) :
     Session(coroutineContext, bot.id) {
+    private val eventSubscriptionString = mutableListOf<BotEventListener>()
+    private val eventSubscriptionArray = mutableListOf<BotEventListener>()
+    private var hasStringFormatSubscription = false
+    private var hasArrayFormatSubscription = false
+
     val cqApiImpl = MiraiApi(bot)
     private val httpApiServer = HttpApiServer(this)
     private val websocketClient = WebSocketReverseClient(this)
@@ -74,5 +86,53 @@ class BotSession internal constructor(
             httpReportService.close()
         }
         super.close()
+    }
+
+    suspend fun triggerEvent(event: BotEvent) {
+        // Boolean checks should be faster then List size checks I suppose.
+        if (this.hasStringFormatSubscription) {
+            triggerEventInternal(event, true)
+        }
+
+        if (this.hasArrayFormatSubscription) {
+            triggerEventInternal(event, false)
+        }
+    }
+
+    private suspend fun triggerEventInternal(event: BotEvent, isStringFormat: Boolean = false) {
+        event.toCQDTO(isRawMessage = isStringFormat).takeIf { it !is CQIgnoreEventDTO }?.let { dto ->
+            val jsonToSend = dto.toJson()
+            PluginBase.logger.debug("发生事件: $jsonToSend")
+            if (!EventFilter.eval(jsonToSend)) {
+                PluginBase.logger.debug("事件被Event Filter命中, 取消发送")
+            } else {
+                if (isStringFormat) {
+                    this.eventSubscriptionString.forEach { it(jsonToSend) }
+                } else {
+                    this.eventSubscriptionArray.forEach { it(jsonToSend) }
+                }
+            }
+        }
+    }
+
+    fun subscribeEvent(listener: BotEventListener, isRawMessage: Boolean = false): BotEventListener =
+        listener.also {
+            if (isRawMessage) {
+                eventSubscriptionString.add(it)
+                hasStringFormatSubscription = true
+            } else {
+                eventSubscriptionArray.add(it)
+                hasArrayFormatSubscription = true
+            }
+        }
+
+    fun unsubscribeEvent(listener: BotEventListener, isRawMessage: Boolean = false) {
+        if (isRawMessage) {
+            eventSubscriptionString.remove(listener)
+            if (eventSubscriptionString.isEmpty()) hasStringFormatSubscription = false
+        } else {
+            eventSubscriptionArray.remove(listener)
+            if (eventSubscriptionArray.isEmpty()) hasArrayFormatSubscription = false
+        }
     }
 }

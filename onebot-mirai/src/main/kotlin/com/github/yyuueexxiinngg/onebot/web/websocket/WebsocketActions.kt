@@ -13,7 +13,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 
 suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi, cqActionText: String) {
     try {
-        logger.debug(cqActionText)
+        logger.debug("WebSocket收到操作请求: $cqActionText")
         val json = Json.parseToJsonElement(cqActionText).jsonObject
         val echo = json["echo"]
         var action = json["action"]?.jsonPrimitive?.content
@@ -29,7 +29,7 @@ suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi
         }
         responseDTO.echo = echo
         val jsonToSend = responseDTO.toJson()
-        logger.debug(jsonToSend)
+        logger.debug("WebSocket将返回结果: $jsonToSend")
         outgoing.send(Frame.Text(jsonToSend))
     } catch (e: Exception) {
         logger.error(e)

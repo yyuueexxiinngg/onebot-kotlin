@@ -1,5 +1,6 @@
 package com.github.yyuueexxiinngg.onebot.web.http
 
+import com.github.yyuueexxiinngg.onebot.BotEventListener
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.headers
@@ -14,14 +15,10 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
-import net.mamoe.mirai.event.Listener
-import net.mamoe.mirai.event.events.BotEvent
-import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.BotSession
 import com.github.yyuueexxiinngg.onebot.MiraiApi
 import com.github.yyuueexxiinngg.onebot.data.common.*
-import com.github.yyuueexxiinngg.onebot.util.EventFilter
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
@@ -51,7 +48,7 @@ class ReportService(
 
     private var sha1Util: Mac? = null
 
-    private var subscription: Listener<BotEvent>? = null
+    private var subscription: BotEventListener? = null
 
     private var heartbeatJob: Job? = null
 
@@ -83,27 +80,21 @@ class ReportService(
                 false
             )
 
-            subscription = session.bot.subscribeAlways {
-                this.toCQDTO(isRawMessage = settings.postMessageFormat == "string")
-                    .takeIf { it !is CQIgnoreEventDTO }?.apply {
-                        val jsonToSend = this.toJson()
-                        logger.debug("HTTP Report将要发送事件: $jsonToSend")
-                        if (!EventFilter.eval(jsonToSend)) {
-                            logger.debug("事件被Event Filter命中, 取消发送")
-                        } else {
-                            scope.launch(Dispatchers.IO) {
-                                report(
-                                    session.cqApiImpl,
-                                    settings.postUrl,
-                                    bot.id,
-                                    jsonToSend,
-                                    settings.secret,
-                                    true
-                                )
-                            }
-                        }
+            subscription = session.subscribeEvent(
+                { jsonToSend ->
+                    scope.launch(Dispatchers.IO) {
+                        report(
+                            session.cqApiImpl,
+                            settings.postUrl,
+                            session.bot.id,
+                            jsonToSend,
+                            settings.secret,
+                            true
+                        )
                     }
-            }
+                },
+                settings.postMessageFormat == "string"
+            )
 
             if (session.settings.heartbeat.enable) {
                 heartbeatJob = HeartbeatScope(EmptyCoroutineContext).launch {
@@ -184,6 +175,6 @@ class ReportService(
         }
         http.close()
         heartbeatJob?.cancel()
-        subscription?.complete()
+        subscription?.let { session.unsubscribeEvent(it) }
     }
 }
