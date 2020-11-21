@@ -7,7 +7,7 @@ import kotlinx.serialization.json.*
 import com.github.yyuueexxiinngg.onebot.MiraiApi
 import com.github.yyuueexxiinngg.onebot.callMiraiApi
 import com.github.yyuueexxiinngg.onebot.data.common.CQResponseDTO
-import com.github.yyuueexxiinngg.onebot.util.logger
+import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -16,7 +16,7 @@ suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi
         logger.debug(cqActionText)
         val json = Json.parseToJsonElement(cqActionText).jsonObject
         val echo = json["echo"]
-        var action = json["action"]?.let { it.jsonPrimitive.content }
+        var action = json["action"]?.jsonPrimitive?.content
         val responseDTO: CQResponseDTO
         if (action?.endsWith("_async") == true) {
             responseDTO = CQResponseDTO.CQAsyncStarted()

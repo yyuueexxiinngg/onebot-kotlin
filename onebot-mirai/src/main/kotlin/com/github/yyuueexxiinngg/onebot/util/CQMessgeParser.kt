@@ -37,6 +37,7 @@ import net.mamoe.mirai.utils.currentTimeMillis
 import com.github.yyuueexxiinngg.onebot.PluginBase
 import com.github.yyuueexxiinngg.onebot.PluginBase.saveImageAsync
 import com.github.yyuueexxiinngg.onebot.PluginBase.saveRecordAsync
+import com.github.yyuueexxiinngg.onebot.logger
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL

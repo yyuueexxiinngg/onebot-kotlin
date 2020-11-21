@@ -5,7 +5,6 @@ import net.mamoe.mirai.console.data.*
 import kotlinx.serialization.Serializable
 
 object PluginSettings : AutoSavePluginConfig("settings") {
-    var debug by value(false)
     var proxy by value("")
     var bots: MutableMap<String, BotSettings>? by value(mutableMapOf("12345654321" to BotSettings()))
 

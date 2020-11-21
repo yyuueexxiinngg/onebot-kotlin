@@ -2,12 +2,10 @@ package com.github.yyuueexxiinngg.onebot
 
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
-import com.github.yyuueexxiinngg.onebot.util.logger
 import com.github.yyuueexxiinngg.onebot.web.http.HttpApiServer
 import com.github.yyuueexxiinngg.onebot.web.http.ReportService
 import com.github.yyuueexxiinngg.onebot.web.websocket.WebSocketReverseClient
 import com.github.yyuueexxiinngg.onebot.web.websocket.WebSocketServer
-import io.ktor.util.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 

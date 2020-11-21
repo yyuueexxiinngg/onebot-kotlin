@@ -3,7 +3,7 @@ package com.github.yyuueexxiinngg.onebot.web.http
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import com.github.yyuueexxiinngg.onebot.BotSession
-import com.github.yyuueexxiinngg.onebot.util.logger
+import com.github.yyuueexxiinngg.onebot.logger
 import io.ktor.util.*
 
 @OptIn(KtorExperimentalAPI::class)

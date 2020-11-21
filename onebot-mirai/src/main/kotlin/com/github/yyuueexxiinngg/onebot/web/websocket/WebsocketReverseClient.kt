@@ -18,10 +18,11 @@ import net.mamoe.mirai.event.events.BotEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.utils.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.BotSession
+import com.github.yyuueexxiinngg.onebot.PluginBase
 import com.github.yyuueexxiinngg.onebot.PluginSettings
 import com.github.yyuueexxiinngg.onebot.data.common.*
 import com.github.yyuueexxiinngg.onebot.util.EventFilter
-import com.github.yyuueexxiinngg.onebot.util.logger
+import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
 import java.io.EOFException
@@ -49,7 +50,6 @@ class WebSocketReverseClient(
     private val scope = WebsocketReverseClientScope(EmptyCoroutineContext)
 
     init {
-//        if (session.config.exist("ws_reverse")) {
         settings?.forEach {
             logger.debug("Host: ${it.reverseHost}, Port: ${it.reversePort}, Enable: ${it.enable}, Use Universal: ${it.useUniversal}")
             if (it.enable) {
@@ -67,9 +67,6 @@ class WebSocketReverseClient(
                 }
             }
         }
-//        } else {
-//            logger.debug("${session.bot.id}未对ws_reverse进行配置")
-//    }
     }
 
     @OptIn(KtorExperimentalAPI::class, ExperimentalCoroutinesApi::class)
@@ -126,7 +123,7 @@ class WebSocketReverseClient(
                             }
                         }
                     } else {
-                        logger.warning("Websocket session alredy exist, $httpClientKey")
+                        logger.warning("Websocket session already exist, $httpClientKey")
                     }
                 }
             } else {
@@ -205,7 +202,7 @@ class WebSocketReverseClient(
                         handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
                     }
                 }
-                else -> logger.warning("Unsupported incomeing frame")
+                else -> logger.warning("Unsupported incoming frame")
             }
         }
     }
@@ -229,7 +226,6 @@ class WebSocketReverseClient(
         )
         val isRawMessage = settings.postMessageFormat != "array"
         subscriptions[httpClientKey] = session.bot.subscribeAlways {
-            // 保存Event以便在WebsocketSession Block中使用
             if (this.bot.id == session.botId) {
                 this.toCQDTO(isRawMessage = isRawMessage).takeIf { it !is CQIgnoreEventDTO }?.apply {
                     val jsonToSend = this.toJson()

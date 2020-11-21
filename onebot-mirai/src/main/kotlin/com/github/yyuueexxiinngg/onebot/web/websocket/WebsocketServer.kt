@@ -26,7 +26,7 @@ import com.github.yyuueexxiinngg.onebot.data.common.CQIgnoreEventDTO
 import com.github.yyuueexxiinngg.onebot.data.common.CQPluginStatusData
 import com.github.yyuueexxiinngg.onebot.data.common.toCQDTO
 import com.github.yyuueexxiinngg.onebot.util.EventFilter
-import com.github.yyuueexxiinngg.onebot.util.logger
+import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
 import io.ktor.util.*

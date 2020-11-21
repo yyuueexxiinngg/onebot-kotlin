@@ -22,7 +22,7 @@ import com.github.yyuueexxiinngg.onebot.BotSession
 import com.github.yyuueexxiinngg.onebot.MiraiApi
 import com.github.yyuueexxiinngg.onebot.data.common.*
 import com.github.yyuueexxiinngg.onebot.util.EventFilter
-import com.github.yyuueexxiinngg.onebot.util.logger
+import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
 import javax.crypto.Mac

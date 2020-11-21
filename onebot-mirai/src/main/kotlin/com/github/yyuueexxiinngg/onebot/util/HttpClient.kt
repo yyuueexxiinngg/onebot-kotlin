@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.ktor.network.sockets.*
 import io.ktor.util.*
 import com.github.yyuueexxiinngg.onebot.PluginSettings
+import com.github.yyuueexxiinngg.onebot.logger
 import java.io.InputStream
 
 class HttpClient {

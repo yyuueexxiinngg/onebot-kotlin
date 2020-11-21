@@ -2,6 +2,7 @@ package com.github.yyuueexxiinngg.onebot.util
 
 import kotlinx.serialization.json.*
 import com.github.yyuueexxiinngg.onebot.PluginBase
+import com.github.yyuueexxiinngg.onebot.logger
 import java.io.File
 
 class EventFilter {

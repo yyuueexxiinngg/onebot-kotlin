@@ -30,7 +30,8 @@ import com.github.yyuueexxiinngg.onebot.util.HttpClient.Companion.initHTTPClient
 import com.github.yyuueexxiinngg.onebot.util.toUHexString
 import java.io.File
 import kotlin.reflect.jvm.isAccessible
-import com.github.yyuueexxiinngg.onebot.BuildConfig
+
+val logger = PluginBase.logger
 
 @AutoService(JvmPlugin::class)
 object PluginBase : KotlinPlugin(
@@ -51,7 +52,7 @@ object PluginBase : KotlinPlugin(
         logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
         PluginSettings.reload()
         EventFilter.init()
-        if (PluginSettings.debug) logger.debug("开发交流群: 1143274864")
+        logger.debug("开发交流群: 1143274864")
         initHTTPClientProxy()
         Bot.forEachInstance {
             if (!allSession.containsKey(it.id)) {
