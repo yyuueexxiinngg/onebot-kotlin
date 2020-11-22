@@ -1,6 +1,9 @@
 # OneBot Mirai - CQHTTP Mirai
 
-![Gradle CI](https://github.com/yyuueexxiinngg/cqhttp-mirai/workflows/Gradle%20CI/badge.svg)
+[![Gradle CI](https://github.com/yyuueexxiinngg/onebot-kotlin/workflows/Gradle%20CI/badge.svg)](https://github.com/yyuueexxiinngg/onebot-kotlin/actions)
+[![Downloads](https://img.shields.io/github/downloads/yyuueexxiinngg/onebot-kotlin/total)](https://github.com/yyuueexxiinngg/onebot-kotlin/releases)
+[![Release](https://img.shields.io/github/v/release/yyuueexxiinngg/onebot-kotlin?include_prereleases)](https://github.com/yyuueexxiinngg/onebot-kotlin/releases)
+[![Downloads @latest](https://img.shields.io/github/downloads-pre/yyuueexxiinngg/onebot-kotlin/latest/total)](https://github.com/yyuueexxiinngg/onebot-kotlin/releases)
 
 __[OneBot标准](https://github.com/howmanybots/onebot) mirai 插件版 *(原cqhttp-mirai)*__
 
@@ -31,14 +34,14 @@ __[OneBot标准](https://github.com/howmanybots/onebot) Kotlin实现 *(原cqhttp
 - `--password *******` 要自动登录账号的密码
 - `--args -- --xx`传入参数至`mirai-console`, 如`--args -- --help`将`--help`传入获取`mirai-console`提供的帮助信息
 
-#### 读取的环境变量
+### 读取的环境变量
 - `onebot.account` 同`--account`参数, 但优先级低, 会被参数覆盖
 - `onebot.password` 同`--password`参数, 但优先级低, 会被参数覆盖
 
+###更新日志: [CHANGELOG](https://github.com/yyuueexxiinngg/onebot-kotlin/blob/master/CHANGELOG.md)
+
 ## 配置相关
 ```yaml
-# Debug日志输出选项
-debug: false
 # 下载图片/语音时使用的Proxy, 配置后, 发送图片/语音时指定`proxy=1`以通过Proxy下载, 如[CQ:image,proxy=1,url=http://***]
 # 支持HTTP及Sock两种Proxy, 设置举例 proxy: "http=http://127.0.0.1:8888", proxy : "sock=127.0.0.1:1088"
 proxy: ''
