@@ -38,7 +38,7 @@ __[OneBot标准](https://github.com/howmanybots/onebot) Kotlin实现 *(原cqhttp
 - `onebot.account` 同`--account`参数, 但优先级低, 会被参数覆盖
 - `onebot.password` 同`--password`参数, 但优先级低, 会被参数覆盖
 
-###更新日志: [CHANGELOG](https://github.com/yyuueexxiinngg/onebot-kotlin/blob/master/CHANGELOG.md)
+### 更新日志: [CHANGELOG](https://github.com/yyuueexxiinngg/onebot-kotlin/blob/master/CHANGELOG.md)
 
 ## 配置相关
 ```yaml
