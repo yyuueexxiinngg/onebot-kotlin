@@ -9,6 +9,7 @@
 
 package com.github.yyuueexxiinngg.onebot.data.common
 
+import com.github.yyuueexxiinngg.onebot.logger
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
@@ -67,31 +68,31 @@ data class CQPrivateMessagePacketDTO(
 
 // Message DTO
 @Serializable
-@SerialName("text")
-data class CQPlainDTO(val data: CQPlainData) : MessageDTO()
+@SerialName("Plain")
+data class CQPlainDTO(val data: CQPlainData, val type: String = "text") : MessageDTO()
 
 @Serializable
 data class CQPlainData(val text: String)
 
 
 @Serializable
-@SerialName("at")
-data class CQAtDTO(val data: CQAtData) : MessageDTO()
+@SerialName("At")
+data class CQAtDTO(val data: CQAtData, val type: String = "at") : MessageDTO()
 
 @Serializable
 data class CQAtData(val qq: Long)
 
 
 @Serializable
-@SerialName("face")
-data class CQFaceDTO(val data: CQFaceData) : MessageDTO()
+@SerialName("Face")
+data class CQFaceDTO(val data: CQFaceData, val type: String = "face") : MessageDTO()
 
 @Serializable
 data class CQFaceData(val id: Int = -1)
 
 @Serializable
-@SerialName("image")
-data class CQImageDTO(val data: CQImageData) : MessageDTO()
+@SerialName("Image")
+data class CQImageDTO(val data: CQImageData, val type: String = "image") : MessageDTO()
 
 @Serializable
 data class CQImageData(
@@ -100,8 +101,8 @@ data class CQImageData(
 )
 
 @Serializable
-@SerialName("shake")
-data class CQPokeMessageDTO(val data: CQPokeData) : MessageDTO()
+@SerialName("Poke")
+data class CQPokeMessageDTO(val data: CQPokeData, val type: String = "poke") : MessageDTO()
 
 @Serializable
 data class CQPokeData(val name: String)
@@ -117,11 +118,11 @@ data class AtAllDTO(val target: Long = 0) : MessageDTO() // target为保留字�
 
 @Serializable
 @SerialName("Xml")
-data class XmlDTO(val xml: String) : MessageDTO()
+data class XmlDTO(val data: String, val type: String = "xml") : MessageDTO()
 
 @Serializable
 @SerialName("App")
-data class AppDTO(val content: String) : MessageDTO()
+data class AppDTO(val data: String, val type: String = "json") : MessageDTO()
 
 
 @Serializable
@@ -280,7 +281,10 @@ suspend fun Message.toDTO() = when (this) {
 //        // 避免套娃
 //        origin = source.originalMessage.toMessageChainDTO { it != UnknownMessageDTO && it !is QuoteDTO })
     is PokeMessage -> CQPokeMessageDTO(CQPokeData(PokeMap[type]))
-    else -> UnknownMessageDTO
+    else -> {
+        logger.debug("收到未支持消息: $this")
+        UnknownMessageDTO
+    }
 }
 
 suspend fun MessageDTO.toMessage(contact: Contact) = when (this) {
@@ -296,9 +300,9 @@ suspend fun MessageDTO.toMessage(contact: Contact) = when (this) {
         !data.url.isNullOrBlank() -> contact.uploadImage(URL(data.url))
         else -> null
     }
-    is XmlDTO -> ServiceMessage(60, xml)
+    is XmlDTO -> ServiceMessage(60, data)
     is JsonDTO -> ServiceMessage(1, json)
-    is AppDTO -> LightApp(content)
+    is AppDTO -> LightApp(data)
     is CQPokeMessageDTO -> PokeMap[data.name]
     // ignore
     is UnknownMessageDTO
