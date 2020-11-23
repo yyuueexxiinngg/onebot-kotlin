@@ -167,12 +167,14 @@ bots:
 | /set_group_ban           | [群组单人禁言](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_ban-群组单人禁言) | |
 | /set_group_whole_ban     | [群组全员禁言](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_whole_ban-群组全员禁言) | |
 | /set_group_card          | [设置群名片(群备注)](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_card-设置群名片（群备注）) | |
-| /set_group_leave         | [退出群组](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_leave-退出群组) | |
-| /set_group_special_title | [设置群组专属头衔](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_special_title-设置群组专属头衔) | |
-| /set_friend_add_request  | [处理加好友请求](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_friend_add_request-处理加好友请求) | |
+| /set_group_leave         | [退出群组](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_leave-退出群组) | (不支持解散群组) |
+| /set_group_special_title | [设置群组专属头衔](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_special_title-设置群组专属头衔) | (不支持设置有效期) |
+| /set_friend_add_request  | [处理加好友请求](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_friend_add_request-处理加好友请求) | (不支持设置备注) |
 | /set_group_add_request   | [处理加群请求/邀请](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_group_add_request-处理加群请求／邀请) | |
 | /get_login_info          | [获取登录号信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_login_info-获取登录号信息) | |
 | /get_friend_list         | [获取好友列表](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_friend_list-获取好友列表) | |
+| /get_group_honor_info    | [获取群荣誉信息](https://github.com/howmanybots/onebot/blob/master/v11/specs/api/public.md#get_group_honor_info-%E8%8E%B7%E5%8F%96%E7%BE%A4%E8%8D%A3%E8%AA%89%E4%BF%A1%E6%81%AF) | |
+| /get_image               | [获取图片](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_image-获取图片) | |
 | /get_group_list          | [获取群列表](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_group_list-获取群列表) | |
 | /get_group_info          | [获取群信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_group_info-获取群信息) | |
 | /get_group_member_info   | [获取群成员信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_group_member_info-获取群成员信息) | |
@@ -181,7 +183,7 @@ bots:
 | /can_send_record         | [检查是否可以发送语音](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#can_send_record-检查是否可以发送语音) | |
 | /get_status              | [获取插件运行状态](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_status-获取插件运行状态) | (不完全支持, 仅返回`online`和`good`两项) |
 | /get_version_info        | [获取 酷Q 及 CQHTTP插件的版本信息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_version_info-获取-酷q-及-cqhttp-插件的版本信息) | |
-| /set_group_name          | 设置群组名(拓展API)                                         |
+| /set_group_name          | [设置群名](https://github.com/howmanybots/onebot/blob/master/v11/specs/api/public.md#set_group_name-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%90%8D)                                        |
 
 </details>
 
@@ -190,7 +192,6 @@ bots:
 
 | API                      | 功能                                                         | 备注                        |
 | ------------------------ | ------------------------------------------------------------ | -------------------------- |
-| /get_image               | [获取图片](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_image-获取图片) | |
 | /get_record              | [获取语音](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#get_record-获取语音) | |
 | /send_discuss_msg        | [发送讨论组消息](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#send_discuss_msg-发送讨论组消息) | 已无讨论组 |
 | /set_discuss_leave       | [退出讨论组](https://github.com/richardchien/cqhttp-protocol/blob/master/v11/specs/api/public.md#set_discuss_leave-退出讨论组) | 已无讨论组 |

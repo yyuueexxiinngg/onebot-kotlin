@@ -9,8 +9,10 @@
 
 package com.github.yyuueexxiinngg.onebot.data.common
 
+import com.github.yyuueexxiinngg.onebot.logger
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.*
@@ -211,7 +213,32 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             flag = eventId.toString(),
             time = currentTimeSeconds
         )
-        else -> CQIgnoreEventDTO(bot.id)
+        is MemberNudgedEvent -> CQGroupMemberNudgedEventDTO(
+            self_id = bot.id,
+            group_id = group.id,
+            user_id = from.id,
+            target_id = member.id,
+            time = currentTimeSeconds
+        )
+        is BotNudgedEvent -> {
+            if (from is Member) {
+                CQGroupMemberNudgedEventDTO(
+                    self_id = bot.id,
+                    group_id = (from as Member).group.id,
+                    user_id = from.id,
+                    target_id = bot.id,
+                    time = currentTimeSeconds
+                )
+            } else {
+                // OneBot not yet provides private nudged event standard.
+                logger.info("私聊被戳事件已被插件忽略: $this")
+                CQIgnoreEventDTO(bot.id)
+            }
+        }
+        else -> {
+            logger.debug("发生了被插件忽略的事件: $this")
+            CQIgnoreEventDTO(bot.id)
+        }
     }
 }
 
@@ -333,4 +360,18 @@ data class CQGroupMemberAddRequestEventDTO(
 ) : CQBotEventDTO() {
     override var post_type: String = "request"
     val request_type: String = "group"
+}
+
+@Serializable
+@SerialName("CQGroupMemberNudgedEventD")
+data class CQGroupMemberNudgedEventDTO(
+    override var self_id: Long,
+    val sub_type: String = "poke",
+    val group_id: Long,
+    val user_id: Long,
+    val target_id: Long,
+    override var time: Long
+) : CQBotEventDTO() {
+    override var post_type: String = "notice"
+    val notice_type: String = "notify"
 }
