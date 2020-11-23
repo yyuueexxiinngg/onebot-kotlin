@@ -118,16 +118,24 @@ data class AtAllDTO(val target: Long = 0) : MessageDTO() // target为保留字�
 
 @Serializable
 @SerialName("Xml")
-data class XmlDTO(val data: String, val type: String = "xml") : MessageDTO()
+data class XmlDTO(val data: CQXmlData, val type: String = "xml") : MessageDTO()
+
+@Serializable
+data class CQXmlData(val data: String)
 
 @Serializable
 @SerialName("App")
-data class AppDTO(val data: String, val type: String = "json") : MessageDTO()
+data class AppDTO(val data: CQAppData, val type: String = "json") : MessageDTO()
 
+@Serializable
+data class CQAppData(val data: String)
 
 @Serializable
 @SerialName("Json")
-data class JsonDTO(val json: String) : MessageDTO()
+data class JsonDTO(val data: CQJsonData, val type: String = "json") : MessageDTO()
+
+@Serializable
+data class CQJsonData(val data: String)
 
 /*@Serializable
 @SerialName("Source")
@@ -269,8 +277,8 @@ suspend fun Message.toDTO() = when (this) {
     is Image -> {
         CQImageDTO(CQImageData(imageId, queryUrl()))
     }
-    is ServiceMessage -> XmlDTO(content)
-    is LightApp -> AppDTO(content)
+    is ServiceMessage -> XmlDTO(CQXmlData(content))
+    is LightApp -> AppDTO(CQAppData(content))
 //    is FlashImage -> FlashImageDTO(image.imageId, image.queryUrl())
 //    is QuoteReply -> QuoteDTO(source.id, source.fromId, source.targetId,
 //        groupId = when {
@@ -300,9 +308,9 @@ suspend fun MessageDTO.toMessage(contact: Contact) = when (this) {
         !data.url.isNullOrBlank() -> contact.uploadImage(URL(data.url))
         else -> null
     }
-    is XmlDTO -> ServiceMessage(60, data)
-    is JsonDTO -> ServiceMessage(1, json)
-    is AppDTO -> LightApp(data)
+    is XmlDTO -> ServiceMessage(60, data.data)
+    is JsonDTO -> ServiceMessage(1, data.data)
+    is AppDTO -> LightApp(data.data)
     is CQPokeMessageDTO -> PokeMap[data.name]
     // ignore
     is UnknownMessageDTO
