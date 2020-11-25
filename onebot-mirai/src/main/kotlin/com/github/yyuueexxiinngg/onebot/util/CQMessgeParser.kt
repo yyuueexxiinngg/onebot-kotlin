@@ -201,7 +201,11 @@ private suspend fun convertToMiraiMessage(
             return XmlMessage(args["data"]!!)
         }
         "json" -> {
-            return JsonMessage(args["data"]!!)
+            return if (args["data"]!!.contains("\"app\":")) {
+                LightApp(args["data"]!!)
+            } else {
+                JsonMessage(args["data"]!!)
+            }
         }
         else -> {
             logger.debug("不支持的 CQ码：${type}")
