@@ -48,7 +48,7 @@ class ReportService(
 
     private var sha1Util: Mac? = null
 
-    private var subscription: BotEventListener? = null
+    private var subscription: Pair<BotEventListener, Boolean>? = null
 
     private var heartbeatJob: Job? = null
 
@@ -80,21 +80,25 @@ class ReportService(
                 false
             )
 
-            subscription = session.subscribeEvent(
-                { jsonToSend ->
-                    scope.launch(Dispatchers.IO) {
-                        report(
-                            session.cqApiImpl,
-                            settings.postUrl,
-                            session.bot.id,
-                            jsonToSend,
-                            settings.secret,
-                            true
-                        )
-                    }
-                },
-                settings.postMessageFormat == "string"
-            )
+            subscription =
+                Pair(
+                    session.subscribeEvent(
+                        { jsonToSend ->
+                            scope.launch(Dispatchers.IO) {
+                                report(
+                                    session.cqApiImpl,
+                                    settings.postUrl,
+                                    session.bot.id,
+                                    jsonToSend,
+                                    settings.secret,
+                                    true
+                                )
+                            }
+                        },
+                        settings.postMessageFormat == "string"
+                    ),
+                    settings.postMessageFormat == "string"
+                )
 
             if (session.settings.heartbeat.enable) {
                 heartbeatJob = HeartbeatScope(EmptyCoroutineContext).launch {
@@ -175,6 +179,6 @@ class ReportService(
         }
         http.close()
         heartbeatJob?.cancel()
-        subscription?.let { session.unsubscribeEvent(it) }
+        subscription?.let { session.unsubscribeEvent(it.first, it.second) }
     }
 }

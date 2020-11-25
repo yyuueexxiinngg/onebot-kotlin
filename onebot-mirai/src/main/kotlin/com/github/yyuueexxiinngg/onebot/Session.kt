@@ -102,7 +102,7 @@ class BotSession internal constructor(
     private suspend fun triggerEventInternal(event: BotEvent, isStringFormat: Boolean = false) {
         event.toCQDTO(isRawMessage = isStringFormat).takeIf { it !is CQIgnoreEventDTO }?.let { dto ->
             val jsonToSend = dto.toJson()
-            PluginBase.logger.debug("发生事件: $jsonToSend")
+            PluginBase.logger.debug("将发送事件: $jsonToSend")
             if (!EventFilter.eval(jsonToSend)) {
                 PluginBase.logger.debug("事件被Event Filter命中, 取消发送")
             } else {
@@ -115,7 +115,7 @@ class BotSession internal constructor(
         }
     }
 
-    fun subscribeEvent(listener: BotEventListener, isRawMessage: Boolean = false): BotEventListener =
+    fun subscribeEvent(listener: BotEventListener, isRawMessage: Boolean): BotEventListener =
         listener.also {
             if (isRawMessage) {
                 eventSubscriptionString.add(it)
@@ -126,7 +126,7 @@ class BotSession internal constructor(
             }
         }
 
-    fun unsubscribeEvent(listener: BotEventListener, isRawMessage: Boolean = false) {
+    fun unsubscribeEvent(listener: BotEventListener, isRawMessage: Boolean) {
         if (isRawMessage) {
             eventSubscriptionString.remove(listener)
             if (eventSubscriptionString.isEmpty()) hasStringFormatSubscription = false

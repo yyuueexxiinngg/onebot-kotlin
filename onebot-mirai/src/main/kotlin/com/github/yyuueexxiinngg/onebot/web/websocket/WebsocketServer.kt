@@ -91,7 +91,7 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
                 incoming.consumeEach { logger.warning("WS Server Event 路由只负责发送事件, 不响应收到的请求") }
             } finally {
                 logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /event 连接被关闭")
-                session.unsubscribeEvent(listener)
+                session.unsubscribeEvent(listener, isRawMessage)
                 heartbeatJob?.cancel()
             }
         }
@@ -131,7 +131,7 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
                 }
             } finally {
                 logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 连接被关闭")
-                session.unsubscribeEvent(listener)
+                session.unsubscribeEvent(listener, isRawMessage)
                 heartbeatJob?.cancel()
             }
         }
