@@ -250,6 +250,7 @@ suspend fun Message.toCQString(): String {
         is PokeMessage -> "[CQ:poke,id=${id},type=${type},name=${name}]"
         is AtAll -> "[CQ:at,qq=all]"
         is Image -> "[CQ:image,file=${md5.toUHexString("")},url=${queryUrl().escape()}]"
+        is FlashImage -> "[CQ:image,file=${image.md5.toUHexString("")},url=${image.queryUrl().escape()},type=flash]"
         is RichMessage -> "[CQ:rich,data=${content.escape()}]"
         is MessageSource -> ""
         is QuoteReply -> ""
@@ -434,19 +435,25 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
         }
     }
 
-    if (media != null) {
-        return media as Message
-    } else if (mediaBytes != null) {
-        when (type) {
-            "image" -> {
+    when (type) {
+        "image" -> {
+            val flash = args.containsKey("type") && args["type"] == "flash"
+            if (media == null && mediaBytes != null) {
                 val bis = ByteArrayInputStream(mediaBytes)
                 media = withContext(Dispatchers.IO) { contact!!.uploadImage(bis) }
-                return media as Image
             }
-            "record" -> {
+
+            return if (flash) {
+                (media as Image).flash()
+            } else {
+                media as Image
+            }
+        }
+        "record" -> {
+            if (media == null && mediaBytes != null) {
                 media = withContext(Dispatchers.IO) { (contact!! as Group).uploadVoice(mediaBytes!!.inputStream()) }
-                return media as Voice
             }
+            return media as Voice
         }
     }
     return PlainText("插件无法获取到媒体" + if (mediaUrl != null) ", 媒体链接: $mediaUrl" else "")

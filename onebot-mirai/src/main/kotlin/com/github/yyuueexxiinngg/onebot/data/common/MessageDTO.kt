@@ -97,7 +97,8 @@ data class CQImageDTO(val data: CQImageData, val type: String = "image") : Messa
 @Serializable
 data class CQImageData(
     val file: String? = null,
-    val url: String? = null
+    val url: String? = null,
+    val type: String? = null
 )
 
 @Serializable
@@ -274,9 +275,8 @@ suspend fun Message.toDTO() = when (this) {
     is AtAll -> CQAtDTO(CQAtData(0L))
     is Face -> CQFaceDTO(CQFaceData(id))
     is PlainText -> CQPlainDTO(CQPlainData(content))
-    is Image -> {
-        CQImageDTO(CQImageData(imageId, queryUrl()))
-    }
+    is Image -> CQImageDTO(CQImageData(imageId, queryUrl()))
+    is FlashImage -> CQImageDTO(CQImageData(image.imageId, image.queryUrl(), "flash"))
     is ServiceMessage -> XmlDTO(CQXmlData(content))
     is LightApp -> AppDTO(CQAppData(content))
 //    is FlashImage -> FlashImageDTO(image.imageId, image.queryUrl())
