@@ -8,11 +8,12 @@ object Versions {
     const val miraiConsoleVersion = "1.0.0"
 
     const val ktorVersion = "1.4.1"
-    const val kotlinVersion = "1.4.0"
+    const val kotlinVersion = "1.4.10"
     const val kotlinSerializationVersion = "1.0.1"
     const val autoService = "1.0-rc7"
     const val logback = "1.2.3"
     const val gson = "2.8.6"
+    const val yamlkt = "0.7.4"
 
     // OneBot Kotlin
     const val clikt = "3.0.1"

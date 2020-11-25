@@ -75,6 +75,8 @@ bots:
       postMessageFormat: string
       # 可选，上报数据签名密钥, 默认为空
       secret: ''
+      # 上报超时时间, 单位毫秒, 须大于0才会生效
+      timeout: 0
     # 可选，反向客户端服务
     ws_reverse: 
       # 可选，是否启用反向客户端，默认不启用

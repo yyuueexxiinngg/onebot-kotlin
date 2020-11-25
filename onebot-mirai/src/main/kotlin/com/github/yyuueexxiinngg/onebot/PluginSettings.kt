@@ -2,6 +2,7 @@ package com.github.yyuueexxiinngg.onebot
 
 import kotlinx.serialization.SerialName
 import net.mamoe.mirai.console.data.*
+import net.mamoe.yamlkt.Comment
 import kotlinx.serialization.Serializable
 
 object PluginSettings : AutoSavePluginConfig("settings") {
@@ -33,7 +34,9 @@ object PluginSettings : AutoSavePluginConfig("settings") {
         var accessToken: String = "",
         var postUrl: String = "",
         var postMessageFormat: String = "string",
-        var secret: String = ""
+        var secret: String = "",
+        @Comment("上报超时时间, 单位毫秒, 须大于0才会生效")
+        var timeout: Long = 0L
     )
 
     @Serializable

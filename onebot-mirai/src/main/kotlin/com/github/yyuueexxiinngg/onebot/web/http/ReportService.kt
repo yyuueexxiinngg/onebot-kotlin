@@ -22,6 +22,8 @@ import com.github.yyuueexxiinngg.onebot.data.common.*
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
+import io.ktor.client.features.*
+import java.net.SocketTimeoutException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import kotlin.coroutines.CoroutineContext
@@ -44,6 +46,7 @@ class ReportService(
                 retryOnConnectionFailure(true)
             }
         }
+        install(HttpTimeout)
     }
 
     private var sha1Util: Mac? = null
@@ -134,27 +137,38 @@ class ReportService(
         secret: String,
         shouldHandleOperation: Boolean
     ) {
-        val res = http.request<String?> {
-            url(url)
-            headers {
-                append("User-Agent", "CQHttp/4.15.0")
-                append("X-Self-ID", botId.toString())
-                secret.takeIf { it != "" }?.apply {
-                    append("X-Signature", getSha1Hash(json))
+        try {
+            val res = http.request<String?> {
+                url(url)
+                headers {
+                    append("User-Agent", "CQHttp/4.15.0")
+                    append("X-Self-ID", botId.toString())
+                    secret.takeIf { it != "" }?.apply {
+                        append("X-Signature", getSha1Hash(json))
+                    }
+                }
+                if (settings.timeout > 0) {
+                    timeout { socketTimeoutMillis = settings.timeout }
+                }
+                method = HttpMethod.Post
+                body = TextContent(json, ContentType.Application.Json.withParameter("charset", "utf-8"))
+            }
+            if (res != "") logger.debug("收到上报响应  $res")
+            if (shouldHandleOperation && res != null && res != "") {
+                try {
+                    val respJson = Json.parseToJsonElement(res).jsonObject
+                    val sentJson = Json.parseToJsonElement(json).jsonObject
+                    val params = hashMapOf("context" to sentJson, "operation" to respJson)
+                    miraiApi.cqHandleQuickOperation(params)
+                } catch (e: SerializationException) {
+                    logger.error("解析HTTP上报返回数据成json失败")
                 }
             }
-            method = HttpMethod.Post
-            body = TextContent(json, ContentType.Application.Json.withParameter("charset", "utf-8"))
-        }
-        if (res != "") logger.debug("收到上报响应  $res")
-        if (shouldHandleOperation && res != null && res != "") {
-            try {
-                val respJson = Json.parseToJsonElement(res).jsonObject
-                val sentJson = Json.parseToJsonElement(json).jsonObject
-                val params = hashMapOf("context" to sentJson, "operation" to respJson)
-                miraiApi.cqHandleQuickOperation(params)
-            } catch (e: SerializationException) {
-                logger.error("解析HTTP上报返回数据成json失败")
+        } catch (e: Exception) {
+            if (e is SocketTimeoutException) {
+                logger.warning("HTTP上报超时")
+            } else {
+                logger.error(e)
             }
         }
     }
