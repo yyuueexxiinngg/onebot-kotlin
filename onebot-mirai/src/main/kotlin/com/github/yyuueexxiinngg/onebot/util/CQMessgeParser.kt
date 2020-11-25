@@ -197,6 +197,15 @@ private suspend fun convertToMiraiMessage(
             }
             return MSG_EMPTY
         }
+        "nudge" -> {
+            val target = args["qq"] ?: error("Nudge target `qq` must not ne null.")
+            if (contact is Group) {
+                contact.members[target.toLong()].nudge().sendTo(contact)
+            } else {
+                contact?.let { bot.friends[target.toLong()].nudge().sendTo(it) }
+            }
+            return MSG_EMPTY
+        }
         "xml" -> {
             return XmlMessage(args["data"]!!)
         }

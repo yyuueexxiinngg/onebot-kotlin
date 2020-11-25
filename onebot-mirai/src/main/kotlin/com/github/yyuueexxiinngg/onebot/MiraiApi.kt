@@ -21,6 +21,7 @@ import com.github.yyuueexxiinngg.onebot.data.common.*
 import com.github.yyuueexxiinngg.onebot.util.*
 import com.github.yyuueexxiinngg.onebot.web.queue.CacheSourceQueue
 import com.github.yyuueexxiinngg.onebot.web.queue.CacheRequestQueue
+import net.mamoe.mirai.message.data.content
 
 
 @OptIn(LowLevelAPI::class)
@@ -110,6 +111,7 @@ class MiraiApi(val bot: Bot) {
         return CQResponseDTO.CQInvalidRequest()
     }
 
+    @Suppress("DuplicatedCode")
     suspend fun cqSendGroupMessage(params: Map<String, JsonElement>): CQResponseDTO {
         val targetGroupId = params["group_id"]!!.jsonPrimitive.long
         val raw = params["auto_escape"]?.jsonPrimitive?.booleanOrNull ?: false
@@ -117,13 +119,18 @@ class MiraiApi(val bot: Bot) {
 
         val group = bot.getGroup(targetGroupId)
         cqMessageToMessageChains(bot, group, messages, raw)?.let {
-            val receipt = group.sendMessage(it)
-            cachedSourceQueue.add(receipt.source)
-            return CQResponseDTO.CQMessageResponse(receipt.source.id)
+            return if (it.content.isNotEmpty()) {
+                val receipt = group.sendMessage(it)
+                cachedSourceQueue.add(receipt.source)
+                CQResponseDTO.CQMessageResponse(receipt.source.id)
+            } else {
+                CQResponseDTO.CQMessageResponse(-1)
+            }
         }
         return CQResponseDTO.CQInvalidRequest()
     }
 
+    @Suppress("DuplicatedCode")
     suspend fun cqSendPrivateMessage(params: Map<String, JsonElement>): CQResponseDTO {
         val targetQQId = params["user_id"]!!.jsonPrimitive.long
         val raw = params["auto_escape"]?.jsonPrimitive?.booleanOrNull ?: false
@@ -138,9 +145,13 @@ class MiraiApi(val bot: Bot) {
         }
 
         cqMessageToMessageChains(bot, contact, messages, raw)?.let {
-            val receipt = contact.sendMessage(it)
-            cachedSourceQueue.add(receipt.source)
-            return CQResponseDTO.CQMessageResponse(receipt.source.id)
+            return if (it.content.isNotEmpty()) {
+                val receipt = contact.sendMessage(it)
+                cachedSourceQueue.add(receipt.source)
+                CQResponseDTO.CQMessageResponse(receipt.source.id)
+            } else {
+                CQResponseDTO.CQMessageResponse(-1)
+            }
         }
         return CQResponseDTO.CQInvalidRequest()
     }
