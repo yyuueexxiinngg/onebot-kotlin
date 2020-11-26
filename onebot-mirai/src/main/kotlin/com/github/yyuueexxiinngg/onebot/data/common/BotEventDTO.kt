@@ -235,6 +235,32 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                 CQIgnoreEventDTO(bot.id)
             }
         }
+        is MessageRecallEvent -> {
+            when (this) {
+                is MessageRecallEvent.GroupRecall -> {
+                    CQGroupMessageRecallEventDTO(
+                        self_id = bot.id,
+                        group_id = group.id,
+                        user_id = authorId,
+                        operator_id = operator?.id ?: bot.id,
+                        message_id = messageInternalId,
+                        time = currentTimeSeconds
+                    )
+                }
+                is MessageRecallEvent.FriendRecall -> {
+                    CQFriendMessageRecallEventDTO(
+                        self_id = bot.id,
+                        user_id = operator,
+                        message_id = messageInternalId,
+                        time = currentTimeSeconds
+                    )
+                }
+                else -> {
+                    logger.debug("发生讨论组消息撤回事件, 已被插件忽略: $this")
+                    CQIgnoreEventDTO(bot.id)
+                }
+            }
+        }
         else -> {
             logger.debug("发生了被插件忽略的事件: $this")
             CQIgnoreEventDTO(bot.id)
@@ -363,7 +389,7 @@ data class CQGroupMemberAddRequestEventDTO(
 }
 
 @Serializable
-@SerialName("CQGroupMemberNudgedEventD")
+@SerialName("CQGroupMemberNudgedEvent")
 data class CQGroupMemberNudgedEventDTO(
     override var self_id: Long,
     val sub_type: String = "poke",
@@ -374,4 +400,30 @@ data class CQGroupMemberNudgedEventDTO(
 ) : CQBotEventDTO() {
     override var post_type: String = "notice"
     val notice_type: String = "notify"
+}
+
+@Serializable
+@SerialName("CQGroupMessageRecallEvent")
+data class CQGroupMessageRecallEventDTO(
+    override var self_id: Long,
+    val group_id: Long,
+    val user_id: Long,
+    val operator_id: Long,
+    val message_id: Int,
+    override var time: Long
+) : CQBotEventDTO() {
+    override var post_type: String = "notice"
+    val notice_type: String = "group_recall"
+}
+
+@Serializable
+@SerialName("CQFriendMessageRecallEvent")
+data class CQFriendMessageRecallEventDTO(
+    override var self_id: Long,
+    val user_id: Long,
+    val message_id: Int,
+    override var time: Long
+) : CQBotEventDTO() {
+    override var post_type: String = "notice"
+    val notice_type: String = "friend_recall"
 }

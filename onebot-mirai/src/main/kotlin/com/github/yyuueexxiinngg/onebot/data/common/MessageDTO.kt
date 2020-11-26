@@ -228,7 +228,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
         is GroupMessageEvent -> CQGroupMessagePacketDTO(
             self_id = bot.id,
             sub_type = "normal",
-            message_id = message.id,
+            message_id = message.internalId,
             group_id = group.id,
             user_id = sender.id,
             anonymous = null,
@@ -241,7 +241,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
         is FriendMessageEvent -> CQPrivateMessagePacketDTO(
             self_id = bot.id,
             sub_type = "friend",
-            message_id = message.id,
+            message_id = message.internalId,
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
@@ -252,7 +252,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
         is TempMessageEvent -> CQPrivateMessagePacketDTO(
             self_id = bot.id,
             sub_type = "group", // QQ don't have discuss anymore
-            message_id = message.id,
+            message_id = message.internalId,
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
