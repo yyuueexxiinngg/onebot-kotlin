@@ -260,7 +260,13 @@ suspend fun Message.toCQString(): String {
         is AtAll -> "[CQ:at,qq=all]"
         is Image -> "[CQ:image,file=${md5.toUHexString("")},url=${queryUrl().escape()}]"
         is FlashImage -> "[CQ:image,file=${image.md5.toUHexString("")},url=${image.queryUrl().escape()},type=flash]"
-        is RichMessage -> "[CQ:rich,data=${content.escape()}]"
+        is ServiceMessage -> with(content) {
+            when {
+                contains("xml version") -> "[CQ:xml,data=${content.escape()}]"
+                else -> "[CQ:json,data=${content.escape()}]"
+            }
+        }
+        is LightApp -> "[CQ:json,data=${content.escape()}]"
         is MessageSource -> ""
         is QuoteReply -> ""
         is Voice -> "[CQ:record,url=${url?.escape()},file=${md5.toUHexString("")}]"

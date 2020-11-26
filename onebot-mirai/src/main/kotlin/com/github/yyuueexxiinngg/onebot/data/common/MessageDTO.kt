@@ -277,7 +277,13 @@ suspend fun Message.toDTO() = when (this) {
     is PlainText -> CQPlainDTO(CQPlainData(content))
     is Image -> CQImageDTO(CQImageData(imageId, queryUrl()))
     is FlashImage -> CQImageDTO(CQImageData(image.imageId, image.queryUrl(), "flash"))
-    is ServiceMessage -> XmlDTO(CQXmlData(content))
+    is ServiceMessage ->
+        with(content) {
+            when {
+                contains("xml version") -> XmlDTO(CQXmlData(content))
+                else -> JsonDTO(CQJsonData(content))
+            }
+        }
     is LightApp -> AppDTO(CQAppData(content))
 //    is FlashImage -> FlashImageDTO(image.imageId, image.queryUrl())
 //    is QuoteReply -> QuoteDTO(source.id, source.fromId, source.targetId,
