@@ -53,7 +53,7 @@ suspend fun cqMessageToMessageChains(
     cqMessage: Any?,
     raw: Boolean = false
 ): MessageChain? {
-    return when (cqMessage) {
+    when (cqMessage) {
         is String -> {
             return if (raw) {
                 PlainText(cqMessage).asMessageChain()
@@ -105,7 +105,7 @@ suspend fun cqMessageToMessageChains(
 
 
 private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message: Any): Message {
-    return when (message) {
+    when (message) {
         is String -> {
             if (message.startsWith("[CQ:") && message.endsWith("]")) {
                 val parts = message.substring(4, message.length - 1).split(delimiters = arrayOf(","), limit = 2)
@@ -126,7 +126,7 @@ private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message
             val args = data.jsonObject.keys.map { it to data.jsonObject[it]!!.jsonPrimitive.content }.toMap()
             return convertToMiraiMessage(bot, contact, type, args)
         }
-        else -> MSG_EMPTY
+        else -> return MSG_EMPTY
     }
 }
 
@@ -197,6 +197,7 @@ private suspend fun convertToMiraiMessage(
             }
             return MSG_EMPTY
         }
+        // Could be changed at anytime.
         "nudge" -> {
             val target = args["qq"] ?: error("Nudge target `qq` must not ne null.")
             if (contact is Group) {

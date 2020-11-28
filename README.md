@@ -1,5 +1,6 @@
 # OneBot Mirai - CQHTTP Mirai
 
+[![OneBot v10](https://img.shields.io/badge/OneBot-v10-black)](https://github.com/howmanybots/onebot/blob/master/v10/specs/README.md)
 [![Gradle CI](https://github.com/yyuueexxiinngg/onebot-kotlin/workflows/Gradle%20CI/badge.svg)](https://github.com/yyuueexxiinngg/onebot-kotlin/actions)
 [![Downloads](https://img.shields.io/github/downloads/yyuueexxiinngg/onebot-kotlin/total)](https://github.com/yyuueexxiinngg/onebot-kotlin/releases)
 [![Release](https://img.shields.io/github/v/release/yyuueexxiinngg/onebot-kotlin?include_prereleases)](https://github.com/yyuueexxiinngg/onebot-kotlin/releases)
