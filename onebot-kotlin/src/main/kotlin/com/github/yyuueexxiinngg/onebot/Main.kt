@@ -31,7 +31,7 @@ object OneBotKtCli : CliktCommand(name = "onebot-kotlin") {
         ------------------------------------------
         后端. "Mirai" 为使用mirai, 一个Kotlin实现的QQ协议客户端;
     ```""".trimIndent(),
-        envvar = "onebot.backend"
+        envvar = "ONEBOT_BACKEND"
     ).enum<BackendType>().default(BackendType.Mirai)
 
     internal val account: String? by option(
@@ -42,7 +42,7 @@ object OneBotKtCli : CliktCommand(name = "onebot-kotlin") {
             需要自动登录的帐号
                 使用mirai后段时为QQ号
         ```""".trimIndent(),
-        envvar = "onebot.account"
+        envvar = "ONEBOT_ACCOUNT"
     )
 
     internal val password: String? by option(
@@ -51,7 +51,7 @@ object OneBotKtCli : CliktCommand(name = "onebot-kotlin") {
             ------------------------------------
             需要自动登录的帐号密码
         ```""".trimIndent(),
-        envvar = "onebot.password"
+        envvar = "ONEBOT_PASSWORD"
     )
 
     private val args: Boolean? by option(
@@ -61,8 +61,7 @@ object OneBotKtCli : CliktCommand(name = "onebot-kotlin") {
             ------------------------------------
             要传递给后端的参数
                 用法: --args -- --help
-       ``` """.trimIndent(),
-        envvar = "onebot.password"
+       ``` """.trimIndent()
     ).flag()
 
     private val argsToPass by argument().multiple()
