@@ -5,9 +5,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelAPI
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.MemberPermission
-import net.mamoe.mirai.contact.PermissionDeniedException
 import net.mamoe.mirai.data.GroupAnnouncement
 import net.mamoe.mirai.data.GroupAnnouncementMsg
 import net.mamoe.mirai.data.GroupHonorListData
@@ -21,6 +18,9 @@ import com.github.yyuueexxiinngg.onebot.data.common.*
 import com.github.yyuueexxiinngg.onebot.util.*
 import com.github.yyuueexxiinngg.onebot.web.queue.CacheSourceQueue
 import com.github.yyuueexxiinngg.onebot.web.queue.CacheRequestQueue
+import net.mamoe.mirai.console.util.ConsoleExperimentalApi
+import net.mamoe.mirai.console.util.ContactUtils.getContactOrNull
+import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.content
 
 
@@ -273,6 +273,25 @@ class MiraiApi(val bot: Bot) {
 
     fun cqGetLoginInfo(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQLoginInfo(bot.id, bot.nick)
+    }
+
+    // Partial support
+    // TODO: Full support when https://github.com/mamoe/mirai/issues/234 resolved.
+    @OptIn(ConsoleExperimentalApi::class)
+    fun cqGetStrangerInfo(params: Map<String, JsonElement>): CQResponseDTO {
+        val userId = params["user_id"]?.jsonPrimitive?.long
+        if (userId != null) {
+            bot.getContactOrNull(userId)?.let { contact ->
+                return when (contact) {
+                    is Friend -> CQResponseDTO.CQStrangerInfo(CQStrangerInfoData(contact.id, contact.nick))
+                    is Member -> CQResponseDTO.CQStrangerInfo(CQStrangerInfoData(contact.id, contact.nick))
+                    else -> CQResponseDTO.CQMiraiFailure()
+                }
+            }
+        } else {
+            return CQResponseDTO.CQInvalidRequest()
+        }
+        return CQResponseDTO.CQMiraiFailure()
     }
 
     fun cqGetFriendList(params: Map<String, JsonElement>): CQResponseDTO {
@@ -669,10 +688,6 @@ class MiraiApi(val bot: Bot) {
     }
 
     fun cqGetCredentials(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
-    }
-
-    fun cqGetStrangerInfo(params: Map<String, JsonElement>): CQResponseDTO {
         return CQResponseDTO.CQMiraiFailure()
     }
 

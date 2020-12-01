@@ -30,6 +30,7 @@ open class CQResponseDTO(
     class CQMessageResponse(message_id: Int) : CQResponseDTO("ok", 0, CQMessageData(message_id))
     class CQLoginInfo(user_id: Long, nickname: String) : CQResponseDTO("ok", 0, CQLoginInfoData(user_id, nickname))
     class CQFriendList(friendList: List<CQFriendData>) : CQResponseDTO("ok", 0, friendList)
+    class CQStrangerInfo(info: CQStrangerInfoData) : CQResponseDTO("ok", 0, info)
 
     class CQGroupList(groupList: List<CQGroupData>?) : CQResponseDTO("ok", 0, groupList)
     class CQGroupInfo(group_id: Long, group_name: String, member_count: Int, max_member_count: Int) :
@@ -77,6 +78,15 @@ data class CQMessageData(val message_id: Int) : CQResponseDataDTO()
 @Serializable
 @SerialName("LoginInfoData")
 data class CQLoginInfoData(val user_id: Long, val nickname: String) : CQResponseDataDTO()
+
+@Serializable
+@SerialName("StrangerInfoData")
+data class CQStrangerInfoData(
+    val user_id: Long,
+    val nickname: String,
+    val sex: String = "unknown",
+    val age: Int = 0
+) : CQResponseDataDTO()
 
 @Serializable
 @SerialName("FriendData")
