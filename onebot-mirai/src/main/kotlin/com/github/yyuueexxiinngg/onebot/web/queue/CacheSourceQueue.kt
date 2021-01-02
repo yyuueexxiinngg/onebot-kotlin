@@ -9,6 +9,7 @@
 
 package com.github.yyuueexxiinngg.onebot.web.queue
 
+import com.github.yyuueexxiinngg.onebot.util.toCQMessageId
 import net.mamoe.mirai.message.data.MessageSource
 
 class CacheSourceQueue : LinkedHashMap<Int, MessageSource>() {
@@ -24,6 +25,6 @@ class CacheSourceQueue : LinkedHashMap<Int, MessageSource>() {
     }
 
     fun add(source: MessageSource) {
-        put(source.id, source)
+        put(source.internalIds.toCQMessageId(source.botId, source.fromId), source)
     }
 }

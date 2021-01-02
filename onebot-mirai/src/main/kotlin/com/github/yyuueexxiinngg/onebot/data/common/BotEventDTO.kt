@@ -10,13 +10,14 @@
 package com.github.yyuueexxiinngg.onebot.data.common
 
 import com.github.yyuueexxiinngg.onebot.logger
+import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
+import com.github.yyuueexxiinngg.onebot.util.toCQMessageId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.event.events.*
-import net.mamoe.mirai.message.*
-import net.mamoe.mirai.utils.currentTimeSeconds
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 
 @Serializable
 sealed class BotEventDTO : EventDTO()
@@ -24,6 +25,7 @@ sealed class BotEventDTO : EventDTO()
 @Serializable
 sealed class CQBotEventDTO : CQEventDTO()
 
+@OptIn(MiraiExperimentalApi::class)
 suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
     return when (this) {
         is MessageEvent -> toDTO(isRawMessage)
@@ -35,7 +37,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = 0L, // Not available in Mirai
                     user_id = member.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
                 is MemberJoinEvent.Invite -> CQMemberJoinEventDTO(
                     self_id = bot.id,
@@ -43,7 +45,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = 0L, // Not available in Mirai
                     user_id = member.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
                 else -> CQIgnoreEventDTO(bot.id)
             }
@@ -56,7 +58,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = member.id,
                     user_id = member.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
                 is MemberLeaveEvent.Kick -> CQMemberLeaveEventDTO(
                     self_id = bot.id,
@@ -64,7 +66,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = operator?.id ?: bot.id,
                     user_id = member.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
                 else -> CQIgnoreEventDTO(bot.id)
             }
@@ -75,7 +77,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             group_id = group.id,
             operator_id = 0L, // Not available in Mirai
             user_id = bot.id,
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is BotJoinGroupEvent.Invite -> CQMemberJoinEventDTO(
             self_id = bot.id,
@@ -83,7 +85,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             group_id = group.id,
             operator_id = 0L, // Not available in Mirai
             user_id = bot.id,
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
 
         is BotLeaveEvent -> {
@@ -94,7 +96,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = 0L, // Retrieve operator is currently not supported
                     user_id = bot.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
                 is BotLeaveEvent.Active -> CQMemberLeaveEventDTO(
                     self_id = bot.id,
@@ -102,7 +104,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = group.id,
                     operator_id = 0L, // Retrieve operator is currently not supported
                     user_id = bot.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
                 else -> CQIgnoreEventDTO(bot.id)
             }
@@ -114,14 +116,14 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     sub_type = "unset",
                     group_id = group.id,
                     user_id = member.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
                 else -> CQGroupAdministratorChangeEventDTO(
                     self_id = bot.id,
                     sub_type = "set",
                     group_id = group.id,
                     user_id = member.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
             }
         is MemberMuteEvent -> CQGroupMuteChangeEventDTO(
@@ -131,7 +133,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             operator_id = operator?.id ?: bot.id,
             user_id = member.id,
             duration = durationSeconds,
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is GroupMuteAllEvent -> {
             if (new) {
@@ -142,7 +144,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     operator_id = operator?.id ?: bot.id,
                     user_id = 0L,
                     duration = 0,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
             } else {
                 CQGroupMuteChangeEventDTO(
@@ -152,7 +154,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     operator_id = operator?.id ?: bot.id,
                     user_id = 0L,
                     duration = 0,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
             }
         }
@@ -163,7 +165,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             operator_id = operator.id,
             user_id = bot.id,
             duration = durationSeconds,
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is MemberUnmuteEvent -> CQGroupMuteChangeEventDTO(
             self_id = bot.id,
@@ -172,7 +174,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             operator_id = operator?.id ?: bot.id,
             user_id = member.id,
             duration = 0,
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is BotUnmuteEvent -> CQGroupMuteChangeEventDTO(
             self_id = bot.id,
@@ -181,19 +183,19 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             operator_id = operator.id,
             user_id = bot.id,
             duration = 0,
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is FriendAddEvent -> CQFriendAddEventDTO(
             self_id = bot.id,
             user_id = friend.id,
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is NewFriendRequestEvent -> CQFriendRequestEventDTO(
             self_id = bot.id,
             user_id = fromId,
             comment = message,
             flag = eventId.toString(),
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is MemberJoinRequestEvent -> CQGroupMemberAddRequestEventDTO(
             self_id = bot.id,
@@ -202,7 +204,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             user_id = fromId,
             comment = message,
             flag = eventId.toString(),
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is BotInvitedJoinGroupRequestEvent -> CQGroupMemberAddRequestEventDTO(
             self_id = bot.id,
@@ -211,14 +213,14 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             user_id = invitorId,
             comment = "",
             flag = eventId.toString(),
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is MemberNudgedEvent -> CQGroupMemberNudgedEventDTO(
             self_id = bot.id,
             group_id = group.id,
             user_id = from.id,
             target_id = member.id,
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is BotNudgedEvent -> {
             if (from is Member) {
@@ -227,7 +229,7 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                     group_id = (from as Member).group.id,
                     user_id = from.id,
                     target_id = bot.id,
-                    time = currentTimeSeconds
+                    time = currentTimeSeconds()
                 )
             } else {
                 // OneBot not yet provides private nudged event standard.
@@ -243,16 +245,16 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                         group_id = group.id,
                         user_id = authorId,
                         operator_id = operator?.id ?: bot.id,
-                        message_id = messageInternalId,
-                        time = currentTimeSeconds
+                        message_id = messageInternalIds.toCQMessageId(bot.id, group.id),
+                        time = currentTimeSeconds()
                     )
                 }
                 is MessageRecallEvent.FriendRecall -> {
                     CQFriendMessageRecallEventDTO(
                         self_id = bot.id,
-                        user_id = operator,
-                        message_id = messageInternalId,
-                        time = currentTimeSeconds
+                        user_id = operatorId,
+                        message_id = messageInternalIds.toCQMessageId(bot.id, operatorId),
+                        time = currentTimeSeconds()
                     )
                 }
                 else -> {

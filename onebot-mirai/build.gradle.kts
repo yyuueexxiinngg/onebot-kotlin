@@ -29,8 +29,8 @@ dependencies {
     implementation("com.google.code.gson:gson:${Versions.gson}")
 
     testImplementation(kotlin("stdlib-jdk8"))
+    testImplementation("net.mamoe:mirai-core-api:${Versions.miraiCoreVersion}")
     testImplementation("net.mamoe:mirai-core:${Versions.miraiCoreVersion}")
-    testImplementation("net.mamoe:mirai-core-qqandroid:${Versions.miraiCoreVersion}")
     testImplementation("net.mamoe:mirai-console:${Versions.miraiConsoleVersion}")
     testImplementation("net.mamoe:mirai-console-terminal:${Versions.miraiConsoleVersion}")
 }

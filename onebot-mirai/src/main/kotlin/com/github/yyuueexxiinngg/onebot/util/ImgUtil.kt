@@ -18,17 +18,17 @@ class ImgUtil {
 
     companion object {
         private val imgStoreGroupPicUpClass =
-            Class.forName("net.mamoe.mirai.qqandroid.network.protocol.packet.chat.image.ImgStore\$GroupPicUp")
+            Class.forName("net.mamoe.mirai.internal.network.protocol.packet.chat.image.ImgStore\$GroupPicUp")
         private val imgStoreGroupPicUpClassConstructor = imgStoreGroupPicUpClass.getDeclaredConstructor()
-        private val netWorkHandlerClass = Class.forName("net.mamoe.mirai.qqandroid.network.QQAndroidBotNetworkHandler")
+        private val netWorkHandlerClass = Class.forName("net.mamoe.mirai.internal.network.QQAndroidBotNetworkHandler")
         private val netWorkHandlerClassConstructor = netWorkHandlerClass.getDeclaredConstructor(
             Class.forName("kotlin.coroutines.CoroutineContext"),
-            Class.forName("net.mamoe.mirai.qqandroid.QQAndroidBot")
+            Class.forName("net.mamoe.mirai.internal.QQAndroidBot")
         )
         private val sendAndExpectMethod = netWorkHandlerClass.declaredMethods.find { it.name == "sendAndExpect" }
         private val groupPicUpInvokeMethod = imgStoreGroupPicUpClass.getDeclaredMethod(
             "invoke",
-            Class.forName("net.mamoe.mirai.qqandroid.network.QQAndroidClient"),
+            Class.forName("net.mamoe.mirai.internal.network.QQAndroidClient"),
             Long::class.java,
             Long::class.java,
             ByteArray::class.java,

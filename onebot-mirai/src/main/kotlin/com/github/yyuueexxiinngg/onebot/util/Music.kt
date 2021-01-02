@@ -24,12 +24,13 @@
 
 package com.github.yyuueexxiinngg.onebot.util
 
-import io.ktor.client.HttpClient
+import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
-import io.ktor.client.request.get
-import io.ktor.util.KtorExperimentalAPI
+import io.ktor.client.request.*
+import io.ktor.util.*
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.SimpleServiceMessage
 
 @OptIn(KtorExperimentalAPI::class)
 abstract class MusicProvider {
@@ -46,7 +47,7 @@ abstract class MusicProvider {
 
 object Music {
     fun custom(url: String, audio: String, title: String, content: String?, image: String?): Message {
-        return XmlMessage(
+        return xmlMessage(
             "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
                     "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] $title\" sourceMsgId=\"0\" " +
                     "url=\"$url\" " +
@@ -90,8 +91,14 @@ object QQMusic : MusicProvider() {
         return Json.parseToJsonElement(result).jsonObject.getValue("songinfo").jsonObject.getValue("data").jsonObject
     }
 
-    fun toXmlMessage(song: String, singer: String, songId: String, albumId: String, playUrl: String): XmlMessage {
-        return XmlMessage(
+    fun toXmlMessage(
+        song: String,
+        singer: String,
+        songId: String,
+        albumId: String,
+        playUrl: String
+    ): SimpleServiceMessage {
+        return xmlMessage(
             "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
                     "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] $song\" sourceMsgId=\"0\" " +
                     "url=\"https://i.y.qq.com/v8/playsong.html?_wv=1&amp;songid=$songId&amp;souce=qqshare&amp;source=qqshare&amp;ADTAG=qqshare\" " +
@@ -124,8 +131,8 @@ object NeteaseMusic : MusicProvider() {
         return Json.parseToJsonElement(result).jsonObject.getValue("songs").jsonArray[0].jsonObject
     }
 
-    fun toXmlMessage(song: String, singer: String, songId: String, coverUrl: String): XmlMessage {
-        return XmlMessage(
+    fun toXmlMessage(song: String, singer: String, songId: String, coverUrl: String): SimpleServiceMessage {
+        return xmlMessage(
             "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
                     "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] $song\" sourceMsgId=\"0\" " +
                     "url=\"http://music.163.com/m/song/$songId\" " +
@@ -138,7 +145,7 @@ object NeteaseMusic : MusicProvider() {
         )
     }
 
-    override suspend fun send(id: String): XmlMessage {
+    override suspend fun send(id: String): SimpleServiceMessage {
         val info = getSongInfo(id)
         val song = info.getValue("name").jsonPrimitive.content
         val artists = info.getValue("artists").jsonArray

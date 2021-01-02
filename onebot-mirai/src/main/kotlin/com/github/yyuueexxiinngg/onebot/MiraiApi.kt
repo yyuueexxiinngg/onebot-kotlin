@@ -1,10 +1,19 @@
 package com.github.yyuueexxiinngg.onebot
 
+import com.github.yyuueexxiinngg.onebot.PluginBase.saveImage
+import com.github.yyuueexxiinngg.onebot.data.common.*
+import com.github.yyuueexxiinngg.onebot.util.*
+import com.github.yyuueexxiinngg.onebot.web.queue.CacheRequestQueue
+import com.github.yyuueexxiinngg.onebot.web.queue.CacheSourceQueue
 import com.google.gson.Gson
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.LowLevelAPI
+import net.mamoe.mirai.LowLevelApi
+import net.mamoe.mirai.Mirai
+import net.mamoe.mirai.console.util.ConsoleExperimentalApi
+import net.mamoe.mirai.console.util.ContactUtils.getContactOrNull
+import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.data.GroupAnnouncement
 import net.mamoe.mirai.data.GroupAnnouncementMsg
 import net.mamoe.mirai.data.GroupHonorListData
@@ -12,19 +21,12 @@ import net.mamoe.mirai.data.GroupHonorType
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
-import net.mamoe.mirai.message.data.recall
-import com.github.yyuueexxiinngg.onebot.PluginBase.saveImage
-import com.github.yyuueexxiinngg.onebot.data.common.*
-import com.github.yyuueexxiinngg.onebot.util.*
-import com.github.yyuueexxiinngg.onebot.web.queue.CacheSourceQueue
-import com.github.yyuueexxiinngg.onebot.web.queue.CacheRequestQueue
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.console.util.ContactUtils.getContactOrNull
-import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.message.data.MessageSource.Key.recall
 import net.mamoe.mirai.message.data.content
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 
 
-@OptIn(LowLevelAPI::class)
+@OptIn(LowLevelApi::class, MiraiExperimentalApi::class)
 suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mirai: MiraiApi): CQResponseDTO {
     var responseDTO: CQResponseDTO = CQResponseDTO.CQPluginFailure()
     try {
@@ -117,12 +119,12 @@ class MiraiApi(val bot: Bot) {
         val raw = params["auto_escape"]?.jsonPrimitive?.booleanOrNull ?: false
         val messages = params["message"]
 
-        val group = bot.getGroup(targetGroupId)
+        val group = bot.getGroupOrFail(targetGroupId)
         cqMessageToMessageChains(bot, group, messages, raw)?.let {
             return if (it.content.isNotEmpty()) {
                 val receipt = group.sendMessage(it)
                 cachedSourceQueue.add(receipt.source)
-                CQResponseDTO.CQMessageResponse(receipt.source.id)
+                CQResponseDTO.CQMessageResponse(receipt.source.internalIds.toCQMessageId(bot.id, group.id))
             } else {
                 CQResponseDTO.CQMessageResponse(-1)
             }
@@ -137,18 +139,18 @@ class MiraiApi(val bot: Bot) {
         val messages = params["message"]
 
         val contact = try {
-            bot.getFriend(targetQQId)
+            bot.getFriendOrFail(targetQQId)
         } catch (e: NoSuchElementException) {
             val fromGroupId = cachedTempContact[targetQQId]
                 ?: bot.groups.find { group -> group.members.contains(targetQQId) }?.id
-            bot.getGroup(fromGroupId!!)[targetQQId]
+            bot.getGroupOrFail(fromGroupId!!).getMemberOrFail(targetQQId)
         }
 
         cqMessageToMessageChains(bot, contact, messages, raw)?.let {
             return if (it.content.isNotEmpty()) {
                 val receipt = contact.sendMessage(it)
                 cachedSourceQueue.add(receipt.source)
-                CQResponseDTO.CQMessageResponse(receipt.source.id)
+                CQResponseDTO.CQMessageResponse(receipt.source.internalIds.toCQMessageId(bot.id, contact.id))
             } else {
                 CQResponseDTO.CQMessageResponse(-1)
             }
@@ -169,7 +171,7 @@ class MiraiApi(val bot: Bot) {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         return if (groupId != null && memberId != null) {
-            bot.getGroup(groupId)[memberId].kick()
+            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).kick("")
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -181,7 +183,7 @@ class MiraiApi(val bot: Bot) {
         val memberId = params["user_id"]?.jsonPrimitive?.long
         val duration = params["duration"]?.jsonPrimitive?.int ?: 30 * 60
         return if (groupId != null && memberId != null) {
-            bot.getGroup(groupId)[memberId].mute(duration)
+            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).mute(duration)
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -192,7 +194,7 @@ class MiraiApi(val bot: Bot) {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val enable = params["enable"]?.jsonPrimitive?.booleanOrNull ?: true
         return if (groupId != null) {
-            bot.getGroup(groupId).settings.isMuteAll = enable
+            bot.getGroupOrFail(groupId).settings.isMuteAll = enable
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -205,7 +207,7 @@ class MiraiApi(val bot: Bot) {
         val card = params["card"]?.jsonPrimitive?.contentOrNull ?: ""
         val enable = params["enable"]?.jsonPrimitive?.booleanOrNull ?: true
         return if (groupId != null && memberId != null) {
-            bot.getGroup(groupId)[memberId].nameCard = card
+            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).nameCard = card
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -219,7 +221,7 @@ class MiraiApi(val bot: Bot) {
             // Not supported
             if (dismiss) return CQResponseDTO.CQMiraiFailure()
 
-            bot.getGroup(groupId).quit()
+            bot.getGroupOrFail(groupId).quit()
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -232,7 +234,7 @@ class MiraiApi(val bot: Bot) {
         val specialTitle = params["special_title"]?.jsonPrimitive?.contentOrNull ?: ""
         val duration = params["duration"]?.jsonPrimitive?.int ?: -1  // Not supported
         return if (groupId != null && memberId != null) {
-            bot.getGroup(groupId)[memberId].specialTitle = specialTitle
+            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).specialTitle = specialTitle
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -319,24 +321,25 @@ class MiraiApi(val bot: Bot) {
         val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
 
         return if (groupId != null) {
-            val group = bot.getGroup(groupId)
+            val group = bot.getGroupOrFail(groupId)
             CQResponseDTO.CQGroupInfo(group.id, group.name, group.members.size + 1, 0)
         } else {
             CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    @LowLevelAPI
+    @MiraiExperimentalApi
+    @LowLevelApi
     suspend fun cqGetGroupMemberInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
 
         return if (groupId != null && memberId != null) {
-            val group = bot.getGroup(groupId)
+            val group = bot.getGroupOrFail(groupId)
             if (noCache) {
-                val groupUin = Group.calculateGroupUinByGroupCode(groupId)
-                val members = bot._lowLevelQueryGroupMemberList(groupUin, groupId, group.owner.id)
+                val groupUin = Mirai.calculateGroupUinByGroupCode(groupId)
+                val members = Mirai._lowLevelQueryGroupMemberList(bot, groupUin, groupId, group.owner.id)
                 val member = members.find { m -> m.uin == memberId }
                 member?.let {
                     CQResponseDTO.CQMemberInfo(
@@ -352,7 +355,7 @@ class MiraiApi(val bot: Bot) {
                     )
                 } ?: CQResponseDTO.CQMiraiFailure()
             } else {
-                val member = bot.getGroup(groupId)[memberId]
+                val member = bot.getGroupOrFail(groupId).getMemberOrFail(memberId)
                 CQResponseDTO.CQMemberInfo(CQMemberInfoData(member))
             }
         } else {
@@ -365,7 +368,7 @@ class MiraiApi(val bot: Bot) {
         val cqGroupMemberListData = mutableListOf<CQMemberInfoData>()
         return if (groupId != null) {
             var isBotIncluded = false
-            val group = bot.getGroup(groupId)
+            val group = bot.getGroupOrFail(groupId)
             val members = group.members
             members.forEach { member ->
                 run {
@@ -577,14 +580,15 @@ class MiraiApi(val bot: Bot) {
         val name = params["group_name"]?.jsonPrimitive?.content
 
         return if (groupId != null && name != null && name != "") {
-            bot.getGroup(groupId).name = name
+            bot.getGroupOrFail(groupId).name = name
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
         }
     }
 
-    @LowLevelAPI
+    @MiraiExperimentalApi
+    @LowLevelApi
     @Suppress("DuplicatedCode")
     suspend fun cqGetGroupHonorInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.longOrNull
@@ -594,42 +598,42 @@ class MiraiApi(val bot: Bot) {
             var finalData: CQGroupHonorInfoData? = null
 
             if (type == "talkative" || type == "all") {
-                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.TALKATIVE)
+                val data = Mirai._lowLevelGetGroupHonorListData(bot, groupId, GroupHonorType.TALKATIVE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
                 val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
                 finalData = cqData?.let { cqData }
             }
 
             if (type == "performer" || type == "all") {
-                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.PERFORMER)
+                val data = Mirai._lowLevelGetGroupHonorListData(bot, groupId, GroupHonorType.PERFORMER)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
                 val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { performerList = cqData?.actorList } ?: cqData?.let { cqData }
             }
 
             if (type == "legend" || type == "all") {
-                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.LEGEND)
+                val data = Mirai._lowLevelGetGroupHonorListData(bot, groupId, GroupHonorType.LEGEND)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
                 val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { legendList = cqData?.legendList } ?: cqData?.let { cqData }
             }
 
             if (type == "strong_newbie" || type == "all") {
-                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.STRONG_NEWBIE)
+                val data = Mirai._lowLevelGetGroupHonorListData(bot, groupId, GroupHonorType.STRONG_NEWBIE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
                 val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { strongNewbieList = cqData?.strongNewbieList } ?: cqData?.let { cqData }
             }
 
             if (type == "emotion" || type == "all") {
-                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.EMOTION)
+                val data = Mirai._lowLevelGetGroupHonorListData(bot, groupId, GroupHonorType.EMOTION)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
                 val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { emotionList = cqData?.emotionList } ?: cqData?.let { cqData }
             }
 
             if (type == "active") {
-                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.ACTIVE)
+                val data = Mirai._lowLevelGetGroupHonorListData(bot, groupId, GroupHonorType.ACTIVE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
                 val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
                 finalData = finalData?.apply {
@@ -639,14 +643,14 @@ class MiraiApi(val bot: Bot) {
             }
 
             if (type == "exclusive") {
-                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.EXCLUSIVE)
+                val data = Mirai._lowLevelGetGroupHonorListData(bot, groupId, GroupHonorType.EXCLUSIVE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
                 val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { exclusiveList = cqData?.exclusiveList } ?: cqData?.let { cqData }
             }
 
             if (type == "manage") {
-                val data = bot._lowLevelGetGroupHonorListData(groupId, GroupHonorType.MANAGE)
+                val data = Mirai._lowLevelGetGroupHonorListData(bot, groupId, GroupHonorType.MANAGE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
                 val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { manageList = cqData?.manageList } ?: cqData?.let { cqData }
@@ -662,13 +666,14 @@ class MiraiApi(val bot: Bot) {
     //// hidden ////
     ///////////////
 
-    @LowLevelAPI
+    @MiraiExperimentalApi
+    @LowLevelApi
     suspend fun cqSetGroupAnnouncement(params: Map<String, JsonElement>): CQResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val content = params["content"]?.jsonPrimitive?.content
 
         return if (groupId != null && content != null && content != "") {
-            bot._lowLevelSendAnnouncement(groupId, GroupAnnouncement(msg = GroupAnnouncementMsg(text = content)))
+            Mirai._lowLevelSendAnnouncement(bot, groupId, GroupAnnouncement(msg = GroupAnnouncementMsg(text = content)))
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -700,7 +705,7 @@ class MiraiApi(val bot: Bot) {
         val enable = params["enable"]?.jsonPrimitive?.long ?: true
         return if (groupId != null) {
             // Not supported
-            // bot.getGroup(groupId).settings.isAnonymousChatEnabled = enable
+            // bot.getGroupOrFail(groupId).settings.isAnonymousChatEnabled = enable
             CQResponseDTO.CQMiraiFailure()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -713,7 +718,7 @@ class MiraiApi(val bot: Bot) {
         val enable = params["enable"]?.jsonPrimitive?.long ?: true
         return if (groupId != null && memberId != null) {
             // Not supported
-            // bot.getGroup(groupId)[memberId].permission = if (enable) MemberPermission.ADMINISTRATOR else MemberPermission.MEMBER
+            // bot.getGroupOrFail(groupId).getMemberOrFail(memberId).permission = if (enable) MemberPermission.ADMINISTRATOR else MemberPermission.MEMBER
             CQResponseDTO.CQMiraiFailure()
         } else {
             CQResponseDTO.CQInvalidRequest()

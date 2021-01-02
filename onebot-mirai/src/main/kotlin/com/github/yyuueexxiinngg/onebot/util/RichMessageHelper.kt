@@ -26,9 +26,11 @@ package com.github.yyuueexxiinngg.onebot.util
 
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.message.data.ServiceMessage
+import net.mamoe.mirai.message.data.SimpleServiceMessage
 import net.mamoe.mirai.message.data.buildXmlMessage
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 
-
+@OptIn(MiraiExperimentalApi::class)
 object RichMessageHelper {
     fun share(u: String, title: String?, content: String?, image: String?) = buildXmlMessage(60) {
         templateId = 12345
@@ -51,8 +53,8 @@ object RichMessageHelper {
     }
 
     fun contactQQ(bot: Bot, id: Long): ServiceMessage {
-        val nick = bot.getFriend(id).nick
-        return XmlMessage(
+        val nick = bot.getFriend(id)?.nick
+        return xmlMessage(
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
                     "<msg templateID=\"12345\" action=\"plugin\" p_actionData=\"AppCmd://OpenContactInfo/?uin=$id\" " +
                     "brief=\"推荐了$nick\" serviceID=\"14\" " +
@@ -65,20 +67,23 @@ object RichMessageHelper {
         )
     }
 
-    fun contactGroup(bot: Bot, id: Long): XmlMessage {
+    fun contactGroup(bot: Bot, id: Long): SimpleServiceMessage {
         val group = bot.getGroup(id)
         // TODO: 创建人，链接
         val founder = "未知创建人"
         val url = "https://github.com/mamoe/mirai"
-        return XmlMessage(
+        return xmlMessage(
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                    "<msg templateID=\"-1\" action=\"web\" brief=\"推荐了${group.name}群\" serviceID=\"15\"" +
+                    "<msg templateID=\"-1\" action=\"web\" brief=\"推荐了${group?.name}群\" serviceID=\"15\"" +
                     " i_actionData=\"group:$id\" url=\"$url\"><item layout=\"0\" mode=\"1\"><summary>推荐群</summary><hr/></item>" +
                     "<item layout=\"2\" mode=\"1\"><picture cover=\"http://p.qlogo.cn/gh/$id/$id/100\"/>" +
-                    "<title>${group.name}</title><summary>创建人：$founder</summary></item><source/></msg>"
+                    "<title>${group?.name}</title><summary>创建人：$founder</summary></item><source/></msg>"
         )
     }
 }
 
-class XmlMessage(content: String) : ServiceMessage(60, content)
-class JsonMessage(content: String) : ServiceMessage(1, content)
+@OptIn(MiraiExperimentalApi::class)
+fun xmlMessage(content: String) = SimpleServiceMessage(60, content)
+
+@OptIn(MiraiExperimentalApi::class)
+fun jsonMessage(content: String) = SimpleServiceMessage(1, content)

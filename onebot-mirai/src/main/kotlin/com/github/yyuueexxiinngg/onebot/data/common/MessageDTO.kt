@@ -10,20 +10,23 @@
 package com.github.yyuueexxiinngg.onebot.data.common
 
 import com.github.yyuueexxiinngg.onebot.logger
-import kotlinx.serialization.*
+import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
+import com.github.yyuueexxiinngg.onebot.util.toCQMessageId
+import com.github.yyuueexxiinngg.onebot.util.toCQString
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import com.github.yyuueexxiinngg.onebot.util.PokeMap
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.message.*
+import net.mamoe.mirai.event.events.FriendMessageEvent
+import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.MessageEvent
+import net.mamoe.mirai.event.events.TempMessageEvent
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.currentTimeSeconds
-import com.github.yyuueexxiinngg.onebot.util.toCQString
-import java.net.URL
+import net.mamoe.mirai.message.data.Image.Key.queryUrl
 
 /*
 *   DTO data class
@@ -228,7 +231,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
         is GroupMessageEvent -> CQGroupMessagePacketDTO(
             self_id = bot.id,
             sub_type = "normal",
-            message_id = message.internalId,
+            message_id = message.internalId.toCQMessageId(bot.id, group.id),
             group_id = group.id,
             user_id = sender.id,
             anonymous = null,
@@ -236,29 +239,31 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             raw_message = rawMessage.value,
             font = 0,
             sender = CQMemberDTO(sender),
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
         is FriendMessageEvent -> CQPrivateMessagePacketDTO(
             self_id = bot.id,
             sub_type = "friend",
-            message_id = message.internalId,
+            message_id = message.internalId.toCQMessageId(bot.id, sender.id),
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
             font = 0,
             sender = CQQQDTO(sender),
-            time = currentTimeSeconds
+            time = currentTimeSeconds()
         )
-        is TempMessageEvent -> CQPrivateMessagePacketDTO(
+        is TempMessageEvent -> CQGroupMessagePacketDTO(
             self_id = bot.id,
-            sub_type = "group", // QQ don't have discuss anymore
-            message_id = message.internalId,
+            sub_type = "normal", // QQ don't have discuss anymore
+            message_id = message.internalId.toCQMessageId(bot.id, group.id),
+            group_id = group.id,
             user_id = sender.id,
+            anonymous = null,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
             font = 0,
-            sender = CQQQDTO(sender),
-            time = currentTimeSeconds
+            sender = CQMemberDTO(sender),
+            time = currentTimeSeconds()
         )
         else -> CQIgnoreEventDTO(sender.id)
     }
@@ -294,31 +299,32 @@ suspend fun Message.toDTO() = when (this) {
 //        },
 //        // 避免套娃
 //        origin = source.originalMessage.toMessageChainDTO { it != UnknownMessageDTO && it !is QuoteDTO })
-    is PokeMessage -> CQPokeMessageDTO(CQPokeData(PokeMap[type]))
+    is PokeMessage -> CQPokeMessageDTO(CQPokeData(name))
     else -> {
         logger.debug("收到未支持消息: $this")
         UnknownMessageDTO
     }
 }
-
+/*
+@OptIn(MiraiInternalApi::class, MiraiExperimentalApi::class)
 suspend fun MessageDTO.toMessage(contact: Contact) = when (this) {
-    is CQAtDTO -> At((contact as Group)[data.qq])
+    is CQAtDTO -> (contact as Group)[data.qq]?.let { At(it) }
     is AtAllDTO -> AtAll
     is CQFaceDTO -> when {
         data.id >= 0 -> Face(data.id)
-        else -> Face(Face.unknown)
+        else -> Face(255)
     }
     is CQPlainDTO -> PlainText(data.text)
     is CQImageDTO -> when {
         !data.file.isNullOrBlank() -> Image(data.file)
-        !data.url.isNullOrBlank() -> contact.uploadImage(URL(data.url))
+        !data.url.isNullOrBlank() -> withContext(Dispatchers.IO) { URL(data.url).openStream().uploadAsImage(contact) }
         else -> null
     }
-    is XmlDTO -> ServiceMessage(60, data.data)
-    is JsonDTO -> ServiceMessage(1, data.data)
+    is XmlDTO -> SimpleServiceMessage(60, data.data)
+    is JsonDTO -> SimpleServiceMessage(1, data.data)
     is AppDTO -> LightApp(data.data)
     is CQPokeMessageDTO -> PokeMap[data.name]
     // ignore
     is UnknownMessageDTO
     -> null
-}
+}*/

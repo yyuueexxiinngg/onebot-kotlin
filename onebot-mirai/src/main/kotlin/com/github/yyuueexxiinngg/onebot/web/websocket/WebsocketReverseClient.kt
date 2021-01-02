@@ -1,29 +1,34 @@
 package com.github.yyuueexxiinngg.onebot.web.websocket
 
 import com.github.yyuueexxiinngg.onebot.BotEventListener
-import io.ktor.client.HttpClient
+import com.github.yyuueexxiinngg.onebot.BotSession
+import com.github.yyuueexxiinngg.onebot.PluginSettings
+import com.github.yyuueexxiinngg.onebot.data.common.CQHeartbeatMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.CQLifecycleMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.CQPluginStatusData
+import com.github.yyuueexxiinngg.onebot.logger
+import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
+import com.github.yyuueexxiinngg.onebot.util.toJson
+import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
+import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.header
-
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.readText
-import io.ktor.util.KtorExperimentalAPI
+import io.ktor.http.cio.websocket.*
+import io.ktor.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import net.mamoe.mirai.Bot
-
-import net.mamoe.mirai.utils.currentTimeSeconds
-import com.github.yyuueexxiinngg.onebot.BotSession
-import com.github.yyuueexxiinngg.onebot.PluginSettings
-import com.github.yyuueexxiinngg.onebot.data.common.*
-import com.github.yyuueexxiinngg.onebot.logger
-import com.github.yyuueexxiinngg.onebot.util.toJson
-import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
 import java.io.EOFException
 import java.io.IOException
 import java.net.ConnectException
+import kotlin.collections.MutableList
+import kotlin.collections.MutableMap
+import kotlin.collections.forEach
+import kotlin.collections.mutableListOf
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -207,7 +212,7 @@ class WebSocketReverseClient(
                 CQLifecycleMetaEventDTO(
                     session.bot.id,
                     "connect",
-                    currentTimeSeconds
+                    currentTimeSeconds()
                 ).toJson()
             )
         )
@@ -236,7 +241,7 @@ class WebSocketReverseClient(
                             Frame.Text(
                                 CQHeartbeatMetaEventDTO(
                                     session.botId,
-                                    currentTimeSeconds,
+                                    currentTimeSeconds(),
                                     CQPluginStatusData(
                                         good = session.bot.isOnline,
                                         online = session.bot.isOnline

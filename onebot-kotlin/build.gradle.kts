@@ -6,8 +6,8 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("net.mamoe:mirai-core-api:${Versions.miraiCoreVersion}")
     implementation("net.mamoe:mirai-core:${Versions.miraiCoreVersion}")
-    implementation("net.mamoe:mirai-core-qqandroid:${Versions.miraiCoreVersion}")
     implementation("net.mamoe:mirai-console:${Versions.miraiConsoleVersion}")
     implementation("net.mamoe:mirai-console-terminal:${Versions.miraiConsoleVersion}")
     implementation("com.github.ajalt.clikt:clikt:${Versions.clikt}")

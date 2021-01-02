@@ -1,30 +1,24 @@
 package com.github.yyuueexxiinngg.onebot.web.websocket
 
-import io.ktor.application.Application
-import io.ktor.application.install
-import io.ktor.features.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.routing.Route
-import io.ktor.routing.routing
-import io.ktor.server.cio.CIO
-import io.ktor.server.engine.ApplicationEngine
-import io.ktor.server.engine.applicationEngineEnvironment
-import io.ktor.server.engine.connector
-import io.ktor.server.engine.embeddedServer
-import io.ktor.websocket.*
-import io.ktor.websocket.WebSockets
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.consumeEach
-import net.mamoe.mirai.utils.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.BotSession
 import com.github.yyuueexxiinngg.onebot.PluginSettings
 import com.github.yyuueexxiinngg.onebot.data.common.CQHeartbeatMetaEventDTO
 import com.github.yyuueexxiinngg.onebot.data.common.CQPluginStatusData
 import com.github.yyuueexxiinngg.onebot.logger
+import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
+import io.ktor.application.*
+import io.ktor.features.*
+import io.ktor.http.cio.websocket.*
+import io.ktor.routing.*
+import io.ktor.server.cio.*
+import io.ktor.server.engine.*
 import io.ktor.util.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.channels.consumeEach
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -145,7 +139,7 @@ private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Fra
                 Frame.Text(
                     CQHeartbeatMetaEventDTO(
                         session.botId,
-                        currentTimeSeconds,
+                        currentTimeSeconds(),
                         CQPluginStatusData(
                             good = session.bot.isOnline,
                             online = session.bot.isOnline

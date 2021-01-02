@@ -23,21 +23,21 @@
  */
 package com.github.yyuueexxiinngg.onebot.util
 
+import com.github.yyuueexxiinngg.onebot.PluginBase
+import com.github.yyuueexxiinngg.onebot.PluginBase.saveImageAsync
+import com.github.yyuueexxiinngg.onebot.PluginBase.saveRecordAsync
+import com.github.yyuueexxiinngg.onebot.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.getGroupOrNull
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.message.uploadImage
-import net.mamoe.mirai.utils.MiraiExperimentalAPI
-import net.mamoe.mirai.utils.currentTimeMillis
-import com.github.yyuueexxiinngg.onebot.PluginBase
-import com.github.yyuueexxiinngg.onebot.PluginBase.saveImageAsync
-import com.github.yyuueexxiinngg.onebot.PluginBase.saveRecordAsync
-import com.github.yyuueexxiinngg.onebot.logger
+import net.mamoe.mirai.message.data.Image.Key.queryUrl
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import net.mamoe.mirai.utils.MiraiExperimentalApi
+import net.mamoe.mirai.utils.MiraiInternalApi
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
@@ -45,7 +45,15 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
+import java.util.zip.CRC32
 import kotlin.collections.HashMap
+
+fun IntArray.toCQMessageId(botId: Long, contactId: Long): Int {
+    val crc = CRC32()
+    val messageId = "$botId$$contactId$${joinToString("-")}"
+    crc.update(joinToString("-").toByteArray())
+    return crc.value.toInt()
+}
 
 suspend fun cqMessageToMessageChains(
     bot: Bot,
@@ -130,6 +138,7 @@ private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message
     }
 }
 
+@OptIn(MiraiExperimentalApi::class)
 private suspend fun convertToMiraiMessage(
     bot: Bot,
     contact: Contact?,
@@ -141,8 +150,8 @@ private suspend fun convertToMiraiMessage(
             if (args["qq"] == "all") {
                 return AtAll
             } else {
-                val group = bot.getGroupOrNull(contact!!.id) ?: return MSG_EMPTY
-                val member = group.getOrNull(args["qq"]!!.toLong()) ?: return MSG_EMPTY
+                val group = bot.getGroup(contact!!.id) ?: return MSG_EMPTY
+                val member = group[args["qq"]!!.toLong()] ?: return MSG_EMPTY
                 return At(member)
             }
         }
@@ -191,7 +200,7 @@ private suspend fun convertToMiraiMessage(
         }
         "poke" -> {
             PokeMessage.values.forEach {
-                if (it.type == args["type"]!!.toInt() && it.id == args["id"]!!.toInt()) {
+                if (it.pokeType == args["type"]!!.toInt() && it.id == args["id"]!!.toInt()) {
                     return it
                 }
             }
@@ -201,20 +210,20 @@ private suspend fun convertToMiraiMessage(
         "nudge" -> {
             val target = args["qq"] ?: error("Nudge target `qq` must not ne null.")
             if (contact is Group) {
-                contact.members[target.toLong()].nudge().sendTo(contact)
+                contact.members[target.toLong()]?.nudge()?.sendTo(contact)
             } else {
-                contact?.let { bot.friends[target.toLong()].nudge().sendTo(it) }
+                contact?.let { bot.friends[target.toLong()]?.nudge()?.sendTo(it) }
             }
             return MSG_EMPTY
         }
         "xml" -> {
-            return XmlMessage(args["data"]!!)
+            return xmlMessage(args["data"]!!)
         }
         "json" -> {
             return if (args["data"]!!.contains("\"app\":")) {
                 LightApp(args["data"]!!)
             } else {
-                JsonMessage(args["data"]!!)
+                jsonMessage(args["data"]!!)
             }
         }
         else -> {
@@ -250,14 +259,14 @@ private fun String.toMap(): HashMap<String, String> {
     return map
 }
 
-@OptIn(MiraiExperimentalAPI::class)
+@OptIn(MiraiExperimentalApi::class, MiraiInternalApi::class)
 suspend fun Message.toCQString(): String {
     return when (this) {
         is PlainText -> content.escape()
         is At -> "[CQ:at,qq=$target]"
         is Face -> "[CQ:face,id=$id]"
         is VipFace -> "[CQ:vipface,id=${kind.id},name=${kind.name},count=${count}]"
-        is PokeMessage -> "[CQ:poke,id=${id},type=${type},name=${name}]"
+        is PokeMessage -> "[CQ:poke,id=${id},type=${pokeType},name=${name}]"
         is AtAll -> "[CQ:at,qq=all]"
         is Image -> "[CQ:image,file=${md5.toUHexString("")},url=${queryUrl().escape()}]"
         is FlashImage -> "[CQ:image,file=${image.md5.toUHexString("")},url=${image.queryUrl().escape()},type=flash]"
@@ -413,7 +422,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
 
                         media = mediaBytes?.let {
-                            contact!!.uploadImage(ByteArrayInputStream(it))
+                            contact!!.uploadImage(it.toExternalResource())
                         }
 
                         if (useCache) {
@@ -424,7 +433,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                                     md5=$imageMD5
                                     size=${mediaBytes?.size ?: 0}
                                     url=https://gchat.qpic.cn/gchatpic_new/${contact!!.bot.id}/0-00-$imageMD5/0?term=2
-                                    addtime=$currentTimeMillis
+                                    addtime=${currentTimeMillis()}
                                     """.trimIndent()
                                 logger.info("此链接图片将缓存为$urlHash.cqimg")
                                 saveImageAsync("$urlHash.cqimg", cqImgContent).start()
@@ -438,8 +447,8 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     }
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
-                        media = mediaBytes?.let {
-                            contact?.let { (it as Group).uploadVoice(ByteArrayInputStream(mediaBytes)) }
+                        media = mediaBytes?.let { mBytes ->
+                            contact?.let { (it as Group).uploadVoice(mBytes.toExternalResource()) }
                         }
 
                         if (useCache && mediaBytes != null) {
@@ -456,7 +465,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
             val flash = args.containsKey("type") && args["type"] == "flash"
             if (media == null && mediaBytes != null) {
                 val bis = ByteArrayInputStream(mediaBytes)
-                media = withContext(Dispatchers.IO) { contact!!.uploadImage(bis) }
+                media = withContext(Dispatchers.IO) { contact!!.uploadImage(bis.toExternalResource()) }
             }
 
             return if (flash) {
@@ -467,7 +476,8 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
         }
         "record" -> {
             if (media == null && mediaBytes != null) {
-                media = withContext(Dispatchers.IO) { (contact!! as Group).uploadVoice(mediaBytes!!.inputStream()) }
+                media =
+                    withContext(Dispatchers.IO) { (contact!! as Group).uploadVoice(mediaBytes!!.toExternalResource()) }
             }
             return media as Voice
         }
@@ -541,7 +551,7 @@ suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
     if (cacheFile != null) {
         if (cacheFile.canRead()) {
             logger.info("此语音已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
-            return contact?.let { (it as Group).uploadVoice(cacheFile.inputStream()) }
+            return contact?.let { (it as Group).uploadVoice(cacheFile.toExternalResource()) }
         } else {
             logger.error("Record $name cache file cannot read.")
         }
@@ -558,7 +568,7 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
     if (cachedImage != null) {
         if (contact != null) {
             // If add time till now more than one day, check if the image exists
-            if (cachedImage.addTime - currentTimeMillis >= 1000 * 60 * 60 * 24) {
+            if (cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
                 if (ImgUtil.tryGroupPicUp(
                         contact.bot,
                         contact.id,
@@ -574,7 +584,7 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
                                                 md5=${cachedImage.md5}
                                                 size=${cachedImage.size}
                                                 url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-${cachedImage.md5}/0?term=2
-                                                addtime=$currentTimeMillis
+                                                addtime=${currentTimeMillis()}
                                             """.trimIndent()
                     saveImageAsync("$name.cqimg", cqImgContent).start() // Update cache file
                 }

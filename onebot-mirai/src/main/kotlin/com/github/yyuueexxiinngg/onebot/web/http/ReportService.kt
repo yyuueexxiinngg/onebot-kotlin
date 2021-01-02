@@ -1,28 +1,25 @@
 package com.github.yyuueexxiinngg.onebot.web.http
 
 import com.github.yyuueexxiinngg.onebot.BotEventListener
-import io.ktor.client.HttpClient
+import com.github.yyuueexxiinngg.onebot.BotSession
+import com.github.yyuueexxiinngg.onebot.MiraiApi
+import com.github.yyuueexxiinngg.onebot.data.common.CQHeartbeatMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.CQLifecycleMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.CQPluginStatusData
+import com.github.yyuueexxiinngg.onebot.logger
+import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
+import com.github.yyuueexxiinngg.onebot.util.toJson
+import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
+import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
-import io.ktor.client.request.headers
-import io.ktor.client.request.request
-import io.ktor.client.request.url
-import io.ktor.http.ContentType
-import io.ktor.http.HttpMethod
-import io.ktor.http.content.TextContent
+import io.ktor.client.features.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.http.content.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
-import net.mamoe.mirai.utils.currentTimeSeconds
-import com.github.yyuueexxiinngg.onebot.BotSession
-import com.github.yyuueexxiinngg.onebot.MiraiApi
-import com.github.yyuueexxiinngg.onebot.data.common.*
-import com.github.yyuueexxiinngg.onebot.logger
-import com.github.yyuueexxiinngg.onebot.util.toJson
-import com.github.yyuueexxiinngg.onebot.web.HeartbeatScope
-import io.ktor.client.features.*
 import java.net.SocketTimeoutException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -78,7 +75,7 @@ class ReportService(
                 session.cqApiImpl,
                 settings.postUrl,
                 session.bot.id,
-                CQLifecycleMetaEventDTO(session.botId, "enable", currentTimeSeconds).toJson(),
+                CQLifecycleMetaEventDTO(session.botId, "enable", currentTimeSeconds()).toJson(),
                 settings.secret,
                 false
             )
@@ -112,7 +109,7 @@ class ReportService(
                             session.bot.id,
                             CQHeartbeatMetaEventDTO(
                                 session.botId,
-                                currentTimeSeconds,
+                                currentTimeSeconds(),
                                 CQPluginStatusData(
                                     good = session.bot.isOnline,
                                     online = session.bot.isOnline
@@ -186,7 +183,7 @@ class ReportService(
                 session.cqApiImpl,
                 settings.postUrl,
                 session.bot.id,
-                CQLifecycleMetaEventDTO(session.botId, "disable", currentTimeSeconds).toJson(),
+                CQLifecycleMetaEventDTO(session.botId, "disable", currentTimeSeconds()).toJson(),
                 settings.secret,
                 false
             )
