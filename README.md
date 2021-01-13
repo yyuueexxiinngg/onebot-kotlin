@@ -36,8 +36,8 @@ __[OneBot标准](https://github.com/howmanybots/onebot) Kotlin实现 *(原cqhttp
 - `--args -- --xx`传入参数至`mirai-console`, 如`--args -- --help`将`--help`传入获取`mirai-console`提供的帮助信息
 
 ### 读取的环境变量
-- `onebot.account` 同`--account`参数, 但优先级低, 会被参数覆盖
-- `onebot.password` 同`--password`参数, 但优先级低, 会被参数覆盖
+- `ONEBOT_ACCOUNT` 同`--account`参数, 但优先级低, 会被参数覆盖
+- `ONEBOT_PASSWORD` 同`--password`参数, 但优先级低, 会被参数覆盖
 
 ### 更新日志: [CHANGELOG](https://github.com/yyuueexxiinngg/onebot-kotlin/blob/master/CHANGELOG.md)
 
