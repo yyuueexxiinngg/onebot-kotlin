@@ -27,7 +27,6 @@ import net.mamoe.mirai.message.data.Voice
 import net.mamoe.mirai.message.data.source
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.io.File
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.jvm.isAccessible
 
 val logger = PluginBase.logger
@@ -72,9 +71,7 @@ object PluginBase : KotlinPlugin(
 
         initialSubscription =
             globalEventChannel().subscribeAlways(
-                BotEvent::class,
-                EmptyCoroutineContext,
-                Listener.ConcurrencyKind.CONCURRENT
+                BotEvent::class
             ) {
                 allSession[bot.id]?.let {
                     (it as BotSession).triggerEvent(this)
@@ -118,7 +115,7 @@ object PluginBase : KotlinPlugin(
                                 session.cqApiImpl.cachedSourceQueue.add(message.source)
                             }
 
-                            if (this is TempMessageEvent) {
+                            if (this is GroupTempMessageEvent) {
                                 session.cqApiImpl.cachedTempContact[this.sender.id] = this.group.id
                             }
 
@@ -127,11 +124,13 @@ object PluginBase : KotlinPlugin(
                                     val delegate = image::class.members.find { it.name == "delegate" }?.call(image)
                                     var imageMD5 = ""
                                     var imageSize = 0
+
+                                    imageMD5 =
+                                        (delegate?.let { _delegate -> _delegate::class.members.find { it.name == "picMd5" } }
+                                            ?.call(delegate) as ByteArray?)?.toUHexString("") ?: ""
+
                                     when (subject) {
                                         is Member, is Friend -> {
-                                            imageMD5 =
-                                                (delegate?.let { _delegate -> _delegate::class.members.find { it.name == "picMd5" } }
-                                                    ?.call(delegate) as ByteArray?)?.toUHexString("") ?: ""
                                             val imageHeight =
                                                 delegate?.let { _delegate -> _delegate::class.members.find { it.name == "picHeight" } }
                                                     ?.call(delegate) as Int?
@@ -144,9 +143,6 @@ object PluginBase : KotlinPlugin(
                                             }
                                         }
                                         is Group -> {
-                                            imageMD5 =
-                                                (delegate?.let { _delegate -> _delegate::class.members.find { it.name == "md5" } }
-                                                    ?.call(delegate) as ByteArray?)?.toUHexString("") ?: ""
                                             imageSize =
                                                 (delegate?.let { _delegate -> _delegate::class.members.find { it.name == "size" } }
                                                     ?.call(delegate) as Int?) ?: 0

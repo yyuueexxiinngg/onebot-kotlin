@@ -14,7 +14,7 @@ import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.util.toCQMessageId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.utils.MiraiExperimentalApi
@@ -215,26 +215,20 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
             flag = eventId.toString(),
             time = currentTimeSeconds()
         )
-        is MemberNudgedEvent -> CQGroupMemberNudgedEventDTO(
-            self_id = bot.id,
-            group_id = group.id,
-            user_id = from.id,
-            target_id = member.id,
-            time = currentTimeSeconds()
-        )
-        is BotNudgedEvent -> {
-            if (from is Member) {
-                CQGroupMemberNudgedEventDTO(
+        is NudgeEvent -> {
+            when (subject) {
+                is Group -> CQGroupMemberNudgedEventDTO(
                     self_id = bot.id,
-                    group_id = (from as Member).group.id,
+                    group_id = subject.id,
                     user_id = from.id,
-                    target_id = bot.id,
+                    target_id = target.id,
                     time = currentTimeSeconds()
                 )
-            } else {
-                // OneBot not yet provides private nudged event standard.
-                logger.info("私聊被戳事件已被插件忽略: $this")
-                CQIgnoreEventDTO(bot.id)
+                else -> {
+                    // OneBot not yet provides private nudged event standard.
+                    logger.info("私聊被戳事件已被插件忽略: $this")
+                    CQIgnoreEventDTO(bot.id)
+                }
             }
         }
         is MessageRecallEvent -> {

@@ -64,7 +64,7 @@ suspend fun cqMessageToMessageChains(
     when (cqMessage) {
         is String -> {
             return if (raw) {
-                PlainText(cqMessage).asMessageChain()
+                PlainText(cqMessage).toMessageChain()
             } else {
                 codeToChain(bot, cqMessage, contact)
             }
@@ -89,8 +89,8 @@ suspend fun cqMessageToMessageChains(
             return try {
                 val data = cqMessage.jsonObject["data"]
                 when (cqMessage.jsonObject["type"]?.jsonPrimitive?.content) {
-                    "text" -> PlainText(data!!.jsonObject["text"]!!.jsonPrimitive.content).asMessageChain()
-                    else -> cqTextToMessageInternal(bot, contact, cqMessage).asMessageChain()
+                    "text" -> PlainText(data!!.jsonObject["text"]!!.jsonPrimitive.content).toMessageChain()
+                    else -> cqTextToMessageInternal(bot, contact, cqMessage).toMessageChain()
                 }
             } catch (e: NullPointerException) {
                 logger.warning("Got null when parsing CQ message object")
@@ -99,7 +99,7 @@ suspend fun cqMessageToMessageChains(
         }
         is JsonPrimitive -> {
             return if (raw) {
-                PlainText(cqMessage.content).asMessageChain()
+                PlainText(cqMessage.content).toMessageChain()
             } else {
                 codeToChain(bot, cqMessage.content, contact)
             }
@@ -196,7 +196,7 @@ private suspend fun convertToMiraiMessage(
             }
         }
         "shake" -> {
-            return PokeMessage.Poke
+            return PokeMessage.ChuoYiChuo
         }
         "poke" -> {
             PokeMessage.values.forEach {

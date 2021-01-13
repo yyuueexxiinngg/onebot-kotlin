@@ -23,8 +23,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.events.GroupTempMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.event.events.TempMessageEvent
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 
@@ -252,7 +252,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             sender = CQQQDTO(sender),
             time = currentTimeSeconds()
         )
-        is TempMessageEvent -> CQGroupMessagePacketDTO(
+        is GroupTempMessageEvent -> CQGroupMessagePacketDTO(
             self_id = bot.id,
             sub_type = "normal", // QQ don't have discuss anymore
             message_id = message.internalId.toCQMessageId(bot.id, group.id),
@@ -271,7 +271,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
 
 suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): WrappedCQMessageChainList {
     return WrappedCQMessageChainList(mutableListOf<MessageDTO>().apply {
-        forEachContent { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
+        contentsSequence().forEach { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
     })
 }
 
