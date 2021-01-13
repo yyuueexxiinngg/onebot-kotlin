@@ -35,13 +35,13 @@ jobs:
         gradle wrapper
         bash gradlew shadow
     
-    - name: Upload articact
+    - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: onebot-mirai
         path: onebot-mirai/build/libs/onebot-mirai-*-all.jar
 
-    - name: Upload articact
+    - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: onebot-kotlin
