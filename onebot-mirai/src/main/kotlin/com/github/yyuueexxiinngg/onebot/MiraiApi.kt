@@ -299,7 +299,7 @@ class MiraiApi(val bot: Bot) {
     fun cqGetFriendList(params: Map<String, JsonElement>): CQResponseDTO {
         val cqFriendList = mutableListOf<CQFriendData>()
         bot.friends.forEach { friend ->
-            cqFriendList.add(CQFriendData(friend.id, friend.nick, ""))
+            cqFriendList.add(CQFriendData(friend.id, friend.nick, friend.remark))
         }
         return CQResponseDTO.CQFriendList(cqFriendList)
     }

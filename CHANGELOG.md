@@ -1,3 +1,12 @@
+## `0.3.4` *2021/01/13*
+- 适配`mirai` 2.0-RC 
+- `get_friend_list`现支持返回好友备注
+- `get_stranger_info`极有限支持, 仅返回用户昵称, 且仅支持获取好友或存在于`Bot`所在某群中的成员 [相关Issue](https://github.com/mamoe/mirai/issues/234)
+- OneBot Kotlin: 系统变量更名 #117
+   - `onebot.backend`->`ONEBOT_BACKEND`
+   - `onebot.account`->`ONEBOT_ACCOUNT`
+   - `onebot.password`->`ONEBOT_PASSWORD`
+
 ## `0.3.3` *2020/11/28*
 - **修复反向Websocket客户端概率出现未清除会话导致无法重连的问题** #81
 - 再次修复`xml`以及`json`消息的字段不正确 #112
