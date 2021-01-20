@@ -42,7 +42,7 @@ object PluginBase : KotlinPlugin(
         info("OneBot Standard Kotlin implementation. ")
     }
 ) {
-    var initialSubscription: Listener<BotEvent>? = null
+    private var initialSubscription: Listener<BotEvent>? = null
 
     @OptIn(LowLevelApi::class, MiraiExperimentalApi::class)
     override fun onEnable() {
@@ -122,11 +122,8 @@ object PluginBase : KotlinPlugin(
                             if (session.settings.cacheImage) {
                                 message.filterIsInstance<Image>().forEach { image ->
                                     val delegate = image::class.members.find { it.name == "delegate" }?.call(image)
-                                    var imageMD5 = ""
                                     var imageSize = 0
-
-                                    imageMD5 =
-                                        (delegate?.let { _delegate -> _delegate::class.members.find { it.name == "picMd5" } }
+                                    val imageMD5: String = (delegate?.let { _delegate -> _delegate::class.members.find { it.name == "picMd5" } }
                                             ?.call(delegate) as ByteArray?)?.toUHexString("") ?: ""
 
                                     when (subject) {
