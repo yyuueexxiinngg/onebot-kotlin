@@ -178,13 +178,7 @@ private suspend fun convertToMiraiMessage(
             when (args["type"]) {
                 "qq" -> return QQMusic.send(args["id"]!!)
                 "163" -> return NeteaseMusic.send(args["id"]!!)
-                "custom" -> return Music.custom(
-                    args["url"]!!,
-                    args["audio"]!!,
-                    args["title"]!!,
-                    args["content"],
-                    args["image"]
-                )
+                else -> throw IllegalArgumentException("Custom music share not supported anymore")
             }
         }
         "shake" -> {

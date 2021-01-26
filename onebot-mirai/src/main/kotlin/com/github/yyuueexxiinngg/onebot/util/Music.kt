@@ -30,6 +30,8 @@ import io.ktor.client.request.*
 import io.ktor.util.*
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.MusicKind
+import net.mamoe.mirai.message.data.MusicShare
 import net.mamoe.mirai.message.data.SimpleServiceMessage
 
 @OptIn(KtorExperimentalAPI::class)
@@ -97,7 +99,7 @@ object QQMusic : MusicProvider() {
         songId: String,
         albumId: String,
         playUrl: String
-    ): SimpleServiceMessage {
+    ): Message {
         return xmlMessage(
             "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
                     "<msg serviceID=\"2\" templateID=\"1\" action=\"web\" brief=\"[分享] $song\" sourceMsgId=\"0\" " +
@@ -115,11 +117,12 @@ object QQMusic : MusicProvider() {
         val info = getSongInfo(id)
         val trackInfo = info.getValue("track_info").jsonObject
         val url = getPlayUrl(trackInfo.getValue("file").jsonObject["media_mid"]!!.jsonPrimitive.content)
-        return toXmlMessage(
+        return MusicShare(
+            MusicKind.QQMusic,
             trackInfo["name"]!!.jsonPrimitive.content,
             trackInfo.getValue("singer").jsonArray[0].jsonObject["name"]!!.jsonPrimitive.content,
-            id,
-            trackInfo.getValue("album").jsonObject["id"]!!.jsonPrimitive.content,
+            "https://i.y.qq.com/v8/playsong.html?_wv=1&amp;songid=$id&amp;souce=qqshare&amp;source=qqshare&amp;ADTAG=qqshare",
+            "http://imgcache.qq.com/music/photo/album_500/${id.substring(id.length - 2)}/500_albumpic_${id}_0.jpg",
             url
         )
     }
@@ -145,16 +148,20 @@ object NeteaseMusic : MusicProvider() {
         )
     }
 
-    override suspend fun send(id: String): SimpleServiceMessage {
+    override suspend fun send(id: String): Message {
         val info = getSongInfo(id)
         val song = info.getValue("name").jsonPrimitive.content
         val artists = info.getValue("artists").jsonArray
         val albumInfo = info.getValue("album").jsonObject
-        return toXmlMessage(
+
+        return MusicShare(
+            MusicKind.NeteaseCloudMusic,
             song,
             artists[0].jsonObject.getValue("name").jsonPrimitive.content,
-            id,
-            albumInfo.getValue("picUrl").jsonPrimitive.content
+            "http://music.163.com/m/song/$id",
+            "http://imgcache.qq.com/music/photo/album_500/${id.substring(id.length - 2)}/500_albumpic_${id}_0.jpg",
+            albumInfo.getValue("picUrl").jsonPrimitive.content,
+            "[分享] $song"
         )
     }
 }
