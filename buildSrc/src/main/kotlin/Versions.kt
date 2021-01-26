@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 object Versions {
     const val projectVersion = "0.3.4"
 
-    const val miraiCoreVersion = "2.0.0"
+    const val miraiCoreVersion = "2.1.0"
     const val miraiConsoleVersion = "2.0.0"
 
     const val ktorVersion = "1.5.0"
