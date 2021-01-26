@@ -277,23 +277,22 @@ class MiraiApi(val bot: Bot) {
         return CQResponseDTO.CQLoginInfo(bot.id, bot.nick)
     }
 
-    // Partial support
-    // TODO: Full support when https://github.com/mamoe/mirai/issues/234 resolved.
-    @OptIn(ConsoleExperimentalApi::class)
-    fun cqGetStrangerInfo(params: Map<String, JsonElement>): CQResponseDTO {
+    @OptIn(ConsoleExperimentalApi::class, MiraiExperimentalApi::class)
+    suspend fun cqGetStrangerInfo(params: Map<String, JsonElement>): CQResponseDTO {
         val userId = params["user_id"]?.jsonPrimitive?.long
-        if (userId != null) {
-            bot.getContactOrNull(userId)?.let { contact ->
-                return when (contact) {
-                    is Friend -> CQResponseDTO.CQStrangerInfo(CQStrangerInfoData(contact.id, contact.nick))
-                    is Member -> CQResponseDTO.CQStrangerInfo(CQStrangerInfoData(contact.id, contact.nick))
-                    else -> CQResponseDTO.CQMiraiFailure()
-                }
-            }
+        return if (userId != null) {
+            val profile = Mirai.queryProfile(bot, userId)
+            CQResponseDTO.CQStrangerInfo(
+                CQStrangerInfoData(
+                    userId,
+                    profile.nickname,
+                    profile.sex.name.toLowerCase(),
+                    profile.age
+                )
+            )
         } else {
-            return CQResponseDTO.CQInvalidRequest()
+            CQResponseDTO.CQInvalidRequest()
         }
-        return CQResponseDTO.CQMiraiFailure()
     }
 
     fun cqGetFriendList(params: Map<String, JsonElement>): CQResponseDTO {
