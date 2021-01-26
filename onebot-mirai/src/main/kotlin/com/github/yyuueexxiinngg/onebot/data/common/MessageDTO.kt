@@ -84,7 +84,7 @@ data class CQPlainData(val text: String)
 data class CQAtDTO(val data: CQAtData, val type: String = "at") : MessageDTO()
 
 @Serializable
-data class CQAtData(val qq: Long)
+data class CQAtData(val qq: String)
 
 
 @Serializable
@@ -92,7 +92,7 @@ data class CQAtData(val qq: Long)
 data class CQFaceDTO(val data: CQFaceData, val type: String = "face") : MessageDTO()
 
 @Serializable
-data class CQFaceData(val id: Int = -1)
+data class CQFaceData(val id: String = "-1")
 
 @Serializable
 @SerialName("Image")
@@ -277,9 +277,9 @@ suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolea
 }
 
 suspend fun Message.toDTO() = when (this) {
-    is At -> CQAtDTO(CQAtData(target))
-    is AtAll -> CQAtDTO(CQAtData(0L))
-    is Face -> CQFaceDTO(CQFaceData(id))
+    is At -> CQAtDTO(CQAtData(target.toString()))
+    is AtAll -> CQAtDTO(CQAtData("0"))
+    is Face -> CQFaceDTO(CQFaceData(id.toString()))
     is PlainText -> CQPlainDTO(CQPlainData(content))
     is Image -> CQImageDTO(CQImageData(imageId, queryUrl()))
     is FlashImage -> CQImageDTO(CQImageData(image.imageId, image.queryUrl(), "flash"))
