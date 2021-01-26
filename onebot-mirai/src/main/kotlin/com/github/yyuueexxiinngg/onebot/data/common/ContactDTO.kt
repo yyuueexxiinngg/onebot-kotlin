@@ -94,7 +94,13 @@ data class CQAnonymousMemberDTO(
     val id: Long,
     val name: String,
     val flag: String
-)
+) {
+    constructor(member: AnonymousMember) : this(
+        member.id,
+        member.nameCard,
+        member.anonymousId + "&${member.nameCard}" // Need member nick to mute
+    )
+}
 
 @Serializable
 data class GroupDTO(

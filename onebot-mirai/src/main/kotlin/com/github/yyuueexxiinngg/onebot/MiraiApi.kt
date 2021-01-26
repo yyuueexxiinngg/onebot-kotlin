@@ -12,8 +12,9 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelApi
 import net.mamoe.mirai.Mirai
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.console.util.ContactUtils.getContactOrNull
-import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.contact.MemberPermission
+import net.mamoe.mirai.contact.PermissionDeniedException
+import net.mamoe.mirai.contact.getMemberOrFail
 import net.mamoe.mirai.data.GroupAnnouncement
 import net.mamoe.mirai.data.GroupAnnouncementMsg
 import net.mamoe.mirai.data.GroupHonorListData
@@ -39,7 +40,7 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
             "send_like" -> responseDTO = mirai.cqSendLike(params)
             "set_group_kick" -> responseDTO = mirai.cqSetGroupKick(params)
             "set_group_ban" -> responseDTO = mirai.cqSetGroupBan(params)
-            "set_group_anonymous_ban" -> responseDTO = mirai.cqSetAnonymousBan(params)
+            "set_group_anonymous_ban" -> responseDTO = mirai.cqSetGroupAnonymousBan(params)
             "set_group_whole_ban" -> responseDTO = mirai.cqSetWholeGroupBan(params)
             "set_group_admin" -> responseDTO = mirai.cqSetGroupAdmin(params)
             "set_group_anonymous" -> responseDTO = mirai.cqSetGroupAnonymous(params)
@@ -184,6 +185,23 @@ class MiraiApi(val bot: Bot) {
         val duration = params["duration"]?.jsonPrimitive?.int ?: 30 * 60
         return if (groupId != null && memberId != null) {
             bot.getGroupOrFail(groupId).getMemberOrFail(memberId).mute(duration)
+            CQResponseDTO.CQGeneralSuccess()
+        } else {
+            CQResponseDTO.CQInvalidRequest()
+        }
+    }
+
+    @OptIn(LowLevelApi::class)
+    suspend fun cqSetGroupAnonymousBan(params: Map<String, JsonElement>): CQResponseDTO {
+        val groupId = params["group_id"]?.jsonPrimitive?.long
+        val flag = params["anonymous"]?.jsonObject?.get("flag")?.jsonPrimitive?.content
+            ?: params["anonymous_flag"]?.jsonPrimitive?.content
+            ?: params["flag"]?.jsonPrimitive?.content
+
+        val duration = params["duration"]?.jsonPrimitive?.int ?: 30 * 60
+        return if (groupId != null && flag != null) {
+            val splits = flag.split("&", limit = 2)
+            Mirai.muteAnonymousMember(bot, splits[0], splits[1], groupId, duration)
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()
@@ -446,7 +464,7 @@ class MiraiApi(val bot: Bot) {
                     if (operation?.get("ban")?.jsonPrimitive?.booleanOrNull == true) {
                         @Suppress("ConstantConditionIf")
                         (return if (isAnonymous) {
-                            cqSetAnonymousBan(context)
+                            cqSetGroupAnonymousBan(context)
                         } else {
                             cqSetGroupBan(context)
                         })
@@ -732,7 +750,5 @@ class MiraiApi(val bot: Bot) {
         return CQResponseDTO.CQMiraiFailure()
     }
 
-    fun cqSetAnonymousBan(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
-    }
+
 }

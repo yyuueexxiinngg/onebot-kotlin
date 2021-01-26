@@ -21,6 +21,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import net.mamoe.mirai.contact.AnonymousMember
 import net.mamoe.mirai.event.events.FriendMessageEvent
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.events.GroupTempMessageEvent
@@ -230,11 +231,11 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
     return when (this) {
         is GroupMessageEvent -> CQGroupMessagePacketDTO(
             self_id = bot.id,
-            sub_type = "normal",
+            sub_type = if (sender is AnonymousMember) "anonymous" else "normal",
             message_id = message.internalId.toCQMessageId(bot.id, group.id),
             group_id = group.id,
             user_id = sender.id,
-            anonymous = null,
+            anonymous = if (sender is AnonymousMember) CQAnonymousMemberDTO(sender as AnonymousMember) else null,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
             font = 0,
