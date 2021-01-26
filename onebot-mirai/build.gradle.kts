@@ -27,6 +27,7 @@ dependencies {
     implementation(ktor("client-websockets"))
     implementation("ch.qos.logback:logback-classic:${Versions.logback}")
     implementation("com.google.code.gson:gson:${Versions.gson}")
+    implementation("org.rocksdb:rocksdbjni:${Versions.rocksdb}")
 
     testImplementation(kotlin("stdlib-jdk8"))
     testImplementation("net.mamoe:mirai-core-api:${Versions.miraiCoreVersion}")

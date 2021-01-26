@@ -45,15 +45,7 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
-import java.util.zip.CRC32
 import kotlin.collections.HashMap
-
-fun IntArray.toCQMessageId(botId: Long, contactId: Long): Int {
-    val crc = CRC32()
-    val messageId = "$botId$$contactId$${joinToString("-")}"
-    crc.update(joinToString("-").toByteArray())
-    return crc.value.toInt()
-}
 
 suspend fun cqMessageToMessageChains(
     bot: Bot,

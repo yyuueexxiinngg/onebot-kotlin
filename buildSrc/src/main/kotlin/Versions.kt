@@ -14,6 +14,7 @@ object Versions {
     const val logback = "1.2.3"
     const val gson = "2.8.6"
     const val yamlkt = "0.7.4"
+    const val rocksdb = "6.15.2"
 
     // OneBot Kotlin
     const val clikt = "3.0.1"

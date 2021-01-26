@@ -2,11 +2,8 @@ package com.github.yyuueexxiinngg.onebot
 
 import com.github.yyuueexxiinngg.onebot.SessionManager.allSession
 import com.github.yyuueexxiinngg.onebot.SessionManager.closeSession
-import com.github.yyuueexxiinngg.onebot.util.EventFilter
-import com.github.yyuueexxiinngg.onebot.util.HttpClient
+import com.github.yyuueexxiinngg.onebot.util.*
 import com.github.yyuueexxiinngg.onebot.util.HttpClient.Companion.initHTTPClientProxy
-import com.github.yyuueexxiinngg.onebot.util.currentTimeMillis
-import com.github.yyuueexxiinngg.onebot.util.toUHexString
 import com.google.auto.service.AutoService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -26,6 +23,10 @@ import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Voice
 import net.mamoe.mirai.message.data.source
 import net.mamoe.mirai.utils.MiraiExperimentalApi
+import org.rocksdb.CompressionType
+import org.rocksdb.Options
+import org.rocksdb.RocksDB
+import org.rocksdb.TtlDB
 import java.io.File
 import kotlin.reflect.jvm.isAccessible
 
@@ -43,12 +44,23 @@ object PluginBase : KotlinPlugin(
     }
 ) {
     private var initialSubscription: Listener<BotEvent>? = null
+    internal var db: RocksDB? = null
 
     @OptIn(LowLevelApi::class, MiraiExperimentalApi::class)
     override fun onEnable() {
+        PluginSettings.reload()
+
+        if (PluginSettings.db.enable) {
+            TtlDB.loadLibrary()
+            val dbOptions = Options()
+                .setCreateIfMissing(true)
+                .setCompressionType(CompressionType.LZ4_COMPRESSION)
+                .setLevelCompactionDynamicLevelBytes(true)
+            db = TtlDB.open(dbOptions, "$dataFolder/db", PluginSettings.db.ttl * 60 * 60, false)
+        }
+
         logger.info("Plugin loaded! ${BuildConfig.VERSION}")
         logger.info("插件当前Commit 版本: ${BuildConfig.COMMIT_HASH}")
-        PluginSettings.reload()
         EventFilter.init()
         logger.debug("开发交流群: 1143274864")
         initHTTPClientProxy()
@@ -109,6 +121,7 @@ object PluginBase : KotlinPlugin(
                     }
                     is MessageEvent -> {
                         allSession[bot.id]?.let { s ->
+                            saveMessageToDB()
                             val session = s as BotSession
 
                             if (this is GroupMessageEvent) {
@@ -123,7 +136,8 @@ object PluginBase : KotlinPlugin(
                                 message.filterIsInstance<Image>().forEach { image ->
                                     val delegate = image::class.members.find { it.name == "delegate" }?.call(image)
                                     var imageSize = 0
-                                    val imageMD5: String = (delegate?.let { _delegate -> _delegate::class.members.find { it.name == "picMd5" } }
+                                    val imageMD5: String =
+                                        (delegate?.let { _delegate -> _delegate::class.members.find { it.name == "picMd5" } }
                                             ?.call(delegate) as ByteArray?)?.toUHexString("") ?: ""
 
                                     when (subject) {
@@ -178,6 +192,7 @@ object PluginBase : KotlinPlugin(
     }
 
     override fun onDisable() {
+        db?.close()
         initialSubscription?.complete()
         allSession.forEach { (sessionId, _) -> closeSession(sessionId) }
     }

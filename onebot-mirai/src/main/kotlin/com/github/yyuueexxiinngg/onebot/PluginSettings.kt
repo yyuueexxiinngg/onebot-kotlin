@@ -1,13 +1,22 @@
 package com.github.yyuueexxiinngg.onebot
 
 import kotlinx.serialization.SerialName
-import net.mamoe.mirai.console.data.*
-import net.mamoe.yamlkt.Comment
 import kotlinx.serialization.Serializable
+import net.mamoe.mirai.console.data.AutoSavePluginConfig
+import net.mamoe.mirai.console.data.value
+import net.mamoe.yamlkt.Comment
 
 object PluginSettings : AutoSavePluginConfig("settings") {
     var proxy by value("")
+    var db by value(DBSettings())
     var bots: MutableMap<String, BotSettings>? by value(mutableMapOf("12345654321" to BotSettings()))
+
+    @Serializable
+    data class DBSettings(
+        var enable: Boolean = true,
+        @Comment("生存时间/小时，存储的消息会在超过此时间后过期删除，设置为非正数视为无限")
+        var ttl: Int = 72
+    )
 
     @Serializable
     data class BotSettings(
