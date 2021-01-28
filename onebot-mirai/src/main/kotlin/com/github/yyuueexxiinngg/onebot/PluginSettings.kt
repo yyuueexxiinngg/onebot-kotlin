@@ -14,8 +14,8 @@ object PluginSettings : AutoSavePluginConfig("settings") {
     @Serializable
     data class DBSettings(
         var enable: Boolean = true,
-        @Comment("生存时间/小时，存储的消息会在超过此时间后过期删除，设置为非正数视为无限")
-        var ttl: Int = 72
+//        @Comment("数据库的最大容量限制,单位GB,非正数视为无限制,超出此大小后旧记录将被删除")
+//        var maxSize: Double = 0.0
     )
 
     @Serializable
