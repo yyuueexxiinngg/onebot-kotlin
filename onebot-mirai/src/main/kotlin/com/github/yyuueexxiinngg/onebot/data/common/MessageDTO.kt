@@ -253,17 +253,15 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
             sender = CQQQDTO(sender),
             time = currentTimeSeconds()
         )
-        is GroupTempMessageEvent -> CQGroupMessagePacketDTO(
+        is GroupTempMessageEvent -> CQPrivateMessagePacketDTO(
             self_id = bot.id,
-            sub_type = "normal", // QQ don't have discuss anymore
-            message_id = message.internalId.toCQMessageId(bot.id, group.id),
-            group_id = group.id,
+            sub_type = "group",
+            message_id = message.internalId.toCQMessageId(bot.id, sender.id),
             user_id = sender.id,
-            anonymous = null,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
             font = 0,
-            sender = CQMemberDTO(sender),
+            sender = CQQQDTO(sender),
             time = currentTimeSeconds()
         )
         else -> CQIgnoreEventDTO(sender.id)
