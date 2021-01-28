@@ -59,7 +59,7 @@ bots:
       # 是否发送心跳包, 默认为否
       enable: false
       # 心跳包发送间隔, 默认为 15000毫秒
-      interval: 1500
+      interval: 15000
     # HTTP 相关配置
     http: 
       # 可选，是否启用HTTP API服务器, 默认为不启用, 此项开始与否跟postUrl无关
