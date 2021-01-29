@@ -1,21 +1,34 @@
+## `0.3.5`
+
+- 适配`mirai` 2.1.0
+- `get_stranger_info`现支持获取陌生人名片
+- 修复错误的array消息上报中错误的数据类型 #127
+- 修复临时会话消息错误上报为群消息 #133
+- 支持接收群组匿名消息
+- 支持禁言匿名群成员 `set_group_anonymous_ban`
+- 支持获取消息 `get_msg`
+- 支持`mirai`2.1.0 音乐分享卡片消息
+- 支持接收群成员荣誉变更事件 (`mriai`2.1.0暂仅支持龙王事件)
+
 ## `0.3.4` *2021/01/13*
-- 适配`mirai` 2.0-RC 
+
+- 适配`mirai` 2.0-RC
 - `get_friend_list`现支持返回好友备注
 - `get_stranger_info`极有限支持, 仅返回用户昵称, 且仅支持获取好友或存在于`Bot`所在某群中的成员 [相关Issue](https://github.com/mamoe/mirai/issues/234)
 - OneBot Kotlin: 系统变量更名 #117
-   - `onebot.backend`->`ONEBOT_BACKEND`
-   - `onebot.account`->`ONEBOT_ACCOUNT`
-   - `onebot.password`->`ONEBOT_PASSWORD`
+  - `onebot.backend`->`ONEBOT_BACKEND`
+  - `onebot.account`->`ONEBOT_ACCOUNT`
+  - `onebot.password`->`ONEBOT_PASSWORD`
 
 ## `0.3.3` *2020/11/28*
+
 - **修复反向Websocket客户端概率出现未清除会话导致无法重连的问题** #81
 - 再次修复`xml`以及`json`消息的字段不正确 #112
 - 支持接收及发送闪照 #114
-- 支持通过`json`发送程序分享富文本消息, 类似 ```{\"app\":\"com.tencent.weather\"&#44;  ....```
+- 支持通过`json`发送程序分享富文本消息, 类似 ```{\"app\":\"com.tencent.weather\"&#44; ....```
 - 支持接收群组及好友消息撤回事件 *(获取消息接口尚未支持)*
 - HTTP上报服务支持超时, `http`配置项中增加`timeout`配置 #113
 - 富文本消息段类型跟随OneBot标准使用`json`, `xml`, 弃用`rich`
-
 
 ## `0.3.2` *2020/11/23*
 ### **修复因合并`embedded`分支而在`0.3.1`中引入的`Array`格式消息上报序列化格式错误**
@@ -26,13 +39,13 @@
 
 ## `0.3.1` *2020/11/22*
 - 优化事件处理机制 #109
-- 更新依赖`mirai-console`至`1.0.0`, [更新日志](https://github.com/mamoe/mirai-console/releases/tag/1.0.0), **现在聊天中`/help`命令不会与`console`内建命令冲突了** #110
+- 更新依赖`mirai-console`至`1.0.0`, [更新日志](https://github.com/mamoe/mirai-console/releases/tag/1.0.0), **现在聊天中`/help`
+  命令不会与`console`内建命令冲突了** #110
 - 新版`console`内置了简单修改日志打印等级的配置, 因此弃用自定义`Logger`
-    - `OneBot`配置项中`debug`项作废, 修改此项不会产生任何作用
-    - 开启Debug打印的配置请修改`console`本身的配置, 位于`config/Console/Logger.yml`
-        - 可将`defaultPriority: INFO`修改为`defaultPriority: DEBUG`或以上开启所有**mirai及所有插件**的Debug日志输出
-        - **或在`loggers`项下新增`OneBot: DEBUG`或以上单独开启本插件的Debug日志输出**
-
+  - `OneBot`配置项中`debug`项作废, 修改此项不会产生任何作用
+  - 开启Debug打印的配置请修改`console`本身的配置, 位于`config/Console/Logger.yml`
+    - 可将`defaultPriority: INFO`修改为`defaultPriority: DEBUG`或以上开启所有**mirai及所有插件**的Debug日志输出
+    - **或在`loggers`项下新增`OneBot: DEBUG`或以上单独开启本插件的Debug日志输出**
 
 ## `0.3.0` *2020/11/16*
 - 项目更名:
@@ -46,7 +59,7 @@
 - 修复: `send_msg` API中群聊与私聊逻辑判断问题 #105
 - 优化: 初次启动时自动生成样本配置文件
 - 更新依赖`mirai-core`至`1.3.3`, 插件版添加获取群荣誉API `get_group_honor_info`支持
-  
+
 ### OneBot Kotlin - [分支](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded)
 
 - 包含上述所有更新
@@ -75,31 +88,40 @@ bots:
 ```
 
 ## `0.2.3`  *2020/08/27*
-- **修复: 反向WS客户端非`Universal`模式下`event`路由不保持长连接的问题**, 此BUG**导致所有非`Universal`模式接入的框架无法使用**(如[cqhttp.Cyan](https://github.com/frank-bots/cqhttp.Cyan)) #69 
-- **修复: 反向WS客户端添加`TLS`支持**, 需在配置文件`ws_reverse`中新增项`useTLS: true`以使用`TLS`建立连接, 配置文件详见README.md #42 
-- 修复: HTTP上报服务启动时发送的`meta_event`未签名, 此BUG导致一些框架(如[PicqBotX](https://github.com/HyDevelop/PicqBotX))无法正常使用 #65 
-- 修复: 心跳服务发送数据类型错误, 此BUG导致一些框架无法正常接收心跳数据包, (如[PicqBotX](https://github.com/HyDevelop/PicqBotX), [cqhttp.Cyan](https://github.com/frank-bots/cqhttp.Cyan)) #70
-- **修复: 从链接发送语音时语音不完整的问题** #59 
-- 修复: `get_version_info `API返回值现在符合[OneBot标准](https://github.com/howmanybots/onebot/blob/master/v11/specs/api/public.md#get_version_info-%E8%8E%B7%E5%8F%96%E7%89%88%E6%9C%AC%E4%BF%A1%E6%81%AF)了 #67 
-    - 其中`app_version`为当前版本, `app_build_version`为当前`Commit`版本
-- 修复: `set_group_name` API参数现在符合[OneBot标准](https://github.com/howmanybots/onebot/blob/master/v11/specs/api/public.md#set_group_name-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%90%8D)了
--  新增: 通过链接下载媒体时支持`timeout`配置 #61  举例: [CQ:image,cache=0,**timeout=5**,url=xxxxxx]
--  新增: **通过链接下载媒体时支持`proxy`配置来通过代理下载**, 举例: [CQ:image,cache=0,**proxy=1**,url=xxxxxx], 需在配置文件中新增`proxy`项, 支持`HTTP`及`Sock`代理, 配置文件详见README.md
+
+- **修复: 反向WS客户端非`Universal`模式下`event`路由不保持长连接的问题**, 此BUG**导致所有非`Universal`模式接入的框架无法使用**(
+  如[cqhttp.Cyan](https://github.com/frank-bots/cqhttp.Cyan)) #69
+- **修复: 反向WS客户端添加`TLS`支持**, 需在配置文件`ws_reverse`中新增项`useTLS: true`以使用`TLS`建立连接, 配置文件详见README.md #42
+- 修复: HTTP上报服务启动时发送的`meta_event`未签名, 此BUG导致一些框架(如[PicqBotX](https://github.com/HyDevelop/PicqBotX))无法正常使用 #65
+- 修复: 心跳服务发送数据类型错误, 此BUG导致一些框架无法正常接收心跳数据包, (如[PicqBotX](https://github.com/HyDevelop/PicqBotX)
+  , [cqhttp.Cyan](https://github.com/frank-bots/cqhttp.Cyan)) #70
+- **修复: 从链接发送语音时语音不完整的问题** #59
+- 修复: `get_version_info `
+  API返回值现在符合[OneBot标准](https://github.com/howmanybots/onebot/blob/master/v11/specs/api/public.md#get_version_info-%E8%8E%B7%E5%8F%96%E7%89%88%E6%9C%AC%E4%BF%A1%E6%81%AF)了
+  #67
+  - 其中`app_version`为当前版本, `app_build_version`为当前`Commit`版本
+- 修复: `set_group_name`
+  API参数现在符合[OneBot标准](https://github.com/howmanybots/onebot/blob/master/v11/specs/api/public.md#set_group_name-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%90%8D)了
+- 新增: 通过链接下载媒体时支持`timeout`配置 #61 举例: [CQ:image,cache=0,**timeout=5**,url=xxxxxx]
+- 新增: **通过链接下载媒体时支持`proxy`配置来通过代理下载**, 举例: [CQ:image,cache=0,**proxy=1**,url=xxxxxx], 需在配置文件中新增`proxy`项, 支持`HTTP`及`Sock`
+  代理, 配置文件详见README.md
 - 新增: 现在支持发送网易云音乐卡片了, 感谢 @F0ur 对[go-cqhttp](https://github.com/Mrs4s/go-cqhttp/)做出的贡献
--  新增: `get_group_member_info` API支持设置`no_cache`, 此前`mirai`已会实时更新群员权限, 即不需要设置为`true`, `no_cache`选项仅适用于实时获取群员特殊头衔
+- 新增: `get_group_member_info` API支持设置`no_cache`, 此前`mirai`已会实时更新群员权限, 即不需要设置为`true`, `no_cache`选项仅适用于实时获取群员特殊头衔
 - 新增: 支持`get_image`和`get_record`API #60 , **需在配置中开启对应缓存**, 返回值中`file`指向媒体文件绝对路径, `file_type`为媒体实际类型, 未知类型返回`unknown`
-    - `get_image`会**根据缓存下载图片**
-    - `get_record`会返回已缓存语音
-    
+  - `get_image`会**根据缓存下载图片**
+  - `get_record`会返回已缓存语音
+
 ### Embedded版本 - [分支](https://github.com/yyuueexxiinngg/cqhttp-mirai/tree/embedded)
 
 - 包含上述所有更新
-- 优化: 现在读取config.txt自动登录时不会与传参和环境变量重复导致登录两次同一个`Bot`了 #64 
-~碎碎念: `mirai-console-1.0.0`已基本可用,  现在应该是基于`mirai-console-0.5.2`的最后一个大版本了 , 接下来重心是对`mirai-console-1.0.0`进行适配~
+- 优化: 现在读取config.txt自动登录时不会与传参和环境变量重复导致登录两次同一个`Bot`了 #64
+  ~碎碎念: `mirai-console-1.0.0`已基本可用, 现在应该是基于`mirai-console-0.5.2`的最后一个大版本了 , 接下来重心是对`mirai-console-1.0.0`进行适配~
 
 ## `0.2.2`  *2020/08/20*
+
 #### 0.2.2.5
-- HTTP API服务器及正向Websocket服务器鉴权支持`Authorization`头 #58 
+
+- HTTP API服务器及正向Websocket服务器鉴权支持`Authorization`头 #58
 - `0.2.2.4`中引入的读取[go-cqhttp](https://github.com/Mrs4s/go-cqhttp/)的`.image`文件现在支持`JRE 1.8`而非`JRE 1.9`以上了
 - 现在调用`delete_msg`接口成功时不会错误返回报错了
 - 现在`Bot`被邀请进群及加群申请被通过后会正常触发`MemberJoinEvent`事件了, `user_id`与`Bot`相同
@@ -116,24 +138,25 @@ bots:
 **因小版本不一定全为BUG修复, 今后小版本不再使用`-Fix*`方式进行命名**
 
 #### 0.2.2-Fix3
-- 普通  修复`BotEvent`的系列化问题, 此BUG在`0.2.2`尝试升级`kotlin serialization`时引入, 会导致插件使用者收不到各类Bot时间, 如`好友请求`, `群成员加群请求/退群事件`, `禁言事件`等
-~~那么Fix3它来了~~
+
+- 普通 修复`BotEvent`的系列化问题, 此BUG在`0.2.2`尝试升级`kotlin serialization`时引入, 会导致插件使用者收不到各类Bot时间, 如`好友请求`, `群成员加群请求/退群事件`, `禁言事件`等
+  ~~那么Fix3它来了~~
 
 #### 0.2.2-Fix2
-- 普通  修复`get_group_info`, `get_group_member_list`API的参数解析错误, 举例: 此BUG会导致yobot无法获取群组和成员信息
-~~希望没有Fix3~~
+
+- 普通 修复`get_group_info`, `get_group_member_list`API的参数解析错误, 举例: 此BUG会导致yobot无法获取群组和成员信息
+  ~~希望没有Fix3~~
 
 #### 0.2.2-Fix1
 
 - **严重**  **修复尝试修复`.handle_quick_operation`API时对其引入的新BUG, 此BUG会导致只有在群里回复并AT发送人时才能正常解析消息**
-   影响范围广泛, HTTP上报服务#48,  反向WS客户端与Nonebot #49 
-
+  影响范围广泛, HTTP上报服务#48, 反向WS客户端与Nonebot #49
 
 #### 0.2.2
 
 - **基于`mirai-core 1.2.1`, 与1.1.3不兼容** #45 
 - **插件版现在也支持发送语音了**
-  -  发送`amr`和`silk`格式的语音全平台可收听, 发送`mp3`, `m4a`, `aac`等格式语音只有手机端可收听
+  - 发送`amr`和`silk`格式的语音全平台可收听, 发送`mp3`, `m4a`, `aac`等格式语音只有手机端可收听
 - **修复`.handle_quick_operation`API中的消息解析错误**, 此错误导致无法使用`array`格式进行快速回复 #38 
 - POST请求支持接收form-urlencoded #44
 - HTTP上报服务`Content-Type`中加入编码值, 此前一些较严框架无法收到上报消息 #37 

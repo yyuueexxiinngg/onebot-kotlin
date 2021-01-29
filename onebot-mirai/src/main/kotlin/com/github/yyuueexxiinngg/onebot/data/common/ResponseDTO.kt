@@ -1,7 +1,10 @@
 package com.github.yyuueexxiinngg.onebot.data.common
 
+import com.github.yyuueexxiinngg.onebot.BuildConfig
 import com.google.gson.annotations.SerializedName
-import kotlinx.serialization.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -10,7 +13,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonElement
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
-import com.github.yyuueexxiinngg.onebot.BuildConfig
 
 @Serializable
 sealed class CQResponseDataDTO
@@ -24,10 +26,11 @@ open class CQResponseDTO(
 ) {
     class CQGeneralSuccess : CQResponseDTO("ok", 0, null)
     class CQAsyncStarted : CQResponseDTO("async", 1, null)
-    class CQMiraiFailure : CQResponseDTO("failed", 102, null)
-    class CQPluginFailure : CQResponseDTO("failed", 103, null)
-    class CQInvalidRequest : CQResponseDTO("failed", 100, null)
+    class CQMiraiFailure(message: String? = null) : CQResponseDTO("failed", 102, ResponseMessageData(message))
+    class CQPluginFailure(message: String? = null) : CQResponseDTO("failed", 103, ResponseMessageData(message))
+    class CQInvalidRequest(message: String? = "参数错误") : CQResponseDTO("failed", 100, ResponseMessageData(message))
     class CQMessageResponse(message_id: Int) : CQResponseDTO("ok", 0, CQMessageData(message_id))
+    class CQGetMessageResponse(result: CQGetMessageData) : CQResponseDTO("ok", 0, result)
     class CQLoginInfo(user_id: Long, nickname: String) : CQResponseDTO("ok", 0, CQLoginInfoData(user_id, nickname))
     class CQFriendList(friendList: List<CQFriendData>) : CQResponseDTO("ok", 0, friendList)
     class CQStrangerInfo(info: CQStrangerInfoData) : CQResponseDTO("ok", 0, info)
@@ -72,8 +75,23 @@ open class CQResponseDTO(
 }
 
 @Serializable
+@SerialName("ResponseMessageData")
+data class ResponseMessageData(val message: String?) : CQResponseDataDTO()
+
+@Serializable
 @SerialName("MessageData")
 data class CQMessageData(val message_id: Int) : CQResponseDataDTO()
+
+@Serializable
+@SerialName("GetMessageData")
+data class CQGetMessageData(
+    val time: Long,
+    val message_type: String,
+    val message_id: Int,
+    val real_id: Int,
+    val sender: CQContactDTO,
+    val message: CQMessageChainOrStringDTO
+) : CQResponseDataDTO()
 
 @Serializable
 @SerialName("LoginInfoData")

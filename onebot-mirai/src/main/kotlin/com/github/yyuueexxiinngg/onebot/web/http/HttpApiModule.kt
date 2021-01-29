@@ -9,6 +9,12 @@
 
 package com.github.yyuueexxiinngg.onebot.web.http
 
+import com.github.yyuueexxiinngg.onebot.BotSession
+import com.github.yyuueexxiinngg.onebot.PluginSettings
+import com.github.yyuueexxiinngg.onebot.callMiraiApi
+import com.github.yyuueexxiinngg.onebot.data.common.CQResponseDTO
+import com.github.yyuueexxiinngg.onebot.logger
+import com.github.yyuueexxiinngg.onebot.util.toJson
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
@@ -19,13 +25,10 @@ import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.*
-import com.github.yyuueexxiinngg.onebot.BotSession
-import com.github.yyuueexxiinngg.onebot.PluginSettings
-import com.github.yyuueexxiinngg.onebot.callMiraiApi
-import com.github.yyuueexxiinngg.onebot.data.common.CQResponseDTO
-import com.github.yyuueexxiinngg.onebot.logger
-import com.github.yyuueexxiinngg.onebot.util.toJson
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import java.nio.charset.Charset
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -197,6 +200,11 @@ fun Application.oneBotApiServer(session: BotSession, settings: PluginSettings.HT
 
         oneBotApi("/get_group_honor_info", settings) {
             val responseDTO = callMiraiApi("get_group_honor_info", it.first, session.cqApiImpl)
+            if (!it.second) call.responseDTO(responseDTO)
+        }
+
+        oneBotApi("/get_msg", settings) {
+            val responseDTO = callMiraiApi("get_msg", it.first, session.cqApiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
 

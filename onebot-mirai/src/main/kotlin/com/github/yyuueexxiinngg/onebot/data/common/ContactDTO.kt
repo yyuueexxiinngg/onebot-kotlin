@@ -9,6 +9,7 @@
 
 package com.github.yyuueexxiinngg.onebot.data.common
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.mamoe.mirai.contact.*
 
@@ -18,11 +19,11 @@ abstract class ContactDTO : DTO {
 }
 
 @Serializable
-abstract class CQContactDTO : DTO {
+sealed class CQContactDTO : DTO {
     abstract val user_id: Long
     abstract val nickname: String
-    abstract val sex: String
-    abstract val age: Int
+    abstract val sex: String?
+    abstract val age: Int?
 }
 
 @Serializable
@@ -50,16 +51,17 @@ data class MemberDTO(
 }
 
 @Serializable
+@SerialName("Member")
 data class CQMemberDTO(
     override val user_id: Long,
     override val nickname: String,
-    val card: String,
-    override val sex: String,
-    override val age: Int,
-    val area: String,
-    val level: String,
-    val role: String,
-    val title: String
+    val card: String? = null,
+    override val sex: String? = null,
+    override val age: Int? = null,
+    val area: String? = null,
+    val level: String? = null,
+    val role: String? = null,
+    val title: String? = null
 ) : CQContactDTO() {
     constructor(member: Member) : this(
         member.id,
@@ -75,11 +77,12 @@ data class CQMemberDTO(
 }
 
 @Serializable
+@SerialName("QQ")
 data class CQQQDTO(
     override val user_id: Long,
     override val nickname: String,
-    override val sex: String,
-    override val age: Int
+    override val sex: String? = null,
+    override val age: Int? = null
 ) : CQContactDTO() {
     constructor(contact: User) : this(
         contact.id,

@@ -22,8 +22,12 @@ import net.mamoe.mirai.data.GroupHonorType
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
+import net.mamoe.mirai.message.data.MessageChain.Companion.deserializeJsonToMessageChain
 import net.mamoe.mirai.message.data.MessageSource.Key.recall
+import net.mamoe.mirai.message.data.MessageSourceKind
 import net.mamoe.mirai.message.data.content
+import net.mamoe.mirai.message.data.kind
+import net.mamoe.mirai.message.data.source
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 
 
@@ -73,6 +77,7 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
 
             "set_group_name" -> responseDTO = mirai.cqSetGroupName(params)
             "get_group_honor_info" -> responseDTO = mirai.cqGetGroupHonorInfo(params)
+            "get_msg" -> responseDTO = mirai.cqGetMessage(params)
 
             "_set_group_announcement" -> responseDTO = mirai.cqSetGroupAnnouncement(params)
             else -> {
@@ -166,6 +171,74 @@ class MiraiApi(val bot: Bot) {
             return CQResponseDTO.CQGeneralSuccess()
         }
         return CQResponseDTO.CQInvalidRequest()
+    }
+
+    suspend fun cqGetMessage(params: Map<String, JsonElement>): CQResponseDTO {
+        val messageId = params["message_id"]?.jsonPrimitive?.intOrNull
+        if (PluginSettings.db.enable) {
+            if (messageId != null) {
+                PluginBase.db?.apply {
+                    val message = String(get(messageId.toByteArray())).deserializeJsonToMessageChain()
+                    val rawMessage = WrappedCQMessageChainString("")
+                    message.forEach { rawMessage.value += it.toCQString() }
+
+                    with(message) {
+                        when (source.kind) {
+                            MessageSourceKind.GROUP -> {
+                                return CQResponseDTO.CQGetMessageResponse(
+                                    CQGetMessageData(
+                                        source.time.toLong(),
+                                        "group",
+                                        messageId,
+                                        messageId,
+                                        CQMemberDTO(source.fromId, "unknown"),
+                                        message.toMessageChainDTO { it != UnknownMessageDTO }
+                                    )
+                                )
+                                /*val dto = CQGroupMessagePacketDTO(
+                                    bot.id,
+                                    if (source.fromId == 80000000L) "anonymous" else "normal",
+                                    messageId,
+                                    source.targetId,
+                                    source.fromId,
+                                    null,
+                                    message.toMessageChainDTO { it != UnknownMessageDTO },
+                                    rawMessage.value,
+                                    0,
+                                    CQMemberDTO(
+                                        source.fromId,
+                                        "unknown",
+                                        "unknown",
+                                        "unknown",
+                                        0,
+                                        "unknown",
+                                        "unknown",
+                                        "unknown",
+                                        "unknown",
+                                    ),
+                                    source.time.toLong()
+                                )*/
+                            }
+                            MessageSourceKind.FRIEND, MessageSourceKind.STRANGER, MessageSourceKind.TEMP -> {
+                                return CQResponseDTO.CQGetMessageResponse(
+                                    CQGetMessageData(
+                                        source.time.toLong(),
+                                        "private",
+                                        messageId,
+                                        messageId,
+                                        CQQQDTO(source.fromId, "unknown"),
+                                        message.toMessageChainDTO { it != UnknownMessageDTO }
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            return CQResponseDTO.CQInvalidRequest()
+        } else {
+            return CQResponseDTO.CQInvalidRequest("请配置开启数据库")
+        }
     }
 
     suspend fun cqSetGroupKick(params: Map<String, JsonElement>): CQResponseDTO {
