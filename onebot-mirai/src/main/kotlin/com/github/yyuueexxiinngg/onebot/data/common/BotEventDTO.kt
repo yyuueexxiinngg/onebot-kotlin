@@ -257,6 +257,15 @@ suspend fun BotEvent.toCQDTO(isRawMessage: Boolean = false): CQEventDTO {
                 }
             }
         }
+        is MemberHonorChangeEvent -> {
+            CQMemberHonorChangeEventDTO(
+                self_id = bot.id,
+                user_id = user.id,
+                group_id = group.id,
+                honor_type = honorType.name.toLowerCase(),
+                time = currentTimeSeconds()
+            )
+        }
         else -> {
             logger.debug("发生了被插件忽略的事件: $this")
             CQIgnoreEventDTO(bot.id)
@@ -422,4 +431,18 @@ data class CQFriendMessageRecallEventDTO(
 ) : CQBotEventDTO() {
     override var post_type: String = "notice"
     val notice_type: String = "friend_recall"
+}
+
+@Serializable
+@SerialName("CQMemberHonorChangeEvent")
+data class CQMemberHonorChangeEventDTO(
+    override var self_id: Long,
+    val sub_type: String = "honor",
+    val user_id: Long,
+    val group_id: Long,
+    val honor_type: String = "talkative",
+    override var time: Long
+) : CQBotEventDTO() {
+    override var post_type: String = "notice"
+    val notice_type: String = "notify"
 }
