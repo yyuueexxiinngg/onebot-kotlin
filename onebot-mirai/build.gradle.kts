@@ -11,7 +11,8 @@ dependencies {
     kapt("com.google.auto.service", "auto-service", Versions.autoService)
 
     compileOnly(kotlin("stdlib-jdk8"))
-    compileOnly("net.mamoe:mirai-core:${Versions.miraiCoreVersion}")
+    compileOnly("net.mamoe:mirai-core-api-jvm:${Versions.miraiCoreVersion}")
+    compileOnly("net.mamoe:mirai-core-jvm:${Versions.miraiCoreVersion}")
     compileOnly("net.mamoe:mirai-console:${Versions.miraiConsoleVersion}")
     compileOnly("net.mamoe:mirai-console-terminal:${Versions.miraiConsoleVersion}")
     compileOnly(kotlin("serialization", Versions.kotlinVersion))
@@ -32,8 +33,8 @@ dependencies {
 //    implementation("org.mapdb:mapdb:${Versions.mapdb}")
 
     testImplementation(kotlin("stdlib-jdk8"))
-    testImplementation("net.mamoe:mirai-core-api:${Versions.miraiCoreVersion}")
-    testImplementation("net.mamoe:mirai-core:${Versions.miraiCoreVersion}")
+    testImplementation("net.mamoe:mirai-core-api-jvm:${Versions.miraiCoreVersion}")
+    testImplementation("net.mamoe:mirai-core-jvm:${Versions.miraiCoreVersion}")
     testImplementation("net.mamoe:mirai-console:${Versions.miraiConsoleVersion}")
     testImplementation("net.mamoe:mirai-console-terminal:${Versions.miraiConsoleVersion}")
 }
