@@ -23,11 +23,6 @@ import net.mamoe.mirai.Bot
 import java.io.EOFException
 import java.io.IOException
 import java.net.ConnectException
-import kotlin.collections.MutableList
-import kotlin.collections.MutableMap
-import kotlin.collections.forEach
-import kotlin.collections.mutableListOf
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -49,7 +44,6 @@ class WebSocketReverseClient(
     private var websocketSessions: MutableMap<String, DefaultClientWebSocketSession> = mutableMapOf()
     private var heartbeatJobs: MutableMap<String, Job> = mutableMapOf()
     private var connectivityChecks: MutableList<String> = mutableListOf()
-    private var closing = false
     private val scope = WebsocketReverseClientScope(EmptyCoroutineContext)
 
     init {
@@ -168,7 +162,6 @@ class WebSocketReverseClient(
                     logger.warning("Websocket连接出错, 可能被服务器关闭, 将在${settings.reconnectInterval / 1000}秒后重试连接, Host: $httpClientKey Path: $path")
                 }
                 is CancellationException -> {
-                    closing = true
                     logger.info("Websocket连接关闭中, Host: $httpClientKey Path: $path")
                 }
                 else -> {
@@ -177,11 +170,7 @@ class WebSocketReverseClient(
             }
             closeClient(httpClientKey)
             delay(settings.reconnectInterval)
-            if (!closing) startGeneralWebsocketClient(session.bot, settings, clientType)
-            else {
-                logger.info("反向Websocket连接关闭中, Host: $httpClientKey Path: $path")
-                closing = false
-            }
+            startGeneralWebsocketClient(session.bot, settings, clientType)
         }
     }
 
@@ -311,7 +300,6 @@ class WebSocketReverseClient(
     }
 
     fun close() {
-        closing = true
         subscriptions.forEach { session.unsubscribeEvent(it.value.first, it.value.second) }
         subscriptions.clear()
         heartbeatJobs.forEach { it.value.cancel() }
