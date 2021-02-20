@@ -20,7 +20,7 @@ class ImgUtil {
         private val imgStoreGroupPicUpClass =
             Class.forName("net.mamoe.mirai.internal.network.protocol.packet.chat.image.ImgStore\$GroupPicUp")
         private val imgStoreGroupPicUpClassConstructor = imgStoreGroupPicUpClass.getDeclaredConstructor()
-        private val netWorkHandlerClass = Class.forName("net.mamoe.mirai.internal.network.QQAndroidBotNetworkHandler")
+        private val netWorkHandlerClass = Class.forName("net.mamoe.mirai.internal.network.handler.QQAndroidBotNetworkHandler")
         private val netWorkHandlerClassConstructor = netWorkHandlerClass.getDeclaredConstructor(
             Class.forName("kotlin.coroutines.CoroutineContext"),
             Class.forName("net.mamoe.mirai.internal.QQAndroidBot")
@@ -32,7 +32,7 @@ class ImgUtil {
             Long::class.java,
             Long::class.java,
             ByteArray::class.java,
-            Int::class.java,
+            Long::class.java,
             Int::class.java,
             Int::class.java,
             Int::class.java,
