@@ -38,12 +38,8 @@ import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.MiraiInternalApi
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.security.MessageDigest
 import java.util.*
 
 suspend fun messageToMiraiMessageChains(
@@ -107,7 +103,7 @@ private suspend fun textToMessageInternal(bot: Bot, contact: Contact?, message: 
     when (message) {
         is String -> {
             if (message.startsWith("[CQ:") && message.endsWith("]")) {
-                val parts = message.substring(4, message.length - 1).split(delimiters = arrayOf(","), limit = 2)
+                val parts = message.substring(4, message.length - 1).split(",", limit = 2)
 
                 val args: HashMap<String, String> = if (parts.size == 2) {
                     parts[1].toMap()
@@ -121,7 +117,7 @@ private suspend fun textToMessageInternal(bot: Bot, contact: Contact?, message: 
         is JsonObject -> {
             val type = message.jsonObject["type"]!!.jsonPrimitive.content
             val data = message.jsonObject["data"] ?: return MSG_EMPTY
-            val args = data.jsonObject.keys.map { it to data.jsonObject[it]!!.jsonPrimitive.content }.toMap()
+            val args = data.jsonObject.keys.associateWith { data.jsonObject[it]!!.jsonPrimitive.content }
             return convertToMiraiMessage(bot, contact, type, args)
         }
         else -> return MSG_EMPTY
@@ -173,9 +169,9 @@ private suspend fun convertToMiraiMessage(
             }
         }
         "music" -> {
-            when (args["type"]) {
-                "qq" -> return QQMusic.send(args["id"]!!)
-                "163" -> return NeteaseMusic.send(args["id"]!!)
+            return when (args["type"]) {
+                "qq" -> QQMusic.send(args["id"]!!)
+                "163" -> NeteaseMusic.send(args["id"]!!)
                 else -> throw IllegalArgumentException("Custom music share not supported anymore")
             }
         }
@@ -237,7 +233,7 @@ private fun String.unescape(): String {
 private fun String.toMap(): HashMap<String, String> {
     val map = HashMap<String, String>()
     split(",").forEach {
-        val parts = it.split(delimiters = arrayOf("="), limit = 2)
+        val parts = it.split("=", limit = 2)
         map[parts[0].trim()] = parts[1].unescape()
     }
     return map
@@ -405,8 +401,11 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
 
-                        media = mediaBytes?.let {
-                            contact!!.uploadImage(it.toExternalResource())
+
+                        media = mediaBytes?.let { bytes ->
+                            bytes.toExternalResource().use {
+                                contact!!.uploadImage(it)
+                            }
                         }
 
                         if (useCache) {
@@ -436,8 +435,8 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     }
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
-                        media = mediaBytes?.let { mBytes ->
-                            contact?.let { (it as Group).uploadVoice(mBytes.toExternalResource()) }
+                        media = mediaBytes?.toExternalResource()?.use { res ->
+                            contact?.let { (it as Group).uploadVoice(res) }
                         }
 
                         if (useCache && mediaBytes != null) {
@@ -453,8 +452,11 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
         "image" -> {
             val flash = args.containsKey("type") && args["type"] == "flash"
             if (media == null && mediaBytes != null) {
-                val bis = ByteArrayInputStream(mediaBytes)
-                media = withContext(Dispatchers.IO) { contact!!.uploadImage(bis.toExternalResource()) }
+                media = withContext(Dispatchers.IO) {
+                    mediaBytes!!.toExternalResource().use { res ->
+                        contact!!.uploadImage(res)
+                    }
+                }
             }
 
             return if (flash) {
@@ -466,178 +468,14 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
         "record" -> {
             if (media == null && mediaBytes != null) {
                 media =
-                    withContext(Dispatchers.IO) { (contact!! as Group).uploadVoice(mediaBytes!!.toExternalResource()) }
+                    withContext(Dispatchers.IO) {
+                        mediaBytes!!.toExternalResource().use { res ->
+                            (contact!! as Group).uploadVoice(res)
+                        }
+                    }
             }
             return media as Voice
         }
     }
     return PlainText("插件无法获取到媒体" + if (mediaUrl != null) ", 媒体链接: $mediaUrl" else "")
 }
-
-suspend fun getCachedImageFile(name: String): CachedImage? = withContext(Dispatchers.IO) {
-    val cacheFile =
-        with(name) {
-            when {
-                endsWith(".cqimg") -> getDataFile("image", name)
-                endsWith(".image") -> getDataFile("image", name.toLowerCase())
-                else -> getDataFile("image", "$name.cqimg") ?: getDataFile("image", "${name.toLowerCase()}.image")
-            }
-        }
-
-    if (cacheFile != null) {
-        if (cacheFile.canRead()) {
-            logger.info("此链接图片已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
-            var md5 = ""
-            var size = 0
-            var url = ""
-            var addTime = 0L
-            var imageType: String? = null
-
-            when (cacheFile.extension) {
-                "cqimg" -> {
-                    val cacheMediaContent = cacheFile.readLines()
-                    cacheMediaContent.forEach {
-                        val parts = it.trim().split("=", limit = 2)
-                        if (parts.size == 2) {
-                            when (parts[0]) {
-                                "md5" -> md5 = parts[1]
-                                "size" -> size = parts[1].toIntOrNull() ?: 0
-                                "url" -> url = parts[1]
-                                "addtime" -> addTime = parts[1].toLongOrNull() ?: 0L
-                                "type" -> imageType = parts[1]
-                            }
-                        }
-                    }
-                }
-
-                "image" -> {
-                    val bytes = cacheFile.readBytes()
-                    md5 = bytes.copyOf(16).toUHexString("")
-                    size = bytes.copyOfRange(16, 20).toUnsignedInt().toInt()
-                    url = "https://gchat.qpic.cn/gchatpic_new/0/0-00-$md5/0?term=2"
-                }
-            }
-
-            if (md5 != "" && size != 0) {
-                return@withContext CachedImage(
-                    cacheFile,
-                    name,
-                    cacheFile.absolutePath,
-                    md5,
-                    size,
-                    url,
-                    addTime,
-                    imageType
-                )
-            } else { // If cache file corrupted
-                cacheFile.delete()
-            }
-        } else {
-            logger.error("Image $name cache file cannot read.")
-        }
-    } else {
-        logger.error("Image $name cache file cannot be found.")
-    }
-    null
-}
-
-suspend fun getCachedRecordFile(name: String): File? = withContext(Dispatchers.IO) {
-    if (name.endsWith(".cqrecord")) getDataFile("record", name)
-    else getDataFile("record", "$name.cqrecord")
-}
-
-suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
-    val cacheFile = getCachedRecordFile(name)
-    if (cacheFile != null) {
-        if (cacheFile.canRead()) {
-            logger.info("此语音已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
-            return contact?.let { (it as Group).uploadVoice(cacheFile.toExternalResource()) }
-        } else {
-            logger.error("Record $name cache file cannot read.")
-        }
-    } else {
-        logger.error("Record $name cache file cannot read.")
-    }
-    return null
-}
-
-suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
-    var image: Image? = null
-    val cachedImage = getCachedImageFile(name)
-
-    if (cachedImage != null) {
-        if (contact != null) {
-            // If add time till now more than one day, check if the image exists
-            if (cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
-                if (ImgUtils.tryGroupPicUp(
-                        contact.bot,
-                        contact.id,
-                        cachedImage.md5,
-                        cachedImage.size
-                    ) != ImgUtils.ImageState.FileExist
-                ) {
-                    cachedImage.file.delete()
-                } else { // If file exists
-                    image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
-                    val imgContent = """
-                                                [image]
-                                                md5=${cachedImage.md5}
-                                                size=${cachedImage.size}
-                                                url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-${cachedImage.md5}/0?term=2
-                                                addtime=${currentTimeMillis()}
-                                                type=${cachedImage.imageType ?: "unknown"}
-                                            """.trimIndent()
-                    saveImageAsync("$name.cqimg", imgContent).start() // Update cache file
-                }
-            } else { // If time < one day
-                image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
-            }
-        }
-    }
-    return image
-}
-
-fun md5(data: ByteArray): ByteArray {
-    return MessageDigest.getInstance("MD5").digest(data)
-}
-
-fun md5(str: String): ByteArray = md5(str.toByteArray())
-
-@OptIn(ExperimentalUnsignedTypes::class)
-internal fun ByteArray.toUHexString(
-    separator: String = " ",
-    offset: Int = 0,
-    length: Int = this.size - offset
-): String {
-    if (length == 0) {
-        return ""
-    }
-    val lastIndex = offset + length
-    return buildString(length * 2) {
-        this@toUHexString.forEachIndexed { index, it ->
-            if (index in offset until lastIndex) {
-                var ret = it.toUByte().toString(16).toUpperCase()
-                if (ret.length == 1) ret = "0$ret"
-                append(ret)
-                if (index < lastIndex - 1) append(separator)
-            }
-        }
-    }
-}
-
-private fun ByteArray.toUnsignedInt(): Long {
-    val buffer: ByteBuffer = ByteBuffer.allocate(8).put(byteArrayOf(0, 0, 0, 0)).put(this)
-    (buffer as Buffer).position(0)
-    return buffer.long
-}
-
-data class CachedImage(
-    val file: File,
-    val fileName: String,
-    val path: String,
-    val md5: String,
-    val size: Int,
-    val url: String,
-    val addTime: Long,
-    val imageType: String?,
-)

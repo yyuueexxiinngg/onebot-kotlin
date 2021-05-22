@@ -1,11 +1,18 @@
 package com.github.yyuueexxiinngg.onebot.util
 
+import com.github.yyuueexxiinngg.onebot.PluginBase
+import com.github.yyuueexxiinngg.onebot.logger
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.Image
+import java.io.File
+import java.nio.Buffer
+import java.nio.ByteBuffer
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.reflect.full.callSuspend
@@ -66,8 +73,8 @@ class ImgUtils {
                 bot.id,
                 groupCode,
                 hexStringToByteArray(md5),
-                size,
-                0, 0, 1000, 0, getRandomString(16) + ".gif", 5, 9, 1, 1006, 0
+                size.toLong(),
+                0, 0, 2001, 0, getRandomString(16) + ".gif", 5, 9, 2, 1006, 0
             )
             val response = sendAndExpectMethod?.kotlinFunction?.callSuspend(
                 network!!.call(bot),
@@ -116,6 +123,17 @@ class ImgUtils {
     }
 }
 
+data class CachedImage(
+    val file: File,
+    val fileName: String,
+    val path: String,
+    val md5: String,
+    val size: Int,
+    val url: String,
+    val addTime: Long,
+    val imageType: String?,
+)
+
 internal fun getImageType(image: Image): String {
     val parts = image.imageId.split(".", limit = 2)
     return if (parts.size == 2) {
@@ -136,4 +154,113 @@ internal fun getImageType(bytes: ByteArray): String {
             else -> "unknown"
         }
     }
+}
+
+suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
+    var image: Image? = null
+    val cachedImage = getCachedImageFile(name)
+
+    if (cachedImage != null) {
+        if (contact != null) {
+            // If add time till now more than one day, check if the image exists
+            if (cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
+                if (ImgUtils.tryGroupPicUp(
+                        contact.bot,
+                        contact.id,
+                        cachedImage.md5,
+                        cachedImage.size
+                    ) != ImgUtils.ImageState.FileExist
+                ) {
+                    cachedImage.file.delete()
+                } else { // If file exists
+                    image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
+                    val imgContent = """
+                                                [image]
+                                                md5=${cachedImage.md5}
+                                                size=${cachedImage.size}
+                                                url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-${cachedImage.md5}/0?term=2
+                                                addtime=${currentTimeMillis()}
+                                                type=${cachedImage.imageType ?: "unknown"}
+                                            """.trimIndent()
+                    PluginBase.saveImageAsync("$name.cqimg", imgContent).start() // Update cache file
+                }
+            } else { // If time < one day
+                image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
+            }
+        }
+    }
+    return image
+}
+
+suspend fun getCachedImageFile(name: String): CachedImage? = withContext(Dispatchers.IO) {
+    val cacheFile =
+        with(name) {
+            when {
+                endsWith(".cqimg") -> getDataFile("image", name)
+                endsWith(".image") -> getDataFile("image", name.toLowerCase())
+                else -> getDataFile("image", "$name.cqimg") ?: getDataFile("image", "${name.toLowerCase()}.image")
+            }
+        }
+
+    if (cacheFile != null) {
+        if (cacheFile.canRead()) {
+            logger.info("此链接图片已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
+            var md5 = ""
+            var size = 0
+            var url = ""
+            var addTime = 0L
+            var imageType: String? = null
+
+            when (cacheFile.extension) {
+                "cqimg" -> {
+                    val cacheMediaContent = cacheFile.readLines()
+                    cacheMediaContent.forEach {
+                        val parts = it.trim().split("=", limit = 2)
+                        if (parts.size == 2) {
+                            when (parts[0]) {
+                                "md5" -> md5 = parts[1]
+                                "size" -> size = parts[1].toIntOrNull() ?: 0
+                                "url" -> url = parts[1]
+                                "addtime" -> addTime = parts[1].toLongOrNull() ?: 0L
+                                "type" -> imageType = parts[1]
+                            }
+                        }
+                    }
+                }
+
+                "image" -> {
+                    val bytes = cacheFile.readBytes()
+                    md5 = bytes.copyOf(16).toUHexString("")
+                    size = bytes.copyOfRange(16, 20).toUnsignedInt().toInt()
+                    url = "https://gchat.qpic.cn/gchatpic_new/0/0-00-$md5/0?term=2"
+                }
+            }
+
+            if (md5 != "" && size != 0) {
+                return@withContext CachedImage(
+                    cacheFile,
+                    name,
+                    cacheFile.absolutePath,
+                    md5,
+                    size,
+                    url,
+                    addTime,
+                    imageType
+                )
+            } else { // If cache file corrupted
+                cacheFile.delete()
+            }
+        } else {
+            logger.error("Image $name cache file cannot read.")
+        }
+    } else {
+        logger.error("Image $name cache file cannot be found.")
+    }
+    null
+}
+
+private fun ByteArray.toUnsignedInt(): Long {
+    val buffer: ByteBuffer = ByteBuffer.allocate(8).put(byteArrayOf(0, 0, 0, 0)).put(this)
+    (buffer as Buffer).position(0)
+    return buffer.long
 }
