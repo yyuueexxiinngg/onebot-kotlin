@@ -8,7 +8,7 @@ import net.mamoe.mirai.message.data.internalId
 import java.nio.ByteBuffer
 import java.util.zip.CRC32
 
-fun IntArray.toCQMessageId(botId: Long, contactId: Long): Int {
+fun IntArray.toMessageId(botId: Long, contactId: Long): Int {
     val crc = CRC32()
     val messageId = "$botId$$contactId$${joinToString("-")}"
     crc.update(messageId.toByteArray())
@@ -19,19 +19,10 @@ fun Int.toByteArray(): ByteArray = ByteBuffer.allocate(4).putInt(this).array()
 
 fun MessageEvent.saveMessageToDB() {
     if (PluginSettings.db.enable) {
-        val messageId = message.internalId.toCQMessageId(bot.id, subject.id)
+        val messageId = message.internalId.toMessageId(bot.id, subject.id)
         PluginBase.db?.put(
             messageId.toByteArray(),
             message.serializeToJsonString().toByteArray()
         )
     }
 }
-
-//    if (PluginSettings.db.enable) {
-//        val messageId = message.internalId.toCQMessageId(bot.id, subject.id)
-//        PluginBase.messageStore?.put(
-//            messageId,
-//            message.serializeToJsonString()
-//        )
-//        PluginBase.db?.commit()
-//    }

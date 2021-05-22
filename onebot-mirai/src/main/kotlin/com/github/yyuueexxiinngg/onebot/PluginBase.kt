@@ -1,9 +1,5 @@
 package com.github.yyuueexxiinngg.onebot
 
-//import org.mapdb.DB
-//import org.mapdb.DBMaker
-//import org.mapdb.HTreeMap
-//import org.mapdb.Serializer
 import com.github.yyuueexxiinngg.onebot.SessionManager.allSession
 import com.github.yyuueexxiinngg.onebot.SessionManager.closeSession
 import com.github.yyuueexxiinngg.onebot.util.*
@@ -48,7 +44,6 @@ object PluginBase : KotlinPlugin(
 ) {
     private var initialSubscription: Listener<BotEvent>? = null
     internal var db: DB? = null
-//    internal var messageStore: HTreeMap<Int, String>? = null
 
 
     @OptIn(LowLevelApi::class, MiraiExperimentalApi::class)
@@ -65,21 +60,6 @@ object PluginBase : KotlinPlugin(
         EventFilter.init()
         logger.debug("开发交流群: 1143274864")
         initHTTPClientProxy()
-//        if (PluginSettings.db.enable) {
-//            db = DBMaker
-//                .fileDB("$dataFolder/onebot.db")
-//                .transactionEnable()
-//                .closeOnJvmShutdown()
-//                .make()
-//            messageStore = db!!
-//                .hashMap("message")
-//                .keySerializer(Serializer.INTEGER)
-//                .valueSerializer(Serializer.STRING)
-//                .expireStoreSize(((if (PluginSettings.db.maxSize > 0) PluginSettings.db.maxSize else 0.0) * 1024 * 1024 * 1024).toLong())
-//                .expireAfterCreate()
-//                .createOrOpen()
-//            logger.info("插件已配置开启数据库")
-//        }
         Bot.instances.forEach {
             if (!allSession.containsKey(it.id)) {
                 if (PluginSettings.bots?.containsKey(it.id.toString()) == true) {
@@ -122,17 +102,17 @@ object PluginBase : KotlinPlugin(
                     }
                     is NewFriendRequestEvent -> {
                         allSession[bot.id]?.let {
-                            (it as BotSession).cqApiImpl.cacheRequestQueue.add(this)
+                            (it as BotSession).apiImpl.cacheRequestQueue.add(this)
                         }
                     }
                     is MemberJoinRequestEvent -> {
                         allSession[bot.id]?.let {
-                            (it as BotSession).cqApiImpl.cacheRequestQueue.add(this)
+                            (it as BotSession).apiImpl.cacheRequestQueue.add(this)
                         }
                     }
                     is BotInvitedJoinGroupRequestEvent -> {
                         allSession[bot.id]?.let {
-                            (it as BotSession).cqApiImpl.cacheRequestQueue.add(this)
+                            (it as BotSession).apiImpl.cacheRequestQueue.add(this)
                         }
                     }
                     is MessageEvent -> {
@@ -141,11 +121,11 @@ object PluginBase : KotlinPlugin(
                             val session = s as BotSession
 
                             if (this is GroupMessageEvent) {
-                                session.cqApiImpl.cachedSourceQueue.add(message.source)
+                                session.apiImpl.cachedSourceQueue.add(message.source)
                             }
 
                             if (this is GroupTempMessageEvent) {
-                                session.cqApiImpl.cachedTempContact[this.sender.id] = this.group.id
+                                session.apiImpl.cachedTempContact[this.sender.id] = this.group.id
                             }
 
                             if (session.settings.cacheImage) {
@@ -211,11 +191,6 @@ object PluginBase : KotlinPlugin(
     }
 
     override fun onDisable() {
-//        db?.apply {
-//            logger.info("正在关闭数据库...")
-//            commit()
-//            close()
-//        }
         initialSubscription?.complete()
         allSession.forEach { (sessionId, _) -> closeSession(sessionId) }
         logger.info("OneBot 已关闭")

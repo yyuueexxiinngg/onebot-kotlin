@@ -45,30 +45,29 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
-import kotlin.collections.HashMap
 
-suspend fun cqMessageToMessageChains(
+suspend fun messageToMiraiMessageChains(
     bot: Bot,
     contact: Contact?,
-    cqMessage: Any?,
+    message: Any?,
     raw: Boolean = false
 ): MessageChain? {
-    when (cqMessage) {
+    when (message) {
         is String -> {
             return if (raw) {
-                PlainText(cqMessage).toMessageChain()
+                PlainText(message).toMessageChain()
             } else {
-                codeToChain(bot, cqMessage, contact)
+                codeToChain(bot, message, contact)
             }
         }
         is JsonArray -> {
             var messageChain = buildMessageChain { }
-            for (msg in cqMessage) {
+            for (msg in message) {
                 try {
                     val data = msg.jsonObject["data"]
                     when (msg.jsonObject["type"]?.jsonPrimitive?.content) {
                         "text" -> messageChain += PlainText(data!!.jsonObject["text"]!!.jsonPrimitive.content)
-                        else -> messageChain += cqTextToMessageInternal(bot, contact, msg)
+                        else -> messageChain += textToMessageInternal(bot, contact, msg)
                     }
                 } catch (e: NullPointerException) {
                     logger.warning("Got null when parsing CQ message array")
@@ -79,10 +78,10 @@ suspend fun cqMessageToMessageChains(
         }
         is JsonObject -> {
             return try {
-                val data = cqMessage.jsonObject["data"]
-                when (cqMessage.jsonObject["type"]?.jsonPrimitive?.content) {
+                val data = message.jsonObject["data"]
+                when (message.jsonObject["type"]?.jsonPrimitive?.content) {
                     "text" -> PlainText(data!!.jsonObject["text"]!!.jsonPrimitive.content).toMessageChain()
-                    else -> cqTextToMessageInternal(bot, contact, cqMessage).toMessageChain()
+                    else -> textToMessageInternal(bot, contact, message).toMessageChain()
                 }
             } catch (e: NullPointerException) {
                 logger.warning("Got null when parsing CQ message object")
@@ -91,27 +90,26 @@ suspend fun cqMessageToMessageChains(
         }
         is JsonPrimitive -> {
             return if (raw) {
-                PlainText(cqMessage.content).toMessageChain()
+                PlainText(message.content).toMessageChain()
             } else {
-                codeToChain(bot, cqMessage.content, contact)
+                codeToChain(bot, message.content, contact)
             }
         }
         else -> {
-            logger.warning("Cannot determine type of " + cqMessage.toString())
+            logger.warning("Cannot determine type of " + message.toString())
             return null
         }
     }
 }
 
 
-private suspend fun cqTextToMessageInternal(bot: Bot, contact: Contact?, message: Any): Message {
+private suspend fun textToMessageInternal(bot: Bot, contact: Contact?, message: Any): Message {
     when (message) {
         is String -> {
             if (message.startsWith("[CQ:") && message.endsWith("]")) {
                 val parts = message.substring(4, message.length - 1).split(delimiters = arrayOf(","), limit = 2)
 
-                lateinit var args: HashMap<String, String>
-                args = if (parts.size == 2) {
+                val args: HashMap<String, String> = if (parts.size == 2) {
                     parts[1].toMap()
                 } else {
                     HashMap()
@@ -239,7 +237,7 @@ private fun String.unescape(): String {
 private fun String.toMap(): HashMap<String, String> {
     val map = HashMap<String, String>()
     split(",").forEach {
-        val parts = it.split(delimiters = *arrayOf("="), limit = 2)
+        val parts = it.split(delimiters = arrayOf("="), limit = 2)
         map[parts[0].trim()] = parts[1].unescape()
     }
     return map
@@ -286,7 +284,7 @@ suspend fun codeToChain(bot: Bot, message: String, contact: Contact?): MessageCh
                         if (sb.isNotEmpty()) {
                             val lastMsg = sb.toString()
                             sb.delete(0, sb.length)
-                            +cqTextToMessageInternal(bot, contact, lastMsg)
+                            +textToMessageInternal(bot, contact, lastMsg)
                         }
                         sb.append(c)
                     }
@@ -300,7 +298,7 @@ suspend fun codeToChain(bot: Bot, message: String, contact: Contact?): MessageCh
                         if (sb.isNotEmpty()) {
                             val lastMsg = sb.toString()
                             sb.delete(0, sb.length)
-                            +cqTextToMessageInternal(bot, contact, lastMsg)
+                            +textToMessageInternal(bot, contact, lastMsg)
                         }
                     }
                 } else {
@@ -309,7 +307,7 @@ suspend fun codeToChain(bot: Bot, message: String, contact: Contact?): MessageCh
                 index++
             }
             if (sb.isNotEmpty()) {
-                +cqTextToMessageInternal(bot, contact, sb.toString())
+                +textToMessageInternal(bot, contact, sb.toString())
             }
         } else {
             +PlainText(message.unescape())
@@ -414,7 +412,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         if (useCache) {
                             val imageMD5 = mediaBytes?.let { md5(it) }?.toUHexString("")
                             if (imageMD5 != null) {
-                                val cqImgContent = """
+                                val imgContent = """
                                     [image]
                                     md5=$imageMD5
                                     size=${mediaBytes?.size ?: 0}
@@ -422,7 +420,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                                     addtime=${currentTimeMillis()}
                                     """.trimIndent()
                                 logger.info("此链接图片将缓存为$urlHash.cqimg")
-                                saveImageAsync("$urlHash.cqimg", cqImgContent).start()
+                                saveImageAsync("$urlHash.cqimg", imgContent).start()
                             }
                         }
                     }
@@ -565,14 +563,14 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
                     cachedImage.file.delete()
                 } else { // If file exists
                     image = Image(ImgUtil.md5ToImageId(cachedImage.md5, contact))
-                    val cqImgContent = """
+                    val imgContent = """
                                                 [image]
                                                 md5=${cachedImage.md5}
                                                 size=${cachedImage.size}
                                                 url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-${cachedImage.md5}/0?term=2
                                                 addtime=${currentTimeMillis()}
                                             """.trimIndent()
-                    saveImageAsync("$name.cqimg", cqImgContent).start() // Update cache file
+                    saveImageAsync("$name.cqimg", imgContent).start() // Update cache file
                 }
             } else { // If time < one day
                 image = Image(ImgUtil.md5ToImageId(cachedImage.md5, contact))

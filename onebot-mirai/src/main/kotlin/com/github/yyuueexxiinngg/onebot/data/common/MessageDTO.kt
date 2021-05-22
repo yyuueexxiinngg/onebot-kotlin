@@ -11,8 +11,9 @@ package com.github.yyuueexxiinngg.onebot.data.common
 
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
-import com.github.yyuueexxiinngg.onebot.util.toCQMessageId
 import com.github.yyuueexxiinngg.onebot.util.toCQString
+import com.github.yyuueexxiinngg.onebot.util.toMessageId
+import com.github.yyuueexxiinngg.onebot.util.toUHexString
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -28,6 +29,7 @@ import net.mamoe.mirai.event.events.GroupTempMessageEvent
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
+import net.mamoe.mirai.utils.MiraiInternalApi
 
 /*
 *   DTO data class
@@ -36,36 +38,36 @@ import net.mamoe.mirai.message.data.Image.Key.queryUrl
 // MessagePacket
 @Serializable
 @SerialName("GroupMessage")
-data class CQGroupMessagePacketDTO(
+data class GroupMessagePacketDTO(
     override var self_id: Long,
     val sub_type: String, // normal、anonymous、notice
     val message_id: Int,
     val group_id: Long,
     val user_id: Long,
-    val anonymous: CQAnonymousMemberDTO?,
-    var message: CQMessageChainOrStringDTO,  // Can be messageChainDTO or string depending on config
+    val anonymous: AnonymousMemberDTO?,
+    var message: MessageChainOrStringDTO,  // Can be messageChainDTO or string depending on config
     val raw_message: String,
     val font: Int,
-    val sender: CQMemberDTO,
+    val sender: MemberDTO,
     override var time: Long
-) : CQEventDTO() {
+) : EventDTO() {
     override var post_type: String = "message"
     val message_type: String = "group"
 }
 
 @Serializable
 @SerialName("PrivateMessage")
-data class CQPrivateMessagePacketDTO(
+data class PrivateMessagePacketDTO(
     override var self_id: Long,
     val sub_type: String, // friend、group、discuss、other
     val message_id: Int,
     val user_id: Long,
-    val message: CQMessageChainOrStringDTO, // Can be messageChainDTO or string depending on config
+    val message: MessageChainOrStringDTO, // Can be messageChainDTO or string depending on config
     val raw_message: String,
     val font: Int,
-    val sender: CQQQDTO,
+    val sender: QQDTO,
     override var time: Long
-) : CQEventDTO() {
+) : EventDTO() {
     override var post_type: String = "message"
     val message_type: String = "private"
 }
@@ -73,33 +75,33 @@ data class CQPrivateMessagePacketDTO(
 // Message DTO
 @Serializable
 @SerialName("Plain")
-data class CQPlainDTO(val data: CQPlainData, val type: String = "text") : MessageDTO()
+data class PlainDTO(val data: PlainData, val type: String = "text") : MessageDTO()
 
 @Serializable
-data class CQPlainData(val text: String)
+data class PlainData(val text: String)
 
 
 @Serializable
 @SerialName("At")
-data class CQAtDTO(val data: CQAtData, val type: String = "at") : MessageDTO()
+data class AtDTO(val data: AtData, val type: String = "at") : MessageDTO()
 
 @Serializable
-data class CQAtData(val qq: String)
+data class AtData(val qq: String)
 
 
 @Serializable
 @SerialName("Face")
-data class CQFaceDTO(val data: CQFaceData, val type: String = "face") : MessageDTO()
+data class FaceDTO(val data: FaceData, val type: String = "face") : MessageDTO()
 
 @Serializable
-data class CQFaceData(val id: String = "-1")
+data class FaceData(val id: String = "-1")
 
 @Serializable
 @SerialName("Image")
-data class CQImageDTO(val data: CQImageData, val type: String = "image") : MessageDTO()
+data class ImageDTO(val data: ImageData, val type: String = "image") : MessageDTO()
 
 @Serializable
-data class CQImageData(
+data class ImageData(
     val file: String? = null,
     val url: String? = null,
     val type: String? = null
@@ -107,10 +109,10 @@ data class CQImageData(
 
 @Serializable
 @SerialName("Poke")
-data class CQPokeMessageDTO(val data: CQPokeData, val type: String = "poke") : MessageDTO()
+data class PokeMessageDTO(val data: PokeData, val type: String = "poke") : MessageDTO()
 
 @Serializable
-data class CQPokeData(val name: String)
+data class PokeData(val name: String)
 
 @Serializable
 @SerialName("Unknown")
@@ -123,24 +125,24 @@ data class AtAllDTO(val target: Long = 0) : MessageDTO() // target为保留字�
 
 @Serializable
 @SerialName("Xml")
-data class XmlDTO(val data: CQXmlData, val type: String = "xml") : MessageDTO()
+data class XmlDTO(val data: XmlData, val type: String = "xml") : MessageDTO()
 
 @Serializable
-data class CQXmlData(val data: String)
+data class XmlData(val data: String)
 
 @Serializable
 @SerialName("App")
-data class AppDTO(val data: CQAppData, val type: String = "json") : MessageDTO()
+data class AppDTO(val data: AppData, val type: String = "json") : MessageDTO()
 
 @Serializable
-data class CQAppData(val data: String)
+data class AppData(val data: String)
 
 @Serializable
 @SerialName("Json")
-data class JsonDTO(val data: CQJsonData, val type: String = "json") : MessageDTO()
+data class JsonDTO(val data: JsonData, val type: String = "json") : MessageDTO()
 
 @Serializable
-data class CQJsonData(val data: String)
+data class JsonData(val data: String)
 
 /*@Serializable
 @SerialName("Source")
@@ -160,60 +162,60 @@ data class QuoteDTO(
 /**
  * Hacky way to get message chain can be both String or List<MessageDTO>
  */
-@Serializable(with = CQMessageChainOrStringDTO.Companion::class)
-sealed class CQMessageChainOrStringDTO {
-    companion object : KSerializer<CQMessageChainOrStringDTO> {
+@Serializable(with = MessageChainOrStringDTO.Companion::class)
+sealed class MessageChainOrStringDTO {
+    companion object : KSerializer<MessageChainOrStringDTO> {
         override val descriptor: SerialDescriptor
             get() = String.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): CQMessageChainOrStringDTO {
+        override fun deserialize(decoder: Decoder): MessageChainOrStringDTO {
             error("Not implemented")
         }
 
-        override fun serialize(encoder: Encoder, value: CQMessageChainOrStringDTO) {
+        override fun serialize(encoder: Encoder, value: MessageChainOrStringDTO) {
             when (value) {
-                is WrappedCQMessageChainString -> {
+                is WrappedMessageChainString -> {
                     String.serializer().serialize(encoder, value.value)
                 }
-                is WrappedCQMessageChainList -> {
-                    WrappedCQMessageChainList.serializer().serialize(encoder, value)
+                is WrappedMessageChainList -> {
+                    WrappedMessageChainList.serializer().serialize(encoder, value)
                 }
             }
         }
     }
 }
 
-@Serializable(with = WrappedCQMessageChainString.Companion::class)
-data class WrappedCQMessageChainString(
+@Serializable(with = WrappedMessageChainString.Companion::class)
+data class WrappedMessageChainString(
     var value: String
-) : CQMessageChainOrStringDTO() {
-    companion object : KSerializer<WrappedCQMessageChainString> {
+) : MessageChainOrStringDTO() {
+    companion object : KSerializer<WrappedMessageChainString> {
         override val descriptor: SerialDescriptor
             get() = String.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): WrappedCQMessageChainString {
-            return WrappedCQMessageChainString(String.serializer().deserialize(decoder))
+        override fun deserialize(decoder: Decoder): WrappedMessageChainString {
+            return WrappedMessageChainString(String.serializer().deserialize(decoder))
         }
 
-        override fun serialize(encoder: Encoder, value: WrappedCQMessageChainString) {
+        override fun serialize(encoder: Encoder, value: WrappedMessageChainString) {
             return String.serializer().serialize(encoder, value.value)
         }
     }
 }
 
-@Serializable(with = WrappedCQMessageChainList.Companion::class)
-data class WrappedCQMessageChainList(
+@Serializable(with = WrappedMessageChainList.Companion::class)
+data class WrappedMessageChainList(
     var value: List<MessageDTO>
-) : CQMessageChainOrStringDTO() {
-    companion object : KSerializer<WrappedCQMessageChainList> {
+) : MessageChainOrStringDTO() {
+    companion object : KSerializer<WrappedMessageChainList> {
         override val descriptor: SerialDescriptor
             get() = String.serializer().descriptor
 
-        override fun deserialize(decoder: Decoder): WrappedCQMessageChainList {
+        override fun deserialize(decoder: Decoder): WrappedMessageChainList {
             error("Not implemented")
         }
 
-        override fun serialize(encoder: Encoder, value: WrappedCQMessageChainList) {
+        override fun serialize(encoder: Encoder, value: WrappedMessageChainList) {
             return ListSerializer(MessageDTO.serializer()).serialize(encoder, value.value)
         }
     }
@@ -225,70 +227,71 @@ sealed class MessageDTO : DTO
 /*
     Extend function
  */
-suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): CQEventDTO {
-    val rawMessage = WrappedCQMessageChainString("")
+suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): EventDTO {
+    val rawMessage = WrappedMessageChainString("")
     message.forEach { rawMessage.value += it.toCQString() }
     return when (this) {
-        is GroupMessageEvent -> CQGroupMessagePacketDTO(
+        is GroupMessageEvent -> GroupMessagePacketDTO(
             self_id = bot.id,
             sub_type = if (sender is AnonymousMember) "anonymous" else "normal",
-            message_id = message.internalId.toCQMessageId(bot.id, group.id),
+            message_id = message.internalId.toMessageId(bot.id, group.id),
             group_id = group.id,
             user_id = sender.id,
-            anonymous = if (sender is AnonymousMember) CQAnonymousMemberDTO(sender as AnonymousMember) else null,
+            anonymous = if (sender is AnonymousMember) AnonymousMemberDTO(sender as AnonymousMember) else null,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
             font = 0,
-            sender = CQMemberDTO(sender),
+            sender = MemberDTO(sender),
             time = currentTimeSeconds()
         )
-        is FriendMessageEvent -> CQPrivateMessagePacketDTO(
+        is FriendMessageEvent -> PrivateMessagePacketDTO(
             self_id = bot.id,
             sub_type = "friend",
-            message_id = message.internalId.toCQMessageId(bot.id, sender.id),
+            message_id = message.internalId.toMessageId(bot.id, sender.id),
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
             font = 0,
-            sender = CQQQDTO(sender),
+            sender = QQDTO(sender),
             time = currentTimeSeconds()
         )
-        is GroupTempMessageEvent -> CQPrivateMessagePacketDTO(
+        is GroupTempMessageEvent -> PrivateMessagePacketDTO(
             self_id = bot.id,
             sub_type = "group",
-            message_id = message.internalId.toCQMessageId(bot.id, sender.id),
+            message_id = message.internalId.toMessageId(bot.id, sender.id),
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
             font = 0,
-            sender = CQQQDTO(sender),
+            sender = QQDTO(sender),
             time = currentTimeSeconds()
         )
-        else -> CQIgnoreEventDTO(sender.id)
+        else -> IgnoreEventDTO(sender.id)
     }
 }
 
-suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): WrappedCQMessageChainList {
-    return WrappedCQMessageChainList(mutableListOf<MessageDTO>().apply {
+suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): WrappedMessageChainList {
+    return WrappedMessageChainList(mutableListOf<MessageDTO>().apply {
         contentsSequence().forEach { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
     })
 }
 
+@OptIn(MiraiInternalApi::class)
 suspend fun Message.toDTO() = when (this) {
-    is At -> CQAtDTO(CQAtData(target.toString()))
-    is AtAll -> CQAtDTO(CQAtData("0"))
-    is Face -> CQFaceDTO(CQFaceData(id.toString()))
-    is PlainText -> CQPlainDTO(CQPlainData(content))
-    is Image -> CQImageDTO(CQImageData(imageId, queryUrl()))
-    is FlashImage -> CQImageDTO(CQImageData(image.imageId, image.queryUrl(), "flash"))
+    is At -> AtDTO(AtData(target.toString()))
+    is AtAll -> AtDTO(AtData("0"))
+    is Face -> FaceDTO(FaceData(id.toString()))
+    is PlainText -> PlainDTO(PlainData(content))
+    is Image -> ImageDTO(ImageData(md5.toUHexString(""), queryUrl()))
+    is FlashImage -> ImageDTO(ImageData(image.md5.toUHexString(""), image.queryUrl(), "flash"))
     is ServiceMessage ->
         with(content) {
             when {
-                contains("xml version") -> XmlDTO(CQXmlData(content))
-                else -> JsonDTO(CQJsonData(content))
+                contains("xml version") -> XmlDTO(XmlData(content))
+                else -> JsonDTO(JsonData(content))
             }
         }
-    is LightApp -> AppDTO(CQAppData(content))
+    is LightApp -> AppDTO(AppData(content))
 //    is FlashImage -> FlashImageDTO(image.imageId, image.queryUrl())
 //    is QuoteReply -> QuoteDTO(source.id, source.fromId, source.targetId,
 //        groupId = when {
@@ -298,7 +301,7 @@ suspend fun Message.toDTO() = when (this) {
 //        },
 //        // 避免套娃
 //        origin = source.originalMessage.toMessageChainDTO { it != UnknownMessageDTO && it !is QuoteDTO })
-    is PokeMessage -> CQPokeMessageDTO(CQPokeData(name))
+    is PokeMessage -> PokeMessageDTO(PokeData(name))
     else -> {
         logger.debug("收到未支持消息: $this")
         UnknownMessageDTO

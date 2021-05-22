@@ -1,25 +1,28 @@
 package com.github.yyuueexxiinngg.onebot.web.websocket
 
-import io.ktor.http.cio.websocket.Frame
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.serialization.json.*
 import com.github.yyuueexxiinngg.onebot.MiraiApi
 import com.github.yyuueexxiinngg.onebot.callMiraiApi
-import com.github.yyuueexxiinngg.onebot.data.common.CQResponseDTO
+import com.github.yyuueexxiinngg.onebot.data.common.ResponseDTO
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
+import io.ktor.http.cio.websocket.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.coroutines.EmptyCoroutineContext
 
-suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi, cqActionText: String) {
+suspend fun handleWebSocketActions(outgoing: SendChannel<Frame>, mirai: MiraiApi, actionText: String) {
     try {
-        logger.debug("WebSocket收到操作请求: $cqActionText")
-        val json = Json.parseToJsonElement(cqActionText).jsonObject
+        logger.debug("WebSocket收到操作请求: $actionText")
+        val json = Json.parseToJsonElement(actionText).jsonObject
         val echo = json["echo"]
         var action = json["action"]?.jsonPrimitive?.content
-        val responseDTO: CQResponseDTO
+        val responseDTO: ResponseDTO
         if (action?.endsWith("_async") == true) {
-            responseDTO = CQResponseDTO.CQAsyncStarted()
+            responseDTO = ResponseDTO.AsyncStarted()
             action = action.replace("_async", "")
             CoroutineScope(EmptyCoroutineContext).launch {
                 callMiraiApi(action, json["params"]?.jsonObject ?: mapOf(), mirai)

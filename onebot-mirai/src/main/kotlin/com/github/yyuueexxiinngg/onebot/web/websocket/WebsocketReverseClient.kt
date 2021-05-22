@@ -3,9 +3,9 @@ package com.github.yyuueexxiinngg.onebot.web.websocket
 import com.github.yyuueexxiinngg.onebot.BotEventListener
 import com.github.yyuueexxiinngg.onebot.BotSession
 import com.github.yyuueexxiinngg.onebot.PluginSettings
-import com.github.yyuueexxiinngg.onebot.data.common.CQHeartbeatMetaEventDTO
-import com.github.yyuueexxiinngg.onebot.data.common.CQLifecycleMetaEventDTO
-import com.github.yyuueexxiinngg.onebot.data.common.CQPluginStatusData
+import com.github.yyuueexxiinngg.onebot.data.common.HeartbeatMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.LifecycleMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.PluginStatusData
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.util.toJson
@@ -180,7 +180,7 @@ class WebSocketReverseClient(
             when (it) {
                 is Frame.Text -> {
                     scope.launch {
-                        handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                        handleWebSocketActions(outgoing, session.apiImpl, it.readText())
                     }
                 }
                 else -> logger.warning("Unsupported incoming frame")
@@ -198,7 +198,7 @@ class WebSocketReverseClient(
         // 通知服务方链接建立
         websocketSession.outgoing.send(
             Frame.Text(
-                CQLifecycleMetaEventDTO(
+                LifecycleMetaEventDTO(
                     session.bot.id,
                     "connect",
                     currentTimeSeconds()
@@ -228,10 +228,10 @@ class WebSocketReverseClient(
                     if (websocketSession.isActive) {
                         websocketSession.outgoing.send(
                             Frame.Text(
-                                CQHeartbeatMetaEventDTO(
+                                HeartbeatMetaEventDTO(
                                     session.botId,
                                     currentTimeSeconds(),
-                                    CQPluginStatusData(
+                                    PluginStatusData(
                                         good = session.bot.isOnline,
                                         online = session.bot.isOnline
                                     ),

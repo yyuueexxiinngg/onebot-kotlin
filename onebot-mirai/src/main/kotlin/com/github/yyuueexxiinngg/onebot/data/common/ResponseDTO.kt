@@ -15,40 +15,40 @@ import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.MemberPermission
 
 @Serializable
-sealed class CQResponseDataDTO
+sealed class ResponseDataDTO
 
 @Serializable
-open class CQResponseDTO(
+open class ResponseDTO(
     val status: String,
     val retcode: Int,
     @Serializable(with = ResponseDataSerializer::class) val data: Any?,
     var echo: JsonElement? = null
 ) {
-    class CQGeneralSuccess : CQResponseDTO("ok", 0, null)
-    class CQAsyncStarted : CQResponseDTO("async", 1, null)
-    class CQMiraiFailure(message: String? = null) : CQResponseDTO("failed", 102, ResponseMessageData(message))
-    class CQPluginFailure(message: String? = null) : CQResponseDTO("failed", 103, ResponseMessageData(message))
-    class CQInvalidRequest(message: String? = "参数错误") : CQResponseDTO("failed", 100, ResponseMessageData(message))
-    class CQMessageResponse(message_id: Int) : CQResponseDTO("ok", 0, CQMessageData(message_id))
-    class CQGetMessageResponse(result: CQGetMessageData) : CQResponseDTO("ok", 0, result)
-    class CQLoginInfo(user_id: Long, nickname: String) : CQResponseDTO("ok", 0, CQLoginInfoData(user_id, nickname))
-    class CQFriendList(friendList: List<CQFriendData>) : CQResponseDTO("ok", 0, friendList)
-    class CQStrangerInfo(info: CQStrangerInfoData) : CQResponseDTO("ok", 0, info)
+    class GeneralSuccess : ResponseDTO("ok", 0, null)
+    class AsyncStarted : ResponseDTO("async", 1, null)
+    class MiraiFailure(message: String? = null) : ResponseDTO("failed", 102, ResponseMessageData(message))
+    class PluginFailure(message: String? = null) : ResponseDTO("failed", 103, ResponseMessageData(message))
+    class InvalidRequest(message: String? = "参数错误") : ResponseDTO("failed", 100, ResponseMessageData(message))
+    class MessageResponse(message_id: Int) : ResponseDTO("ok", 0, MessageData(message_id))
+    class GetMessageResponse(result: GetMessageData) : ResponseDTO("ok", 0, result)
+    class LoginInfo(user_id: Long, nickname: String) : ResponseDTO("ok", 0, LoginInfoData(user_id, nickname))
+    class FriendList(friendList: List<FriendData>) : ResponseDTO("ok", 0, friendList)
+    class StrangerInfo(info: StrangerInfoData) : ResponseDTO("ok", 0, info)
 
-    class CQGroupList(groupList: List<CQGroupData>?) : CQResponseDTO("ok", 0, groupList)
-    class CQGroupInfo(group_id: Long, group_name: String, member_count: Int, max_member_count: Int) :
-        CQResponseDTO("ok", 0, CQGroupInfoData(group_id, group_name, member_count, max_member_count))
+    class GroupList(groupList: List<GroupData>?) : ResponseDTO("ok", 0, groupList)
+    class GroupInfo(group_id: Long, group_name: String, member_count: Int, max_member_count: Int) :
+        ResponseDTO("ok", 0, GroupInfoData(group_id, group_name, member_count, max_member_count))
 
-    class CQImageInfo(image: CQImageInfoData) : CQResponseDTO("ok", 0, image)
-    class CQRecordInfo(record: CQRecordInfoData) : CQResponseDTO("ok", 0, record)
-    class CQMemberInfo(member: CQMemberInfoData) : CQResponseDTO("ok", 0, member)
-    class CQMemberList(memberList: List<CQMemberInfoData>) : CQResponseDTO("ok", 0, memberList)
-    class CQCanSendImage(data: CQCanSendImageData = CQCanSendImageData()) : CQResponseDTO("ok", 0, data)
-    class CQCanSendRecord(data: CQCanSendRecordData = CQCanSendRecordData()) : CQResponseDTO("ok", 0, data)
-    class CQPluginStatus(status: CQPluginStatusData) : CQResponseDTO("ok", 0, status)
-    class CQVersionInfo(versionInfo: CQVersionInfoData) : CQResponseDTO("ok", 0, versionInfo)
+    class ImageInfo(image: ImageInfoData) : ResponseDTO("ok", 0, image)
+    class RecordInfo(record: RecordInfoData) : ResponseDTO("ok", 0, record)
+    class MemberInfo(member: MemberInfoData) : ResponseDTO("ok", 0, member)
+    class MemberList(memberList: List<MemberInfoData>) : ResponseDTO("ok", 0, memberList)
+    class CanSendImage(data: CanSendImageData = CanSendImageData()) : ResponseDTO("ok", 0, data)
+    class CanSendRecord(data: CanSendRecordData = CanSendRecordData()) : ResponseDTO("ok", 0, data)
+    class PluginStatus(status: PluginStatusData) : ResponseDTO("ok", 0, status)
+    class VersionInfo(versionInfo: VersionInfoData) : ResponseDTO("ok", 0, versionInfo)
 
-    class CQHonorInfo(honorInfo: CQGroupHonorInfoData) : CQResponseDTO("ok", 0, honorInfo)
+    class HonorInfo(honorInfo: GroupHonorInfoData) : ResponseDTO("ok", 0, honorInfo)
 
     object ResponseDataSerializer : KSerializer<Any?> {
         override val descriptor: SerialDescriptor
@@ -62,12 +62,12 @@ open class CQResponseDTO(
         override fun serialize(encoder: Encoder, value: Any?) {
             return when (value) {
                 is List<*> -> encoder.encodeSerializableValue(
-                    ListSerializer(CQResponseDataDTO.serializer()),
-                    value as List<CQResponseDataDTO>
+                    ListSerializer(ResponseDataDTO.serializer()),
+                    value as List<ResponseDataDTO>
                 )
                 else -> encoder.encodeSerializableValue(
-                    CQResponseDataDTO.serializer(),
-                    value as CQResponseDataDTO
+                    ResponseDataDTO.serializer(),
+                    value as ResponseDataDTO
                 )
             }
         }
@@ -76,56 +76,56 @@ open class CQResponseDTO(
 
 @Serializable
 @SerialName("ResponseMessageData")
-data class ResponseMessageData(val message: String?) : CQResponseDataDTO()
+data class ResponseMessageData(val message: String?) : ResponseDataDTO()
 
 @Serializable
 @SerialName("MessageData")
-data class CQMessageData(val message_id: Int) : CQResponseDataDTO()
+data class MessageData(val message_id: Int) : ResponseDataDTO()
 
 @Serializable
 @SerialName("GetMessageData")
-data class CQGetMessageData(
+data class GetMessageData(
     val time: Long,
     val message_type: String,
     val message_id: Int,
     val real_id: Int,
-    val sender: CQContactDTO,
-    val message: CQMessageChainOrStringDTO
-) : CQResponseDataDTO()
+    val sender: ContactDTO,
+    val message: MessageChainOrStringDTO
+) : ResponseDataDTO()
 
 @Serializable
 @SerialName("LoginInfoData")
-data class CQLoginInfoData(val user_id: Long, val nickname: String) : CQResponseDataDTO()
+data class LoginInfoData(val user_id: Long, val nickname: String) : ResponseDataDTO()
 
 @Serializable
 @SerialName("StrangerInfoData")
-data class CQStrangerInfoData(
+data class StrangerInfoData(
     val user_id: Long,
     val nickname: String,
     val sex: String = "unknown",
     val age: Int = 0
-) : CQResponseDataDTO()
+) : ResponseDataDTO()
 
 @Serializable
 @SerialName("FriendData")
-data class CQFriendData(val user_id: Long, val nickname: String, val remark: String) : CQResponseDataDTO()
+data class FriendData(val user_id: Long, val nickname: String, val remark: String) : ResponseDataDTO()
 
 @Serializable
 @SerialName("GroupData")
-data class CQGroupData(val group_id: Long, val group_name: String) : CQResponseDataDTO()
+data class GroupData(val group_id: Long, val group_name: String) : ResponseDataDTO()
 
 @Serializable
 @SerialName("GroupInfoData")
-data class CQGroupInfoData(
+data class GroupInfoData(
     val group_id: Long,
     val group_name: String,
     val member_count: Int,
     val max_member_count: Int
-) : CQResponseDataDTO()
+) : ResponseDataDTO()
 
 @Serializable
 @SerialName("MemberInfoData")
-data class CQMemberInfoData(
+data class MemberInfoData(
     val group_id: Long,
     val user_id: Long,
     val nickname: String,
@@ -140,7 +140,7 @@ data class CQMemberInfoData(
     val title: String,
     val title_expire_time: Int = 0,
     val card_changeable: Boolean
-) : CQResponseDataDTO() {
+) : ResponseDataDTO() {
     constructor(member: Member) : this(
         member.group.id,
         member.id,
@@ -161,7 +161,7 @@ data class CQMemberInfoData(
 
 @Serializable
 @SerialName("ImageInfoData")
-data class CQImageInfoData(
+data class ImageInfoData(
     val file: String,
     @SerialName("filename") val fileName: String,
     val md5: String,
@@ -169,35 +169,35 @@ data class CQImageInfoData(
     val url: String,
     @SerialName("add_time") val addTime: Long,
     @SerialName("file_type") val fileType: String,
-) : CQResponseDataDTO()
+) : ResponseDataDTO()
 
 @Serializable
 @SerialName("RecordInfoData")
-data class CQRecordInfoData(
+data class RecordInfoData(
     val file: String,
     @SerialName("filename") val fileName: String,
     val md5: String,
     @SerialName("file_type") val fileType: String,
-) : CQResponseDataDTO()
+) : ResponseDataDTO()
 
 @Serializable
 @SerialName("CanSendImageData")
-data class CQCanSendImageData(val yes: Boolean = true) : CQResponseDataDTO()
+data class CanSendImageData(val yes: Boolean = true) : ResponseDataDTO()
 
 @Serializable
 @SerialName("CanSendRecordData")
-data class CQCanSendRecordData(val yes: Boolean = true) : CQResponseDataDTO()
+data class CanSendRecordData(val yes: Boolean = true) : ResponseDataDTO()
 
 @Serializable
 @SerialName("PluginStatusData")
-data class CQPluginStatusData(
+data class PluginStatusData(
     val app_initialized: Boolean = true,
     val app_enabled: Boolean = true,
     val plugins_good: PluginsGoodData = PluginsGoodData(),
     val app_good: Boolean = true,
     val online: Boolean = true,
     val good: Boolean = true
-) : CQResponseDataDTO()
+) : ResponseDataDTO()
 
 @Serializable
 @SerialName("PluginsGoodData")
@@ -222,11 +222,11 @@ data class PluginsGoodData(
     val websocket: Boolean = true,
     val websocketReverse: Boolean = true,
     val workerPoolResizer: Boolean = true,
-) : CQResponseDataDTO()
+) : ResponseDataDTO()
 
 @Serializable
 @SerialName("VersionInfoData")
-data class CQVersionInfoData(
+data class VersionInfoData(
     val coolq_directory: String = "",
     val coolq_edition: String = "pro",
     val plugin_version: String = "4.15.0",
@@ -236,11 +236,11 @@ data class CQVersionInfoData(
     val app_version: String = BuildConfig.VERSION,
     val app_build_version: String = BuildConfig.COMMIT_HASH,
     val protocol_version: String = "v10",
-) : CQResponseDataDTO()
+) : ResponseDataDTO()
 
-@SerialName("HonorInfoData")
 @Serializable
-data class CQGroupHonorInfoData(
+@SerialName("HonorInfoData")
+data class GroupHonorInfoData(
     @SerialName("accept_languages") val acceptLanguages: List<Language?>? = null,
     @SerialName("group_id") @SerializedName("gc")
     val groupId: String?,
@@ -283,7 +283,7 @@ data class CQGroupHonorInfoData(
     val hasServerError: Boolean?,
     @SerialName("hw_excellent_list")
     val hwExcellentList: List<Actor?>? = null
-) : CQResponseDataDTO() {
+) : ResponseDataDTO() {
     @Serializable
     data class Language(
         @SerialName("code")

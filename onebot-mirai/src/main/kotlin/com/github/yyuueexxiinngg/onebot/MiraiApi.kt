@@ -32,64 +32,64 @@ import net.mamoe.mirai.utils.MiraiExperimentalApi
 
 
 @OptIn(LowLevelApi::class, MiraiExperimentalApi::class)
-suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mirai: MiraiApi): CQResponseDTO {
-    var responseDTO: CQResponseDTO = CQResponseDTO.CQPluginFailure()
+suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mirai: MiraiApi): ResponseDTO {
+    var responseDTO: ResponseDTO = ResponseDTO.PluginFailure()
     try {
         when (action) {
-            "send_msg" -> responseDTO = mirai.cqSendMessage(params)
-            "send_private_msg" -> responseDTO = mirai.cqSendPrivateMessage(params)
-            "send_group_msg" -> responseDTO = mirai.cqSendGroupMessage(params)
-            "send_discuss_msg" -> responseDTO = mirai.cqSendDiscussMessage(params)
-            "delete_msg" -> responseDTO = mirai.cqDeleteMessage(params)
-            "send_like" -> responseDTO = mirai.cqSendLike(params)
-            "set_group_kick" -> responseDTO = mirai.cqSetGroupKick(params)
-            "set_group_ban" -> responseDTO = mirai.cqSetGroupBan(params)
-            "set_group_anonymous_ban" -> responseDTO = mirai.cqSetGroupAnonymousBan(params)
-            "set_group_whole_ban" -> responseDTO = mirai.cqSetWholeGroupBan(params)
-            "set_group_admin" -> responseDTO = mirai.cqSetGroupAdmin(params)
-            "set_group_anonymous" -> responseDTO = mirai.cqSetGroupAnonymous(params)
-            "set_group_card" -> responseDTO = mirai.cqSetGroupCard(params)
-            "set_group_leave" -> responseDTO = mirai.cqSetGroupLeave(params)
-            "set_group_special_title" -> responseDTO = mirai.cqSetGroupSpecialTitle(params)
-            "set_discuss_leave" -> responseDTO = mirai.cqSetDiscussLeave(params)
-            "set_friend_add_request" -> responseDTO = mirai.cqSetFriendAddRequest(params)
-            "set_group_add_request" -> responseDTO = mirai.cqSetGroupAddRequest(params)
-            "get_login_info" -> responseDTO = mirai.cqGetLoginInfo(params)
-            "get_stranger_info" -> responseDTO = mirai.cqGetStrangerInfo(params)
-            "get_friend_list" -> responseDTO = mirai.cqGetFriendList(params)
-            "get_group_list" -> responseDTO = mirai.cqGetGroupList(params)
-            "get_group_info" -> responseDTO = mirai.cqGetGroupInfo(params)
-            "get_group_member_info" -> responseDTO = mirai.cqGetGroupMemberInfo(params)
-            "get_group_member_list" -> responseDTO = mirai.cqGetGroupMemberList(params)
-            "get_cookies" -> responseDTO = mirai.cqGetCookies(params)
-            "get_csrf_token" -> responseDTO = mirai.cqGetCSRFToken(params)
-            "get_credentials" -> responseDTO = mirai.cqGetCredentials(params)
-            "get_record" -> responseDTO = mirai.cqGetRecord(params)
-            "get_image" -> responseDTO = mirai.cqGetImage(params)
-            "can_send_image" -> responseDTO = mirai.cqCanSendImage(params)
-            "can_send_record" -> responseDTO = mirai.cqCanSendRecord(params)
-            "get_status" -> responseDTO = mirai.cqGetStatus(params)
-            "get_version_info" -> responseDTO = mirai.cqGetVersionInfo(params)
-            "set_restart_plugin" -> responseDTO = mirai.cqSetRestartPlugin(params)
-            "clean_data_dir" -> responseDTO = mirai.cqCleanDataDir(params)
-            "clean_plugin_log" -> responseDTO = mirai.cqCleanPluginLog(params)
-            ".handle_quick_operation" -> responseDTO = mirai.cqHandleQuickOperation(params)
+            "send_msg" -> responseDTO = mirai.sendMessage(params)
+            "send_private_msg" -> responseDTO = mirai.sendPrivateMessage(params)
+            "send_group_msg" -> responseDTO = mirai.sendGroupMessage(params)
+            "send_discuss_msg" -> responseDTO = mirai.sendDiscussMessage(params)
+            "delete_msg" -> responseDTO = mirai.deleteMessage(params)
+            "send_like" -> responseDTO = mirai.sendLike(params)
+            "set_group_kick" -> responseDTO = mirai.setGroupKick(params)
+            "set_group_ban" -> responseDTO = mirai.setGroupBan(params)
+            "set_group_anonymous_ban" -> responseDTO = mirai.setGroupAnonymousBan(params)
+            "set_group_whole_ban" -> responseDTO = mirai.setWholeGroupBan(params)
+            "set_group_admin" -> responseDTO = mirai.setGroupAdmin(params)
+            "set_group_anonymous" -> responseDTO = mirai.setGroupAnonymous(params)
+            "set_group_card" -> responseDTO = mirai.setGroupCard(params)
+            "set_group_leave" -> responseDTO = mirai.setGroupLeave(params)
+            "set_group_special_title" -> responseDTO = mirai.setGroupSpecialTitle(params)
+            "set_discuss_leave" -> responseDTO = mirai.setDiscussLeave(params)
+            "set_friend_add_request" -> responseDTO = mirai.setFriendAddRequest(params)
+            "set_group_add_request" -> responseDTO = mirai.setGroupAddRequest(params)
+            "get_login_info" -> responseDTO = mirai.getLoginInfo(params)
+            "get_stranger_info" -> responseDTO = mirai.getStrangerInfo(params)
+            "get_friend_list" -> responseDTO = mirai.getFriendList(params)
+            "get_group_list" -> responseDTO = mirai.getGroupList(params)
+            "get_group_info" -> responseDTO = mirai.getGroupInfo(params)
+            "get_group_member_info" -> responseDTO = mirai.getGroupMemberInfo(params)
+            "get_group_member_list" -> responseDTO = mirai.getGroupMemberList(params)
+            "get_cookies" -> responseDTO = mirai.getCookies(params)
+            "get_csrf_token" -> responseDTO = mirai.getCSRFToken(params)
+            "get_credentials" -> responseDTO = mirai.getCredentials(params)
+            "get_record" -> responseDTO = mirai.getRecord(params)
+            "get_image" -> responseDTO = mirai.getImage(params)
+            "can_send_image" -> responseDTO = mirai.canSendImage(params)
+            "can_send_record" -> responseDTO = mirai.canSendRecord(params)
+            "get_status" -> responseDTO = mirai.getStatus(params)
+            "get_version_info" -> responseDTO = mirai.getVersionInfo(params)
+            "set_restart_plugin" -> responseDTO = mirai.setRestartPlugin(params)
+            "clean_data_dir" -> responseDTO = mirai.cleanDataDir(params)
+            "clean_plugin_log" -> responseDTO = mirai.cleanPluginLog(params)
+            ".handle_quick_operation" -> responseDTO = mirai.handleQuickOperation(params)
 
-            "set_group_name" -> responseDTO = mirai.cqSetGroupName(params)
-            "get_group_honor_info" -> responseDTO = mirai.cqGetGroupHonorInfo(params)
-            "get_msg" -> responseDTO = mirai.cqGetMessage(params)
+            "set_group_name" -> responseDTO = mirai.setGroupName(params)
+            "get_group_honor_info" -> responseDTO = mirai.getGroupHonorInfo(params)
+            "get_msg" -> responseDTO = mirai.getMessage(params)
 
-            "_set_group_announcement" -> responseDTO = mirai.cqSetGroupAnnouncement(params)
+            "_set_group_announcement" -> responseDTO = mirai.setGroupAnnouncement(params)
             else -> {
                 logger.error("未知OneBot API: $action")
             }
         }
     } catch (e: PermissionDeniedException) {
         logger.debug("机器人无操作权限, 调用的API: /$action")
-        responseDTO = CQResponseDTO.CQMiraiFailure()
+        responseDTO = ResponseDTO.MiraiFailure()
     } catch (e: Exception) {
         logger.error(e)
-        responseDTO = CQResponseDTO.CQPluginFailure()
+        responseDTO = ResponseDTO.PluginFailure()
     }
 
     return responseDTO
@@ -103,43 +103,43 @@ class MiraiApi(val bot: Bot) {
     val cacheRequestQueue = CacheRequestQueue()
     val cachedSourceQueue = CacheSourceQueue()
 
-    suspend fun cqSendMessage(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun sendMessage(params: Map<String, JsonElement>): ResponseDTO {
         if (params.contains("message_type")) {
             when (params["message_type"]?.jsonPrimitive?.content) {
-                "private" -> return cqSendPrivateMessage(params)
-                "group" -> return cqSendGroupMessage(params)
+                "private" -> return sendPrivateMessage(params)
+                "group" -> return sendGroupMessage(params)
             }
         } else {
             when {
-                params["group_id"] != null -> return cqSendGroupMessage(params)
-                params["discuss_id"] != null -> return cqSendGroupMessage(params)
-                params["user_id"] != null -> return cqSendPrivateMessage(params)
+                params["group_id"] != null -> return sendGroupMessage(params)
+                params["discuss_id"] != null -> return sendGroupMessage(params)
+                params["user_id"] != null -> return sendPrivateMessage(params)
             }
         }
-        return CQResponseDTO.CQInvalidRequest()
+        return ResponseDTO.InvalidRequest()
     }
 
     @Suppress("DuplicatedCode")
-    suspend fun cqSendGroupMessage(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun sendGroupMessage(params: Map<String, JsonElement>): ResponseDTO {
         val targetGroupId = params["group_id"]!!.jsonPrimitive.long
         val raw = params["auto_escape"]?.jsonPrimitive?.booleanOrNull ?: false
         val messages = params["message"]
 
         val group = bot.getGroupOrFail(targetGroupId)
-        cqMessageToMessageChains(bot, group, messages, raw)?.let {
+        messageToMiraiMessageChains(bot, group, messages, raw)?.let {
             return if (it.content.isNotEmpty()) {
                 val receipt = group.sendMessage(it)
                 cachedSourceQueue.add(receipt.source)
-                CQResponseDTO.CQMessageResponse(receipt.source.internalIds.toCQMessageId(bot.id, group.id))
+                ResponseDTO.MessageResponse(receipt.source.internalIds.toMessageId(bot.id, group.id))
             } else {
-                CQResponseDTO.CQMessageResponse(-1)
+                ResponseDTO.MessageResponse(-1)
             }
         }
-        return CQResponseDTO.CQInvalidRequest()
+        return ResponseDTO.InvalidRequest()
     }
 
     @Suppress("DuplicatedCode")
-    suspend fun cqSendPrivateMessage(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun sendPrivateMessage(params: Map<String, JsonElement>): ResponseDTO {
         val targetQQId = params["user_id"]!!.jsonPrimitive.long
         val raw = params["auto_escape"]?.jsonPrimitive?.booleanOrNull ?: false
         val messages = params["message"]
@@ -152,46 +152,46 @@ class MiraiApi(val bot: Bot) {
             bot.getGroupOrFail(fromGroupId!!).getMemberOrFail(targetQQId)
         }
 
-        cqMessageToMessageChains(bot, contact, messages, raw)?.let {
+        messageToMiraiMessageChains(bot, contact, messages, raw)?.let {
             return if (it.content.isNotEmpty()) {
                 val receipt = contact.sendMessage(it)
                 cachedSourceQueue.add(receipt.source)
-                CQResponseDTO.CQMessageResponse(receipt.source.internalIds.toCQMessageId(bot.id, contact.id))
+                ResponseDTO.MessageResponse(receipt.source.internalIds.toMessageId(bot.id, contact.id))
             } else {
-                CQResponseDTO.CQMessageResponse(-1)
+                ResponseDTO.MessageResponse(-1)
             }
         }
-        return CQResponseDTO.CQInvalidRequest()
+        return ResponseDTO.InvalidRequest()
     }
 
-    suspend fun cqDeleteMessage(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun deleteMessage(params: Map<String, JsonElement>): ResponseDTO {
         val messageId = params["message_id"]?.jsonPrimitive?.intOrNull
         messageId?.let {
             cachedSourceQueue[it].recall()
-            return CQResponseDTO.CQGeneralSuccess()
+            return ResponseDTO.GeneralSuccess()
         }
-        return CQResponseDTO.CQInvalidRequest()
+        return ResponseDTO.InvalidRequest()
     }
 
-    suspend fun cqGetMessage(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun getMessage(params: Map<String, JsonElement>): ResponseDTO {
         val messageId = params["message_id"]?.jsonPrimitive?.intOrNull
         if (PluginSettings.db.enable) {
             if (messageId != null) {
                 PluginBase.db?.apply {
                     val message = String(get(messageId.toByteArray())).deserializeJsonToMessageChain()
-                    val rawMessage = WrappedCQMessageChainString("")
+                    val rawMessage = WrappedMessageChainString("")
                     message.forEach { rawMessage.value += it.toCQString() }
 
                     with(message) {
                         when (source.kind) {
                             MessageSourceKind.GROUP -> {
-                                return CQResponseDTO.CQGetMessageResponse(
-                                    CQGetMessageData(
+                                return ResponseDTO.GetMessageResponse(
+                                    GetMessageData(
                                         source.time.toLong(),
                                         "group",
                                         messageId,
                                         messageId,
-                                        CQMemberDTO(source.fromId, "unknown"),
+                                        MemberDTO(source.fromId, "unknown"),
                                         message.toMessageChainDTO { it != UnknownMessageDTO }
                                     )
                                 )
@@ -220,13 +220,13 @@ class MiraiApi(val bot: Bot) {
                                 )*/
                             }
                             MessageSourceKind.FRIEND, MessageSourceKind.STRANGER, MessageSourceKind.TEMP -> {
-                                return CQResponseDTO.CQGetMessageResponse(
-                                    CQGetMessageData(
+                                return ResponseDTO.GetMessageResponse(
+                                    GetMessageData(
                                         source.time.toLong(),
                                         "private",
                                         messageId,
                                         messageId,
-                                        CQQQDTO(source.fromId, "unknown"),
+                                        QQDTO(source.fromId, "unknown"),
                                         message.toMessageChainDTO { it != UnknownMessageDTO }
                                     )
                                 )
@@ -235,37 +235,37 @@ class MiraiApi(val bot: Bot) {
                     }
                 }
             }
-            return CQResponseDTO.CQInvalidRequest()
+            return ResponseDTO.InvalidRequest()
         } else {
-            return CQResponseDTO.CQInvalidRequest("请配置开启数据库")
+            return ResponseDTO.InvalidRequest("请配置开启数据库")
         }
     }
 
-    suspend fun cqSetGroupKick(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun setGroupKick(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         return if (groupId != null && memberId != null) {
             bot.getGroupOrFail(groupId).getMemberOrFail(memberId).kick("")
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    suspend fun cqSetGroupBan(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun setGroupBan(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         val duration = params["duration"]?.jsonPrimitive?.int ?: 30 * 60
         return if (groupId != null && memberId != null) {
             bot.getGroupOrFail(groupId).getMemberOrFail(memberId).mute(duration)
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
     @OptIn(LowLevelApi::class)
-    suspend fun cqSetGroupAnonymousBan(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun setGroupAnonymousBan(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val flag = params["anonymous"]?.jsonObject?.get("flag")?.jsonPrimitive?.content
             ?: params["anonymous_flag"]?.jsonPrimitive?.content
@@ -275,64 +275,64 @@ class MiraiApi(val bot: Bot) {
         return if (groupId != null && flag != null) {
             val splits = flag.split("&", limit = 2)
             Mirai.muteAnonymousMember(bot, splits[0], splits[1], groupId, duration)
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqSetWholeGroupBan(params: Map<String, JsonElement>): CQResponseDTO {
+    fun setWholeGroupBan(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val enable = params["enable"]?.jsonPrimitive?.booleanOrNull ?: true
         return if (groupId != null) {
             bot.getGroupOrFail(groupId).settings.isMuteAll = enable
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqSetGroupCard(params: Map<String, JsonElement>): CQResponseDTO {
+    fun setGroupCard(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         val card = params["card"]?.jsonPrimitive?.contentOrNull ?: ""
         val enable = params["enable"]?.jsonPrimitive?.booleanOrNull ?: true
         return if (groupId != null && memberId != null) {
             bot.getGroupOrFail(groupId).getMemberOrFail(memberId).nameCard = card
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    suspend fun cqSetGroupLeave(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun setGroupLeave(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val dismiss = params["enable"]?.jsonPrimitive?.booleanOrNull ?: false
         return if (groupId != null) {
             // Not supported
-            if (dismiss) return CQResponseDTO.CQMiraiFailure()
+            if (dismiss) return ResponseDTO.MiraiFailure()
 
             bot.getGroupOrFail(groupId).quit()
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqSetGroupSpecialTitle(params: Map<String, JsonElement>): CQResponseDTO {
+    fun setGroupSpecialTitle(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         val specialTitle = params["special_title"]?.jsonPrimitive?.contentOrNull ?: ""
         val duration = params["duration"]?.jsonPrimitive?.int ?: -1  // Not supported
         return if (groupId != null && memberId != null) {
             bot.getGroupOrFail(groupId).getMemberOrFail(memberId).specialTitle = specialTitle
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    suspend fun cqSetFriendAddRequest(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun setFriendAddRequest(params: Map<String, JsonElement>): ResponseDTO {
         val flag = params["flag"]?.jsonPrimitive?.contentOrNull
         val approve = params["approve"]?.jsonPrimitive?.booleanOrNull ?: true
         val remark = params["remark"]?.jsonPrimitive?.contentOrNull
@@ -340,13 +340,13 @@ class MiraiApi(val bot: Bot) {
             val event = cacheRequestQueue[flag.toLongOrNull()]
             if (event is NewFriendRequestEvent)
                 if (approve) event.accept() else event.reject()
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    suspend fun cqSetGroupAddRequest(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun setGroupAddRequest(params: Map<String, JsonElement>): ResponseDTO {
         val flag = params["flag"]?.jsonPrimitive?.contentOrNull
         val type = params["type"]?.jsonPrimitive?.contentOrNull
         val subType = params["sub_type"]?.jsonPrimitive?.contentOrNull
@@ -358,23 +358,23 @@ class MiraiApi(val bot: Bot) {
                 is MemberJoinRequestEvent -> if (approve) event.accept() else event.reject(message = reason ?: "")
                 is BotInvitedJoinGroupRequestEvent -> if (approve) event.accept() else event.ignore()
             }
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqGetLoginInfo(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQLoginInfo(bot.id, bot.nick)
+    fun getLoginInfo(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.LoginInfo(bot.id, bot.nick)
     }
 
     @OptIn(ConsoleExperimentalApi::class, MiraiExperimentalApi::class)
-    suspend fun cqGetStrangerInfo(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun getStrangerInfo(params: Map<String, JsonElement>): ResponseDTO {
         val userId = params["user_id"]?.jsonPrimitive?.long
         return if (userId != null) {
             val profile = Mirai.queryProfile(bot, userId)
-            CQResponseDTO.CQStrangerInfo(
-                CQStrangerInfoData(
+            ResponseDTO.StrangerInfo(
+                StrangerInfoData(
                     userId,
                     profile.nickname,
                     profile.sex.name.toLowerCase(),
@@ -382,45 +382,45 @@ class MiraiApi(val bot: Bot) {
                 )
             )
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqGetFriendList(params: Map<String, JsonElement>): CQResponseDTO {
-        val cqFriendList = mutableListOf<CQFriendData>()
+    fun getFriendList(params: Map<String, JsonElement>): ResponseDTO {
+        val friendList = mutableListOf<FriendData>()
         bot.friends.forEach { friend ->
-            cqFriendList.add(CQFriendData(friend.id, friend.nick, friend.remark))
+            friendList.add(FriendData(friend.id, friend.nick, friend.remark))
         }
-        return CQResponseDTO.CQFriendList(cqFriendList)
+        return ResponseDTO.FriendList(friendList)
     }
 
-    fun cqGetGroupList(params: Map<String, JsonElement>): CQResponseDTO {
-        val cqGroupList = mutableListOf<CQGroupData>()
+    fun getGroupList(params: Map<String, JsonElement>): ResponseDTO {
+        val groupList = mutableListOf<GroupData>()
         bot.groups.forEach { group ->
-            cqGroupList.add(CQGroupData(group.id, group.name))
+            groupList.add(GroupData(group.id, group.name))
         }
-        return CQResponseDTO.CQGroupList(cqGroupList)
+        return ResponseDTO.GroupList(groupList)
     }
 
     /**
      * 获取群信息
      * 不支持获取群容量, 返回0
      */
-    fun cqGetGroupInfo(params: Map<String, JsonElement>): CQResponseDTO {
+    fun getGroupInfo(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
 
         return if (groupId != null) {
             val group = bot.getGroupOrFail(groupId)
-            CQResponseDTO.CQGroupInfo(group.id, group.name, group.members.size + 1, 0)
+            ResponseDTO.GroupInfo(group.id, group.name, group.members.size + 1, 0)
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
     @MiraiExperimentalApi
     @LowLevelApi
-    suspend fun cqGetGroupMemberInfo(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun getGroupMemberInfo(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
@@ -432,8 +432,8 @@ class MiraiApi(val bot: Bot) {
                 val members = Mirai.getRawGroupMemberList(bot, groupUin, groupId, group.owner.id)
                 val member = members.find { m -> m.uin == memberId }
                 member?.let {
-                    CQResponseDTO.CQMemberInfo(
-                        CQMemberInfoData(
+                    ResponseDTO.MemberInfo(
+                        MemberInfoData(
                             group.id,
                             it.uin,
                             nickname = it.nameCard,
@@ -443,19 +443,19 @@ class MiraiApi(val bot: Bot) {
                             card_changeable = group.botPermission == MemberPermission.OWNER
                         )
                     )
-                } ?: CQResponseDTO.CQMiraiFailure()
+                } ?: ResponseDTO.MiraiFailure()
             } else {
                 val member = bot.getGroupOrFail(groupId).getMemberOrFail(memberId)
-                CQResponseDTO.CQMemberInfo(CQMemberInfoData(member))
+                ResponseDTO.MemberInfo(MemberInfoData(member))
             }
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqGetGroupMemberList(params: Map<String, JsonElement>): CQResponseDTO {
+    fun getGroupMemberList(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
-        val cqGroupMemberListData = mutableListOf<CQMemberInfoData>()
+        val groupMemberListData = mutableListOf<MemberInfoData>()
         return if (groupId != null) {
             var isBotIncluded = false
             val group = bot.getGroupOrFail(groupId)
@@ -463,18 +463,18 @@ class MiraiApi(val bot: Bot) {
             members.forEach { member ->
                 run {
                     if (member.id == bot.id) isBotIncluded = true
-                    cqGroupMemberListData.add(CQMemberInfoData(member))
+                    groupMemberListData.add(MemberInfoData(member))
                 }
             }
-            if (!isBotIncluded) cqGroupMemberListData.add(CQMemberInfoData(group.botAsMember))
-            CQResponseDTO.CQMemberList(cqGroupMemberListData)
+            if (!isBotIncluded) groupMemberListData.add(MemberInfoData(group.botAsMember))
+            ResponseDTO.MemberList(groupMemberListData)
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
     // https://github.com/richardchien/coolq-http-api/blob/master/src/cqhttp/plugins/web/http.cpp#L375
-    suspend fun cqHandleQuickOperation(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun handleQuickOperation(params: Map<String, JsonElement>): ResponseDTO {
         try {
             val context = params["context"]?.jsonObject
             val operation = params["operation"]?.jsonObject
@@ -522,24 +522,24 @@ class MiraiApi(val bot: Bot) {
                     } else {
                         nextCallParams["message"] = replyElement
                     }
-                    return cqSendMessage(nextCallParams)
+                    return sendMessage(nextCallParams)
                 }
 
                 if (messageType == "group") {
                     // TODO: 备忘, 暂未支持
                     val isAnonymous = false
                     if (operation?.get("delete")?.jsonPrimitive?.booleanOrNull == true) {
-                        return cqDeleteMessage(context)
+                        return deleteMessage(context)
                     }
                     if (operation?.get("kick")?.jsonPrimitive?.booleanOrNull == true) {
-                        return cqSetGroupKick(context)
+                        return setGroupKick(context)
                     }
                     if (operation?.get("ban")?.jsonPrimitive?.booleanOrNull == true) {
                         @Suppress("ConstantConditionIf")
                         (return if (isAnonymous) {
-                            cqSetGroupAnonymousBan(context)
+                            setGroupAnonymousBan(context)
                         } else {
-                            cqSetGroupBan(context)
+                            setGroupBan(context)
                         })
                     }
                 }
@@ -551,18 +551,18 @@ class MiraiApi(val bot: Bot) {
                 nextCallParams["remark"] = JsonPrimitive(operation?.get("remark")?.jsonPrimitive?.contentOrNull)
                 nextCallParams["reason"] = JsonPrimitive(operation?.get("reason")?.jsonPrimitive?.contentOrNull)
                 if (requestType == "friend") {
-                    return cqSetFriendAddRequest(nextCallParams)
+                    return setFriendAddRequest(nextCallParams)
                 } else if (requestType == "group") {
-                    return cqSetGroupAddRequest(nextCallParams)
+                    return setGroupAddRequest(nextCallParams)
                 }
             }
-            return CQResponseDTO.CQInvalidRequest()
+            return ResponseDTO.InvalidRequest()
         } catch (e: Exception) {
-            return CQResponseDTO.CQPluginFailure()
+            return ResponseDTO.PluginFailure()
         }
     }
 
-    suspend fun cqGetRecord(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun getRecord(params: Map<String, JsonElement>): ResponseDTO {
         val file = params["file"]?.jsonPrimitive?.contentOrNull
         val outFormat = params["out_format"]?.jsonPrimitive?.contentOrNull // Currently not supported
         return if (file != null) {
@@ -575,21 +575,21 @@ class MiraiApi(val bot: Bot) {
                         else -> "unknown"
                     }
                 }
-                CQResponseDTO.CQRecordInfo(
-                    CQRecordInfoData(
+                ResponseDTO.RecordInfo(
+                    RecordInfoData(
                         it.absolutePath,
                         it.nameWithoutExtension,
                         it.nameWithoutExtension,
                         fileType
                     )
                 )
-            } ?: CQResponseDTO.CQPluginFailure()
+            } ?: ResponseDTO.PluginFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    suspend fun cqGetImage(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun getImage(params: Map<String, JsonElement>): ResponseDTO {
         val file = params["file"]?.jsonPrimitive?.contentOrNull
         return if (file != null) {
             val image = getCachedImageFile(file)
@@ -610,8 +610,8 @@ class MiraiApi(val bot: Bot) {
                             else -> "unknown"
                         }
                     }
-                    CQResponseDTO.CQImageInfo(
-                        CQImageInfoData(
+                    ResponseDTO.ImageInfo(
+                        ImageInfoData(
                             it.absolutePath,
                             cachedImageMeta.fileName,
                             cachedImageMeta.md5,
@@ -622,110 +622,110 @@ class MiraiApi(val bot: Bot) {
                         )
                     )
                 }
-            } ?: CQResponseDTO.CQPluginFailure()
+            } ?: ResponseDTO.PluginFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqCanSendImage(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQCanSendImage()
+    fun canSendImage(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.CanSendImage()
     }
 
-    fun cqCanSendRecord(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQCanSendRecord()
+    fun canSendRecord(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.CanSendRecord()
     }
 
-    fun cqGetStatus(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQPluginStatus(CQPluginStatusData(online = bot.isActive, good = bot.isActive))
+    fun getStatus(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.PluginStatus(PluginStatusData(online = bot.isActive, good = bot.isActive))
     }
 
-    fun cqGetVersionInfo(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQVersionInfo(
-            CQVersionInfoData(
+    fun getVersionInfo(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.VersionInfo(
+            VersionInfoData(
                 coolq_directory = PluginBase.dataFolder.absolutePath
             )
         )
     }
 
-    fun cqSetRestartPlugin(params: Map<String, JsonElement>): CQResponseDTO {
+    fun setRestartPlugin(params: Map<String, JsonElement>): ResponseDTO {
         val delay = params["delay"]?.jsonPrimitive?.int ?: 0
-        return CQResponseDTO.CQGeneralSuccess()
+        return ResponseDTO.GeneralSuccess()
     }
 
-    fun cqCleanDataDir(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQGeneralSuccess()
+    fun cleanDataDir(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.GeneralSuccess()
     }
 
-    fun cqCleanPluginLog(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQGeneralSuccess()
+    fun cleanPluginLog(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.GeneralSuccess()
     }
 
     ////////////////
     ////  v11  ////
     //////////////
 
-    fun cqSetGroupName(params: Map<String, JsonElement>): CQResponseDTO {
+    fun setGroupName(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val name = params["group_name"]?.jsonPrimitive?.content
 
         return if (groupId != null && name != null && name != "") {
             bot.getGroupOrFail(groupId).name = name
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
     @MiraiExperimentalApi
     @LowLevelApi
     @Suppress("DuplicatedCode")
-    suspend fun cqGetGroupHonorInfo(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun getGroupHonorInfo(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.longOrNull
         val type = params["type"]?.jsonPrimitive?.contentOrNull
 
         return if (groupId != null && type != null) {
-            var finalData: CQGroupHonorInfoData? = null
+            var finalData: GroupHonorInfoData? = null
 
             if (type == "talkative" || type == "all") {
                 val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.TALKATIVE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
                 finalData = cqData?.let { cqData }
             }
 
             if (type == "performer" || type == "all") {
                 val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.PERFORMER)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { performerList = cqData?.actorList } ?: cqData?.let { cqData }
             }
 
             if (type == "legend" || type == "all") {
                 val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.LEGEND)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { legendList = cqData?.legendList } ?: cqData?.let { cqData }
             }
 
             if (type == "strong_newbie" || type == "all") {
                 val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.STRONG_NEWBIE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { strongNewbieList = cqData?.strongNewbieList } ?: cqData?.let { cqData }
             }
 
             if (type == "emotion" || type == "all") {
                 val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.EMOTION)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { emotionList = cqData?.emotionList } ?: cqData?.let { cqData }
             }
 
             if (type == "active") {
                 val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.ACTIVE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
                 finalData = finalData?.apply {
                     activeObj = cqData?.activeObj
                     showActiveObj = cqData?.showActiveObj
@@ -735,20 +735,20 @@ class MiraiApi(val bot: Bot) {
             if (type == "exclusive") {
                 val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.EXCLUSIVE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { exclusiveList = cqData?.exclusiveList } ?: cqData?.let { cqData }
             }
 
             if (type == "manage") {
                 val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.MANAGE)
                 val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, CQGroupHonorInfoData::class.java) }
+                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
                 finalData = finalData?.apply { manageList = cqData?.manageList } ?: cqData?.let { cqData }
             }
 
-            finalData?.let { CQResponseDTO.CQHonorInfo(it) } ?: CQResponseDTO.CQMiraiFailure()
+            finalData?.let { ResponseDTO.HonorInfo(it) } ?: ResponseDTO.MiraiFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
@@ -758,15 +758,15 @@ class MiraiApi(val bot: Bot) {
 
     @MiraiExperimentalApi
     @LowLevelApi
-    suspend fun cqSetGroupAnnouncement(params: Map<String, JsonElement>): CQResponseDTO {
+    suspend fun setGroupAnnouncement(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val content = params["content"]?.jsonPrimitive?.content
 
         return if (groupId != null && content != null && content != "") {
             Mirai.sendGroupAnnouncement(bot, groupId, GroupAnnouncement(msg = GroupAnnouncementMsg(text = content)))
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
@@ -774,53 +774,53 @@ class MiraiApi(val bot: Bot) {
     //// currently unsupported ////
     //////////////////////////////
 
-    fun cqGetCookies(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
+    fun getCookies(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.MiraiFailure()
     }
 
-    fun cqGetCSRFToken(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
+    fun getCSRFToken(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.MiraiFailure()
     }
 
-    fun cqGetCredentials(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
+    fun getCredentials(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.MiraiFailure()
     }
 
-    fun cqSendDiscussMessage(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
+    fun sendDiscussMessage(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.MiraiFailure()
     }
 
-    fun cqSetGroupAnonymous(params: Map<String, JsonElement>): CQResponseDTO {
+    fun setGroupAnonymous(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val enable = params["enable"]?.jsonPrimitive?.long ?: true
         return if (groupId != null) {
             // Not supported
             // bot.getGroupOrFail(groupId).settings.isAnonymousChatEnabled = enable
-            CQResponseDTO.CQMiraiFailure()
+            ResponseDTO.MiraiFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqSetGroupAdmin(params: Map<String, JsonElement>): CQResponseDTO {
+    fun setGroupAdmin(params: Map<String, JsonElement>): ResponseDTO {
         val groupId = params["group_id"]?.jsonPrimitive?.long
         val memberId = params["user_id"]?.jsonPrimitive?.long
         val enable = params["enable"]?.jsonPrimitive?.long ?: true
         return if (groupId != null && memberId != null) {
             // Not supported
             // bot.getGroupOrFail(groupId).getMemberOrFail(memberId).permission = if (enable) MemberPermission.ADMINISTRATOR else MemberPermission.MEMBER
-            CQResponseDTO.CQMiraiFailure()
+            ResponseDTO.MiraiFailure()
         } else {
-            CQResponseDTO.CQInvalidRequest()
+            ResponseDTO.InvalidRequest()
         }
     }
 
-    fun cqSetDiscussLeave(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
+    fun setDiscussLeave(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.MiraiFailure()
     }
 
-    fun cqSendLike(params: Map<String, JsonElement>): CQResponseDTO {
-        return CQResponseDTO.CQMiraiFailure()
+    fun sendLike(params: Map<String, JsonElement>): ResponseDTO {
+        return ResponseDTO.MiraiFailure()
     }
 
 

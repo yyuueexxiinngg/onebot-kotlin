@@ -12,7 +12,7 @@ package com.github.yyuueexxiinngg.onebot.web.http
 import com.github.yyuueexxiinngg.onebot.BotSession
 import com.github.yyuueexxiinngg.onebot.PluginSettings
 import com.github.yyuueexxiinngg.onebot.callMiraiApi
-import com.github.yyuueexxiinngg.onebot.data.common.CQResponseDTO
+import com.github.yyuueexxiinngg.onebot.data.common.ResponseDTO
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.toJson
 import io.ktor.application.*
@@ -37,155 +37,155 @@ fun Application.oneBotApiServer(session: BotSession, settings: PluginSettings.HT
     // it.second -> if is async call
     routing {
         oneBotApi("/send_msg", settings) {
-            val responseDTO = callMiraiApi("send_msg", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("send_msg", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/send_private_msg", settings) {
-            val responseDTO = callMiraiApi("send_private_msg", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("send_private_msg", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/send_group_msg", settings) {
-            val responseDTO = callMiraiApi("send_group_msg", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("send_group_msg", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/send_discuss_msg", settings) {
-            val responseDTO = callMiraiApi("send_discuss_msg", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("send_discuss_msg", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/delete_msg", settings) {
-            val responseDTO = callMiraiApi("delete_msg", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("delete_msg", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/send_like", settings) {
-            val responseDTO = callMiraiApi("send_like", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("send_like", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_kick", settings) {
-            val responseDTO = callMiraiApi("set_group_kick", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_kick", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_ban", settings) {
-            val responseDTO = callMiraiApi("set_group_ban", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_ban", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_anonymous_ban", settings) {
-            val responseDTO = callMiraiApi("set_group_anonymous_ban", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_anonymous_ban", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_whole_ban", settings) {
-            val responseDTO = callMiraiApi("set_group_whole_ban", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_whole_ban", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_admin", settings) {
-            val responseDTO = callMiraiApi("set_group_admin", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_admin", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_anonymous", settings) {
-            val responseDTO = callMiraiApi("set_group_anonymous", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_anonymous", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_card", settings) {
-            val responseDTO = callMiraiApi("set_group_card", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_card", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_leave", settings) {
-            val responseDTO = callMiraiApi("set_group_leave", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_leave", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_special_title", settings) {
-            val responseDTO = callMiraiApi("set_group_special_title", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_special_title", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_discuss_leave", settings) {
-            val responseDTO = callMiraiApi("set_discuss_leave", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_discuss_leave", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_friend_add_request", settings) {
-            val responseDTO = callMiraiApi("set_friend_add_request", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_friend_add_request", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_group_add_request", settings) {
-            val responseDTO = callMiraiApi("set_group_add_request", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_add_request", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_login_info", settings) {
-            val responseDTO = callMiraiApi("get_login_info", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_login_info", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_stranger_info", settings) {
-            val responseDTO = callMiraiApi("get_stranger_info", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_stranger_info", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_friend_list", settings) {
-            val responseDTO = callMiraiApi("get_friend_list", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_friend_list", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_group_list", settings) {
-            val responseDTO = callMiraiApi("get_group_list", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_group_list", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_group_info", settings) {
-            val responseDTO = callMiraiApi("get_group_info", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_group_info", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_group_member_info", settings) {
-            val responseDTO = callMiraiApi("get_group_member_info", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_group_member_info", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_group_member_list", settings) {
-            val responseDTO = callMiraiApi("get_group_member_list", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_group_member_list", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_cookies", settings) {
-            val responseDTO = callMiraiApi("get_cookies", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_cookies", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_csrf_token", settings) {
-            val responseDTO = callMiraiApi("get_csrf_token", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_csrf_token", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_credentials", settings) {
-            val responseDTO = callMiraiApi("get_credentials", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_credentials", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_record", settings) {
-            val responseDTO = callMiraiApi("get_record", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_record", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_image", settings) {
-            val responseDTO = callMiraiApi("get_image", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_image", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/can_send_image", settings) {
-            val responseDTO = callMiraiApi("can_send_image", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("can_send_image", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/can_send_record", settings) {
-            val responseDTO = callMiraiApi("can_send_record", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("can_send_record", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_status", settings) {
-            val responseDTO = callMiraiApi("get_status", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_status", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/get_version_info", settings) {
-            val responseDTO = callMiraiApi("get_version_info", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_version_info", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/set_restart_plugin", settings) {
-            val responseDTO = callMiraiApi("set_restart_plugin", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_restart_plugin", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/clean_data_dir", settings) {
-            val responseDTO = callMiraiApi("clean_data_dir", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("clean_data_dir", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/clean_plugin_log", settings) {
-            val responseDTO = callMiraiApi("clean_plugin_log", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("clean_plugin_log", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
         oneBotApi("/.handle_quick_operation", settings) {
-            val responseDTO = callMiraiApi(".handle_quick_operation", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi(".handle_quick_operation", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
 
@@ -194,17 +194,17 @@ fun Application.oneBotApiServer(session: BotSession, settings: PluginSettings.HT
         //////////////
 
         oneBotApi("/set_group_name", settings) {
-            val responseDTO = callMiraiApi("set_group_name", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("set_group_name", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
 
         oneBotApi("/get_group_honor_info", settings) {
-            val responseDTO = callMiraiApi("get_group_honor_info", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_group_honor_info", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
 
         oneBotApi("/get_msg", settings) {
-            val responseDTO = callMiraiApi("get_msg", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("get_msg", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
 
@@ -213,13 +213,13 @@ fun Application.oneBotApiServer(session: BotSession, settings: PluginSettings.HT
         ///////////////
 
         oneBotApi("/_set_group_announcement", settings) {
-            val responseDTO = callMiraiApi("_set_group_announcement", it.first, session.cqApiImpl)
+            val responseDTO = callMiraiApi("_set_group_announcement", it.first, session.apiImpl)
             if (!it.second) call.responseDTO(responseDTO)
         }
     }
 }
 
-internal suspend fun ApplicationCall.responseDTO(dto: CQResponseDTO) {
+internal suspend fun ApplicationCall.responseDTO(dto: ResponseDTO) {
     val jsonToSend = dto.toJson()
     logger.debug("HTTP API response: $jsonToSend")
     respondText(jsonToSend, defaultTextContentType(ContentType("application", "json")))
@@ -299,7 +299,7 @@ internal inline fun Route.oneBotApi(
         get {
             if (checkAccessToken(call, settings)) {
                 val req = call.parameters
-                call.responseDTO(CQResponseDTO.CQAsyncStarted())
+                call.responseDTO(ResponseDTO.AsyncStarted())
                 CoroutineScope(EmptyCoroutineContext).launch {
                     body(Pair(paramsToJson(req), true))
                 }
@@ -314,7 +314,7 @@ internal inline fun Route.oneBotApi(
                     }
                     contentType.contentSubtype.contains("json") -> {
                         val req = call.receiveTextWithCorrectEncoding()
-                        call.responseDTO(CQResponseDTO.CQAsyncStarted())
+                        call.responseDTO(ResponseDTO.AsyncStarted())
                         CoroutineScope(EmptyCoroutineContext).launch {
                             body(Pair(Json.parseToJsonElement(req).jsonObject, true))
                         }

@@ -3,9 +3,9 @@ package com.github.yyuueexxiinngg.onebot.web.http
 import com.github.yyuueexxiinngg.onebot.BotEventListener
 import com.github.yyuueexxiinngg.onebot.BotSession
 import com.github.yyuueexxiinngg.onebot.MiraiApi
-import com.github.yyuueexxiinngg.onebot.data.common.CQHeartbeatMetaEventDTO
-import com.github.yyuueexxiinngg.onebot.data.common.CQLifecycleMetaEventDTO
-import com.github.yyuueexxiinngg.onebot.data.common.CQPluginStatusData
+import com.github.yyuueexxiinngg.onebot.data.common.HeartbeatMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.LifecycleMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.PluginStatusData
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.util.toJson
@@ -72,10 +72,10 @@ class ReportService(
             }
 
             report(
-                session.cqApiImpl,
+                session.apiImpl,
                 settings.postUrl,
                 session.bot.id,
-                CQLifecycleMetaEventDTO(session.botId, "enable", currentTimeSeconds()).toJson(),
+                LifecycleMetaEventDTO(session.botId, "enable", currentTimeSeconds()).toJson(),
                 settings.secret,
                 false
             )
@@ -86,7 +86,7 @@ class ReportService(
                         { jsonToSend ->
                             scope.launch(Dispatchers.IO) {
                                 report(
-                                    session.cqApiImpl,
+                                    session.apiImpl,
                                     settings.postUrl,
                                     session.bot.id,
                                     jsonToSend,
@@ -104,13 +104,13 @@ class ReportService(
                 heartbeatJob = HeartbeatScope(EmptyCoroutineContext).launch {
                     while (true) {
                         report(
-                            session.cqApiImpl,
+                            session.apiImpl,
                             settings.postUrl,
                             session.bot.id,
-                            CQHeartbeatMetaEventDTO(
+                            HeartbeatMetaEventDTO(
                                 session.botId,
                                 currentTimeSeconds(),
-                                CQPluginStatusData(
+                                PluginStatusData(
                                     good = session.bot.isOnline,
                                     online = session.bot.isOnline
                                 ),
@@ -156,7 +156,7 @@ class ReportService(
                     val respJson = Json.parseToJsonElement(res).jsonObject
                     val sentJson = Json.parseToJsonElement(json).jsonObject
                     val params = hashMapOf("context" to sentJson, "operation" to respJson)
-                    miraiApi.cqHandleQuickOperation(params)
+                    miraiApi.handleQuickOperation(params)
                 } catch (e: SerializationException) {
                     logger.error("解析HTTP上报返回数据成json失败")
                 }
@@ -180,10 +180,10 @@ class ReportService(
     suspend fun close() {
         if (settings.postUrl != "") {
             report(
-                session.cqApiImpl,
+                session.apiImpl,
                 settings.postUrl,
                 session.bot.id,
-                CQLifecycleMetaEventDTO(session.botId, "disable", currentTimeSeconds()).toJson(),
+                LifecycleMetaEventDTO(session.botId, "disable", currentTimeSeconds()).toJson(),
                 settings.secret,
                 false
             )

@@ -2,8 +2,8 @@ package com.github.yyuueexxiinngg.onebot.web.websocket
 
 import com.github.yyuueexxiinngg.onebot.BotSession
 import com.github.yyuueexxiinngg.onebot.PluginSettings
-import com.github.yyuueexxiinngg.onebot.data.common.CQHeartbeatMetaEventDTO
-import com.github.yyuueexxiinngg.onebot.data.common.CQPluginStatusData
+import com.github.yyuueexxiinngg.onebot.data.common.HeartbeatMetaEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.PluginStatusData
 import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.util.toJson
@@ -40,7 +40,7 @@ class WebSocketServer(
         if (settings.enable) {
             try {
                 server = embeddedServer(CIO, environment = applicationEngineEnvironment {
-                    this.module { cqWebsocketServer(session, settings) }
+                    this.module { websocketServer(session, settings) }
                     connector {
                         this.host = settings.wsHost
                         this.port = settings.wsPort
@@ -62,7 +62,7 @@ class WebSocketServer(
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("DuplicatedCode")
-fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.WebsocketServerSettings) {
+fun Application.websocketServer(session: BotSession, settings: PluginSettings.WebsocketServerSettings) {
     val scope = WebsocketServerScope(EmptyCoroutineContext)
     logger.debug("Bot: ${session.bot.id} 尝试开启正向Websocket服务端于端口: ${settings.wsPort}")
     install(DefaultHeaders)
@@ -70,7 +70,7 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
     routing {
         logger.debug("Bot: ${session.bot.id} 正向Websocket服务端开始创建路由")
         val isRawMessage = settings.postMessageFormat != "array"
-        cqWebsocket("/event", session, settings) { _ ->
+        websocket("/event", session, settings) { _ ->
             logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /event 开始监听事件")
             val listener = session.subscribeEvent(
                 {
@@ -89,13 +89,13 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
                 heartbeatJob?.cancel()
             }
         }
-        cqWebsocket("/api", session, settings) {
+        websocket("/api", session, settings) {
             try {
                 logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 /api 开始处理API请求")
                 incoming.consumeEach {
                     if (it is Frame.Text) {
                         scope.launch {
-                            handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                            handleWebSocketActions(outgoing, session.apiImpl, it.readText())
                         }
                     }
                 }
@@ -103,7 +103,7 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
                 logger.info("Bot: ${session.bot.id} 正向Websocket服务端 /api 连接被关闭")
             }
         }
-        cqWebsocket("/", session, settings) { _ ->
+        websocket("/", session, settings) { _ ->
             logger.debug("Bot: ${session.bot.id} 正向Websocket服务端 / 开始监听事件")
             val listener = session.subscribeEvent(
                 {
@@ -119,7 +119,7 @@ fun Application.cqWebsocketServer(session: BotSession, settings: PluginSettings.
                 incoming.consumeEach {
                     if (it is Frame.Text) {
                         scope.launch {
-                            handleWebSocketActions(outgoing, session.cqApiImpl, it.readText())
+                            handleWebSocketActions(outgoing, session.apiImpl, it.readText())
                         }
                     }
                 }
@@ -137,10 +137,10 @@ private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Fra
         while (true) {
             outgoing.send(
                 Frame.Text(
-                    CQHeartbeatMetaEventDTO(
+                    HeartbeatMetaEventDTO(
                         session.botId,
                         currentTimeSeconds(),
-                        CQPluginStatusData(
+                        PluginStatusData(
                             good = session.bot.isOnline,
                             online = session.bot.isOnline
                         ),
@@ -154,7 +154,7 @@ private suspend fun emitHeartbeat(session: BotSession, outgoing: SendChannel<Fra
 }
 
 
-private inline fun Route.cqWebsocket(
+private inline fun Route.websocket(
     path: String,
     session: BotSession,
     settings: PluginSettings.WebsocketServerSettings,

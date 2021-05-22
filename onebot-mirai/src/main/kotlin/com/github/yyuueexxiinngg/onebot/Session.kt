@@ -1,15 +1,18 @@
 package com.github.yyuueexxiinngg.onebot
 
-import com.github.yyuueexxiinngg.onebot.data.common.CQIgnoreEventDTO
-import com.github.yyuueexxiinngg.onebot.data.common.toCQDTO
+import com.github.yyuueexxiinngg.onebot.data.common.IgnoreEventDTO
+import com.github.yyuueexxiinngg.onebot.data.common.toDTO
 import com.github.yyuueexxiinngg.onebot.util.EventFilter
 import com.github.yyuueexxiinngg.onebot.util.toJson
-import kotlinx.coroutines.*
-import net.mamoe.mirai.Bot
 import com.github.yyuueexxiinngg.onebot.web.http.HttpApiServer
 import com.github.yyuueexxiinngg.onebot.web.http.ReportService
 import com.github.yyuueexxiinngg.onebot.web.websocket.WebSocketReverseClient
 import com.github.yyuueexxiinngg.onebot.web.websocket.WebSocketServer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.runBlocking
+import net.mamoe.mirai.Bot
 import net.mamoe.mirai.event.events.BotEvent
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -62,7 +65,7 @@ class BotSession internal constructor(
     private var hasStringFormatSubscription = false
     private var hasArrayFormatSubscription = false
 
-    val cqApiImpl = MiraiApi(bot)
+    val apiImpl = MiraiApi(bot)
     private val httpApiServer = HttpApiServer(this)
     private val websocketClient = WebSocketReverseClient(this)
     private val websocketServer = WebSocketServer(this)
@@ -100,7 +103,7 @@ class BotSession internal constructor(
     }
 
     private suspend fun triggerEventInternal(event: BotEvent, isStringFormat: Boolean = false) {
-        event.toCQDTO(isRawMessage = isStringFormat).takeIf { it !is CQIgnoreEventDTO }?.let { dto ->
+        event.toDTO(isRawMessage = isStringFormat).takeIf { it !is IgnoreEventDTO }?.let { dto ->
             val jsonToSend = dto.toJson()
             PluginBase.logger.debug("将发送事件: $jsonToSend")
             if (!EventFilter.eval(jsonToSend)) {

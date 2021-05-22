@@ -14,12 +14,7 @@ import kotlinx.serialization.Serializable
 import net.mamoe.mirai.contact.*
 
 @Serializable
-abstract class ContactDTO : DTO {
-    abstract val id: Long
-}
-
-@Serializable
-sealed class CQContactDTO : DTO {
+sealed class ContactDTO : DTO {
     abstract val user_id: Long
     abstract val nickname: String
     abstract val sex: String?
@@ -27,32 +22,8 @@ sealed class CQContactDTO : DTO {
 }
 
 @Serializable
-data class QQDTO(
-    override val id: Long,
-    val nickname: String,
-    val remark: String
-) : ContactDTO() {
-    // TODO: queryProfile.nickname & queryRemark.value not support now
-    constructor(qq: Friend) : this(qq.id, qq.nick, "")
-}
-
-
-@Serializable
-data class MemberDTO(
-    override val id: Long,
-    val memberName: String,
-    val permission: MemberPermission,
-    val group: GroupDTO
-) : ContactDTO() {
-    constructor(member: Member) : this(
-        member.id, member.nameCardOrNick, member.permission,
-        GroupDTO(member.group)
-    )
-}
-
-@Serializable
 @SerialName("Member")
-data class CQMemberDTO(
+data class MemberDTO(
     override val user_id: Long,
     override val nickname: String,
     val card: String? = null,
@@ -62,7 +33,7 @@ data class CQMemberDTO(
     val level: String? = null,
     val role: String? = null,
     val title: String? = null
-) : CQContactDTO() {
+) : ContactDTO() {
     constructor(member: Member) : this(
         member.id,
         member.nameCardOrNick,
@@ -78,12 +49,12 @@ data class CQMemberDTO(
 
 @Serializable
 @SerialName("QQ")
-data class CQQQDTO(
+data class QQDTO(
     override val user_id: Long,
     override val nickname: String,
     override val sex: String? = null,
     override val age: Int? = null
-) : CQContactDTO() {
+) : ContactDTO() {
     constructor(contact: User) : this(
         contact.id,
         contact.nameCardOrNick,
@@ -93,7 +64,7 @@ data class CQQQDTO(
 }
 
 @Serializable
-data class CQAnonymousMemberDTO(
+data class AnonymousMemberDTO(
     val id: Long,
     val name: String,
     val flag: String
@@ -103,13 +74,4 @@ data class CQAnonymousMemberDTO(
         member.nameCard,
         member.anonymousId + "&${member.nameCard}" // Need member nick to mute
     )
-}
-
-@Serializable
-data class GroupDTO(
-    override val id: Long,
-    val name: String,
-    val permission: MemberPermission
-) : ContactDTO() {
-    constructor(group: Group) : this(group.id, group.name, group.botPermission)
 }

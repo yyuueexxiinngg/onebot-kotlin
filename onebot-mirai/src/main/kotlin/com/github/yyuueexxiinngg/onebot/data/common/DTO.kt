@@ -14,21 +14,14 @@ import kotlinx.serialization.Serializable
 interface DTO
 
 @Serializable
-abstract class EventDTO : DTO {
+abstract class EventDTO {
     abstract var post_type: String
     abstract var self_id: Long
     abstract var time: Long
 }
 
 @Serializable
-abstract class CQEventDTO {
-    abstract var post_type: String
-    abstract var self_id: Long
-    abstract var time: Long
-}
-
-@Serializable
-class CQIgnoreEventDTO(override var self_id: Long) : CQEventDTO() {
+class IgnoreEventDTO(override var self_id: Long) : EventDTO() {
     override var post_type = "IGNORED"
     override var time = System.currentTimeMillis()
 }

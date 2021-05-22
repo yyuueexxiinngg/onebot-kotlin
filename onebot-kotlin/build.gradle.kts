@@ -33,6 +33,7 @@ tasks {
             classpath = sourceSets["test"].runtimeClasspath
             standardInput = System.`in`
             args("--backend", "mirai")
+            systemProperty("mirai.slider.captcha.supported", 1)
         }
     }
 }
