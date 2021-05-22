@@ -156,15 +156,16 @@ object PluginBase : KotlinPlugin(
                                         }
                                     }
 
-                                    val cqImgContent = """
+                                    val imgMetaContent = """
                                     [image]
                                     md5=$imageMD5
                                     size=$imageSize
                                     url=https://gchat.qpic.cn/gchatpic_new/0/0-00-$imageMD5/0?term=2
                                     addtime=${currentTimeMillis()}
+                                    type=${getImageType(image)}
                                 """.trimIndent()
 
-                                    saveImageAsync("$imageMD5.cqimg", cqImgContent).start()
+                                    saveImageAsync("${image.imageId}.cqimg", imgMetaContent).start()
                                 }
                             }
 

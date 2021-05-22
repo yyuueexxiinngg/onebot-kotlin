@@ -5,12 +5,13 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.message.data.Image
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.jvm.kotlinFunction
 
-class ImgUtil {
+class ImgUtils {
     enum class ImageState {
         RequireUpload,
         FileExist
@@ -20,7 +21,8 @@ class ImgUtil {
         private val imgStoreGroupPicUpClass =
             Class.forName("net.mamoe.mirai.internal.network.protocol.packet.chat.image.ImgStore\$GroupPicUp")
         private val imgStoreGroupPicUpClassConstructor = imgStoreGroupPicUpClass.getDeclaredConstructor()
-        private val netWorkHandlerClass = Class.forName("net.mamoe.mirai.internal.network.handler.QQAndroidBotNetworkHandler")
+        private val netWorkHandlerClass =
+            Class.forName("net.mamoe.mirai.internal.network.handler.QQAndroidBotNetworkHandler")
         private val netWorkHandlerClassConstructor = netWorkHandlerClass.getDeclaredConstructor(
             Class.forName("kotlin.coroutines.CoroutineContext"),
             Class.forName("net.mamoe.mirai.internal.QQAndroidBot")
@@ -80,13 +82,13 @@ class ImgUtil {
             }
         }
 
-        fun md5ToImageId(md5: String, contact: Contact): String {
+        fun md5ToImageId(md5: String, contact: Contact, imageType: String?): String {
             return when (contact) {
                 is Group -> "{${md5.substring(0, 8)}-" +
                         "${md5.substring(8, 12)}-" +
                         "${md5.substring(12, 16)}-" +
                         "${md5.substring(16, 20)}-" +
-                        "${md5.substring(20)}}.mirai"
+                        "${md5.substring(20)}}.${imageType ?: "mirai"}"
                 is Friend, is Member -> "/0-00-$md5"
                 else -> ""
             }
@@ -110,6 +112,28 @@ class ImgUtil {
                 i += 2
             }
             return data
+        }
+    }
+}
+
+internal fun getImageType(image: Image): String {
+    val parts = image.imageId.split(".", limit = 2)
+    return if (parts.size == 2) {
+        parts[1]
+    } else {
+        "unknown"
+    }
+}
+
+internal fun getImageType(bytes: ByteArray): String {
+    return with(bytes.copyOfRange(0, 8).toUHexString("")) {
+        when {
+            startsWith("FFD8") -> "jpg"
+            startsWith("89504E47") -> "png"
+            startsWith("47494638") -> "gif"
+            startsWith("424D") -> "bmp"
+            startsWith("52494646") -> "webp"
+            else -> "unknown"
         }
     }
 }

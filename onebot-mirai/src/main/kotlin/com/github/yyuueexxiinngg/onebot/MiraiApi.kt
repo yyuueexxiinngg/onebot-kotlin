@@ -552,15 +552,7 @@ class MiraiApi(val bot: Bot) {
             cachedFile = getDataFile("image", cachedImageMeta.fileName)
 
             cachedFile?.let {
-                val fileType = with(it.readBytes().copyOfRange(0, 8).toUHexString("")) {
-                    when {
-                        startsWith("FFD8") -> "jpg"
-                        startsWith("89504E47") -> "png"
-                        startsWith("47494638") -> "gif"
-                        startsWith("424D") -> "bmp"
-                        else -> "unknown"
-                    }
-                }
+                val fileType = getImageType(it.readBytes())
                 return ResponseDTO.ImageInfo(
                     ImageInfoData(
                         it.absolutePath,

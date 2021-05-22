@@ -252,8 +252,8 @@ suspend fun Message.toCQString(): String {
         is VipFace -> "[CQ:vipface,id=${kind.id},name=${kind.name},count=${count}]"
         is PokeMessage -> "[CQ:poke,id=${id},type=${pokeType},name=${name}]"
         is AtAll -> "[CQ:at,qq=all]"
-        is Image -> "[CQ:image,file=${md5.toUHexString("")},url=${queryUrl().escape()}]"
-        is FlashImage -> "[CQ:image,file=${image.md5.toUHexString("")},url=${image.queryUrl().escape()},type=flash]"
+        is Image -> "[CQ:image,file=${imageId},url=${queryUrl().escape()}]"
+        is FlashImage -> "[CQ:image,file=${image.imageId},url=${image.queryUrl().escape()},type=flash]"
         is ServiceMessage -> with(content) {
             when {
                 contains("xml version") -> "[CQ:xml,data=${content.escape()}]"
@@ -410,7 +410,11 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                         }
 
                         if (useCache) {
-                            val imageMD5 = mediaBytes?.let { md5(it) }?.toUHexString("")
+                            var imageType = "unknown"
+                            val imageMD5 = mediaBytes?.let {
+                                imageType = getImageType(it)
+                                md5(it)
+                            }?.toUHexString("")
                             if (imageMD5 != null) {
                                 val imgContent = """
                                     [image]
@@ -418,6 +422,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                                     size=${mediaBytes?.size ?: 0}
                                     url=https://gchat.qpic.cn/gchatpic_new/${contact!!.bot.id}/0-00-$imageMD5/0?term=2
                                     addtime=${currentTimeMillis()}
+                                    type=$imageType
                                     """.trimIndent()
                                 logger.info("此链接图片将缓存为$urlHash.cqimg")
                                 saveImageAsync("$urlHash.cqimg", imgContent).start()
@@ -486,6 +491,7 @@ suspend fun getCachedImageFile(name: String): CachedImage? = withContext(Dispatc
             var size = 0
             var url = ""
             var addTime = 0L
+            var imageType: String? = null
 
             when (cacheFile.extension) {
                 "cqimg" -> {
@@ -498,6 +504,7 @@ suspend fun getCachedImageFile(name: String): CachedImage? = withContext(Dispatc
                                 "size" -> size = parts[1].toIntOrNull() ?: 0
                                 "url" -> url = parts[1]
                                 "addtime" -> addTime = parts[1].toLongOrNull() ?: 0L
+                                "type" -> imageType = parts[1]
                             }
                         }
                     }
@@ -512,7 +519,16 @@ suspend fun getCachedImageFile(name: String): CachedImage? = withContext(Dispatc
             }
 
             if (md5 != "" && size != 0) {
-                return@withContext CachedImage(cacheFile, name, cacheFile.absolutePath, md5, size, url, addTime)
+                return@withContext CachedImage(
+                    cacheFile,
+                    name,
+                    cacheFile.absolutePath,
+                    md5,
+                    size,
+                    url,
+                    addTime,
+                    imageType
+                )
             } else { // If cache file corrupted
                 cacheFile.delete()
             }
@@ -553,27 +569,28 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
         if (contact != null) {
             // If add time till now more than one day, check if the image exists
             if (cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
-                if (ImgUtil.tryGroupPicUp(
+                if (ImgUtils.tryGroupPicUp(
                         contact.bot,
                         contact.id,
                         cachedImage.md5,
                         cachedImage.size
-                    ) != ImgUtil.ImageState.FileExist
+                    ) != ImgUtils.ImageState.FileExist
                 ) {
                     cachedImage.file.delete()
                 } else { // If file exists
-                    image = Image(ImgUtil.md5ToImageId(cachedImage.md5, contact))
+                    image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
                     val imgContent = """
                                                 [image]
                                                 md5=${cachedImage.md5}
                                                 size=${cachedImage.size}
                                                 url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-${cachedImage.md5}/0?term=2
                                                 addtime=${currentTimeMillis()}
+                                                type=${cachedImage.imageType ?: "unknown"}
                                             """.trimIndent()
                     saveImageAsync("$name.cqimg", imgContent).start() // Update cache file
                 }
             } else { // If time < one day
-                image = Image(ImgUtil.md5ToImageId(cachedImage.md5, contact))
+                image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
             }
         }
     }
@@ -622,4 +639,5 @@ data class CachedImage(
     val size: Int,
     val url: String,
     val addTime: Long,
+    val imageType: String?,
 )

@@ -13,7 +13,6 @@ import com.github.yyuueexxiinngg.onebot.logger
 import com.github.yyuueexxiinngg.onebot.util.currentTimeSeconds
 import com.github.yyuueexxiinngg.onebot.util.toCQString
 import com.github.yyuueexxiinngg.onebot.util.toMessageId
-import com.github.yyuueexxiinngg.onebot.util.toUHexString
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -282,8 +281,8 @@ suspend fun Message.toDTO() = when (this) {
     is AtAll -> AtDTO(AtData("0"))
     is Face -> FaceDTO(FaceData(id.toString()))
     is PlainText -> PlainDTO(PlainData(content))
-    is Image -> ImageDTO(ImageData(md5.toUHexString(""), queryUrl()))
-    is FlashImage -> ImageDTO(ImageData(image.md5.toUHexString(""), image.queryUrl(), "flash"))
+    is Image -> ImageDTO(ImageData(imageId, queryUrl()))
+    is FlashImage -> ImageDTO(ImageData(image.imageId, image.queryUrl(), "flash"))
     is ServiceMessage ->
         with(content) {
             when {
