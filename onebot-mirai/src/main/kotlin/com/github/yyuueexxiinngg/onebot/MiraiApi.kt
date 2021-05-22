@@ -11,7 +11,6 @@ import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.LowLevelApi
 import net.mamoe.mirai.Mirai
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.contact.PermissionDeniedException
 import net.mamoe.mirai.contact.getMemberOrFail
@@ -32,7 +31,7 @@ import net.mamoe.mirai.utils.MiraiExperimentalApi
 
 
 @OptIn(LowLevelApi::class, MiraiExperimentalApi::class)
-suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mirai: MiraiApi): ResponseDTO {
+suspend fun callMiraiApi(action: String?, params: ApiParams, mirai: MiraiApi): ResponseDTO {
     var responseDTO: ResponseDTO = ResponseDTO.PluginFailure()
     try {
         when (action) {
@@ -84,6 +83,8 @@ suspend fun callMiraiApi(action: String?, params: Map<String, JsonElement>, mira
                 logger.error("未知OneBot API: $action")
             }
         }
+    } catch (e: IllegalArgumentException) {
+        responseDTO = ResponseDTO.InvalidRequest()
     } catch (e: PermissionDeniedException) {
         logger.debug("机器人无操作权限, 调用的API: /$action")
         responseDTO = ResponseDTO.MiraiFailure()
@@ -103,9 +104,9 @@ class MiraiApi(val bot: Bot) {
     val cacheRequestQueue = CacheRequestQueue()
     val cachedSourceQueue = CacheSourceQueue()
 
-    suspend fun sendMessage(params: Map<String, JsonElement>): ResponseDTO {
+    suspend fun sendMessage(params: ApiParams): ResponseDTO {
         if (params.contains("message_type")) {
-            when (params["message_type"]?.jsonPrimitive?.content) {
+            when (params["message_type"].string) {
                 "private" -> return sendPrivateMessage(params)
                 "group" -> return sendGroupMessage(params)
             }
@@ -120,9 +121,9 @@ class MiraiApi(val bot: Bot) {
     }
 
     @Suppress("DuplicatedCode")
-    suspend fun sendGroupMessage(params: Map<String, JsonElement>): ResponseDTO {
-        val targetGroupId = params["group_id"]!!.jsonPrimitive.long
-        val raw = params["auto_escape"]?.jsonPrimitive?.booleanOrNull ?: false
+    suspend fun sendGroupMessage(params: ApiParams): ResponseDTO {
+        val targetGroupId = params["group_id"].long
+        val raw = params["auto_escape"].booleanOrNull ?: false
         val messages = params["message"]
 
         val group = bot.getGroupOrFail(targetGroupId)
@@ -139,9 +140,9 @@ class MiraiApi(val bot: Bot) {
     }
 
     @Suppress("DuplicatedCode")
-    suspend fun sendPrivateMessage(params: Map<String, JsonElement>): ResponseDTO {
-        val targetQQId = params["user_id"]!!.jsonPrimitive.long
-        val raw = params["auto_escape"]?.jsonPrimitive?.booleanOrNull ?: false
+    suspend fun sendPrivateMessage(params: ApiParams): ResponseDTO {
+        val targetQQId = params["user_id"].long
+        val raw = params["auto_escape"].booleanOrNull ?: false
         val messages = params["message"]
 
         val contact = try {
@@ -164,229 +165,193 @@ class MiraiApi(val bot: Bot) {
         return ResponseDTO.InvalidRequest()
     }
 
-    suspend fun deleteMessage(params: Map<String, JsonElement>): ResponseDTO {
-        val messageId = params["message_id"]?.jsonPrimitive?.intOrNull
-        messageId?.let {
-            cachedSourceQueue[it].recall()
-            return ResponseDTO.GeneralSuccess()
-        }
-        return ResponseDTO.InvalidRequest()
+    suspend fun deleteMessage(params: ApiParams): ResponseDTO {
+        val messageId = params["message_id"].int
+        cachedSourceQueue[messageId].recall()
+        return ResponseDTO.GeneralSuccess()
     }
 
-    suspend fun getMessage(params: Map<String, JsonElement>): ResponseDTO {
-        val messageId = params["message_id"]?.jsonPrimitive?.intOrNull
+    suspend fun getMessage(params: ApiParams): ResponseDTO {
+        val messageId = params["message_id"].int
         if (PluginSettings.db.enable) {
-            if (messageId != null) {
-                PluginBase.db?.apply {
-                    val message = String(get(messageId.toByteArray())).deserializeJsonToMessageChain()
-                    val rawMessage = WrappedMessageChainString("")
-                    message.forEach { rawMessage.value += it.toCQString() }
+            PluginBase.db?.apply {
+                val message = String(get(messageId.toByteArray())).deserializeJsonToMessageChain()
+                val rawMessage = WrappedMessageChainString("")
+                message.forEach { rawMessage.value += it.toCQString() }
 
-                    with(message) {
-                        when (source.kind) {
-                            MessageSourceKind.GROUP -> {
-                                return ResponseDTO.GetMessageResponse(
-                                    GetMessageData(
-                                        source.time.toLong(),
-                                        "group",
-                                        messageId,
-                                        messageId,
-                                        MemberDTO(source.fromId, "unknown"),
-                                        message.toMessageChainDTO { it != UnknownMessageDTO }
-                                    )
-                                )
-                                /*val dto = CQGroupMessagePacketDTO(
-                                    bot.id,
-                                    if (source.fromId == 80000000L) "anonymous" else "normal",
+                with(message) {
+                    when (source.kind) {
+                        MessageSourceKind.GROUP -> {
+                            return ResponseDTO.GetMessageResponse(
+                                GetMessageData(
+                                    source.time.toLong(),
+                                    "group",
                                     messageId,
-                                    source.targetId,
-                                    source.fromId,
-                                    null,
-                                    message.toMessageChainDTO { it != UnknownMessageDTO },
-                                    rawMessage.value,
-                                    0,
-                                    CQMemberDTO(
-                                        source.fromId,
-                                        "unknown",
-                                        "unknown",
-                                        "unknown",
-                                        0,
-                                        "unknown",
-                                        "unknown",
-                                        "unknown",
-                                        "unknown",
-                                    ),
-                                    source.time.toLong()
-                                )*/
-                            }
-                            MessageSourceKind.FRIEND, MessageSourceKind.STRANGER, MessageSourceKind.TEMP -> {
-                                return ResponseDTO.GetMessageResponse(
-                                    GetMessageData(
-                                        source.time.toLong(),
-                                        "private",
-                                        messageId,
-                                        messageId,
-                                        QQDTO(source.fromId, "unknown"),
-                                        message.toMessageChainDTO { it != UnknownMessageDTO }
-                                    )
+                                    messageId,
+                                    MemberDTO(source.fromId, "unknown"),
+                                    message.toMessageChainDTO { it != UnknownMessageDTO }
                                 )
-                            }
+                            )
+                            /*val dto = CQGroupMessagePacketDTO(
+                                bot.id,
+                                if (source.fromId == 80000000L) "anonymous" else "normal",
+                                messageId,
+                                source.targetId,
+                                source.fromId,
+                                null,
+                                message.toMessageChainDTO { it != UnknownMessageDTO },
+                                rawMessage.value,
+                                0,
+                                CQMemberDTO(
+                                    source.fromId,
+                                    "unknown",
+                                    "unknown",
+                                    "unknown",
+                                    0,
+                                    "unknown",
+                                    "unknown",
+                                    "unknown",
+                                    "unknown",
+                                ),
+                                source.time.toLong()
+                            )*/
                         }
+                        MessageSourceKind.FRIEND, MessageSourceKind.STRANGER, MessageSourceKind.TEMP -> {
+                            return ResponseDTO.GetMessageResponse(
+                                GetMessageData(
+                                    source.time.toLong(),
+                                    "private",
+                                    messageId,
+                                    messageId,
+                                    QQDTO(source.fromId, "unknown"),
+                                    message.toMessageChainDTO { it != UnknownMessageDTO }
+                                )
+                            )
+                        }
+                        else -> return ResponseDTO.PluginFailure("未知消息类型")
                     }
                 }
             }
-            return ResponseDTO.InvalidRequest()
+            return ResponseDTO.PluginFailure("数据库未正常初始化")
         } else {
             return ResponseDTO.InvalidRequest("请配置开启数据库")
         }
     }
 
-    suspend fun setGroupKick(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val memberId = params["user_id"]?.jsonPrimitive?.long
-        return if (groupId != null && memberId != null) {
-            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).kick("")
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+    suspend fun setGroupKick(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val memberId = params["user_id"].long
+
+        bot.getGroupOrFail(groupId).getMemberOrFail(memberId).kick("")
+        return ResponseDTO.GeneralSuccess()
     }
 
-    suspend fun setGroupBan(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val memberId = params["user_id"]?.jsonPrimitive?.long
-        val duration = params["duration"]?.jsonPrimitive?.int ?: 30 * 60
-        return if (groupId != null && memberId != null) {
-            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).mute(duration)
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+    suspend fun setGroupBan(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val memberId = params["user_id"].long
+        val duration = params["duration"].intOrNull ?: 30 * 60
+
+        bot.getGroupOrFail(groupId).getMemberOrFail(memberId).mute(duration)
+        return ResponseDTO.GeneralSuccess()
     }
 
-    @OptIn(LowLevelApi::class)
-    suspend fun setGroupAnonymousBan(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val flag = params["anonymous"]?.jsonObject?.get("flag")?.jsonPrimitive?.content
-            ?: params["anonymous_flag"]?.jsonPrimitive?.content
-            ?: params["flag"]?.jsonPrimitive?.content
+    @OptIn(LowLevelApi::class, MiraiExperimentalApi::class)
+    suspend fun setGroupAnonymousBan(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val flag = params["anonymous"]?.jsonObject?.get("flag").stringOrNull
+            ?: params["anonymous_flag"].stringOrNull
+            ?: params["flag"].string
 
-        val duration = params["duration"]?.jsonPrimitive?.int ?: 30 * 60
-        return if (groupId != null && flag != null) {
-            val splits = flag.split("&", limit = 2)
-            Mirai.muteAnonymousMember(bot, splits[0], splits[1], groupId, duration)
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+        val duration = params["duration"].intOrNull ?: 30 * 60
+        val splits = flag.split("&", limit = 2)
+        Mirai.muteAnonymousMember(bot, splits[0], splits[1], groupId, duration)
+        return ResponseDTO.GeneralSuccess()
     }
 
-    fun setWholeGroupBan(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val enable = params["enable"]?.jsonPrimitive?.booleanOrNull ?: true
-        return if (groupId != null) {
-            bot.getGroupOrFail(groupId).settings.isMuteAll = enable
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+    fun setWholeGroupBan(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val enable = params["enable"].booleanOrNull ?: true
+
+        bot.getGroupOrFail(groupId).settings.isMuteAll = enable
+        return ResponseDTO.GeneralSuccess()
     }
 
-    fun setGroupCard(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val memberId = params["user_id"]?.jsonPrimitive?.long
-        val card = params["card"]?.jsonPrimitive?.contentOrNull ?: ""
-        val enable = params["enable"]?.jsonPrimitive?.booleanOrNull ?: true
-        return if (groupId != null && memberId != null) {
-            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).nameCard = card
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+    fun setGroupCard(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val memberId = params["user_id"].long
+        val card = params["card"].stringOrNull ?: ""
+
+        bot.getGroupOrFail(groupId).getMemberOrFail(memberId).nameCard = card
+        return ResponseDTO.GeneralSuccess()
     }
 
-    suspend fun setGroupLeave(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val dismiss = params["enable"]?.jsonPrimitive?.booleanOrNull ?: false
-        return if (groupId != null) {
-            // Not supported
-            if (dismiss) return ResponseDTO.MiraiFailure()
+    suspend fun setGroupLeave(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val dismiss = params["is_dismiss"].booleanOrNull ?: false
 
-            bot.getGroupOrFail(groupId).quit()
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+        // Not supported
+        if (dismiss) return ResponseDTO.MiraiFailure()
+
+        bot.getGroupOrFail(groupId).quit()
+        return ResponseDTO.GeneralSuccess()
     }
 
-    fun setGroupSpecialTitle(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val memberId = params["user_id"]?.jsonPrimitive?.long
-        val specialTitle = params["special_title"]?.jsonPrimitive?.contentOrNull ?: ""
-        val duration = params["duration"]?.jsonPrimitive?.int ?: -1  // Not supported
-        return if (groupId != null && memberId != null) {
-            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).specialTitle = specialTitle
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+    fun setGroupSpecialTitle(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val memberId = params["user_id"].long
+        val specialTitle = params["special_title"].stringOrNull ?: ""
+        val duration = params["duration"].intOrNull ?: -1 // unused
+
+        bot.getGroupOrFail(groupId).getMemberOrFail(memberId).specialTitle = specialTitle
+        return ResponseDTO.GeneralSuccess()
     }
 
-    suspend fun setFriendAddRequest(params: Map<String, JsonElement>): ResponseDTO {
-        val flag = params["flag"]?.jsonPrimitive?.contentOrNull
-        val approve = params["approve"]?.jsonPrimitive?.booleanOrNull ?: true
-        val remark = params["remark"]?.jsonPrimitive?.contentOrNull
-        return if (flag != null) {
-            val event = cacheRequestQueue[flag.toLongOrNull()]
-            if (event is NewFriendRequestEvent)
-                if (approve) event.accept() else event.reject()
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+    suspend fun setFriendAddRequest(params: ApiParams): ResponseDTO {
+        val flag = params["flag"].string
+        val approve = params["approve"].booleanOrNull ?: true
+        val remark = params["remark"].stringOrNull // unused
+
+        val event = cacheRequestQueue[flag.toLong()]
+        if (event is NewFriendRequestEvent)
+            if (approve) event.accept() else event.reject()
+        else return ResponseDTO.InvalidRequest()
+
+        return ResponseDTO.GeneralSuccess()
     }
 
-    suspend fun setGroupAddRequest(params: Map<String, JsonElement>): ResponseDTO {
-        val flag = params["flag"]?.jsonPrimitive?.contentOrNull
-        val type = params["type"]?.jsonPrimitive?.contentOrNull
-        val subType = params["sub_type"]?.jsonPrimitive?.contentOrNull
-        val approve = params["approve"]?.jsonPrimitive?.booleanOrNull ?: true
-        val reason = params["reason"]?.jsonPrimitive?.contentOrNull
+    suspend fun setGroupAddRequest(params: ApiParams): ResponseDTO {
+        val flag = params["flag"].string
+        val type = params["type"].stringOrNull // unused
+        val subType = params["sub_type"].stringOrNull // unused
+        val approve = params["approve"].booleanOrNull ?: true
+        val reason = params["reason"].stringOrNull
 
-        return if (flag != null) {
-            when (val event = cacheRequestQueue[flag.toLongOrNull()]) {
-                is MemberJoinRequestEvent -> if (approve) event.accept() else event.reject(message = reason ?: "")
-                is BotInvitedJoinGroupRequestEvent -> if (approve) event.accept() else event.ignore()
-            }
-            ResponseDTO.GeneralSuccess()
-        } else {
-            ResponseDTO.InvalidRequest()
+        when (val event = cacheRequestQueue[flag.toLong()]) {
+            is MemberJoinRequestEvent -> if (approve) event.accept() else event.reject(message = reason ?: "")
+            is BotInvitedJoinGroupRequestEvent -> if (approve) event.accept() else event.ignore()
         }
+        return ResponseDTO.GeneralSuccess()
     }
 
-    fun getLoginInfo(params: Map<String, JsonElement>): ResponseDTO {
+    fun getLoginInfo(params: ApiParams): ResponseDTO {
         return ResponseDTO.LoginInfo(bot.id, bot.nick)
     }
 
-    @OptIn(ConsoleExperimentalApi::class, MiraiExperimentalApi::class)
-    suspend fun getStrangerInfo(params: Map<String, JsonElement>): ResponseDTO {
-        val userId = params["user_id"]?.jsonPrimitive?.long
-        return if (userId != null) {
-            val profile = Mirai.queryProfile(bot, userId)
-            ResponseDTO.StrangerInfo(
-                StrangerInfoData(
-                    userId,
-                    profile.nickname,
-                    profile.sex.name.toLowerCase(),
-                    profile.age
-                )
+    suspend fun getStrangerInfo(params: ApiParams): ResponseDTO {
+        val userId = params["user_id"].long
+
+        val profile = Mirai.queryProfile(bot, userId)
+        return ResponseDTO.StrangerInfo(
+            StrangerInfoData(
+                userId,
+                profile.nickname,
+                profile.sex.name.toLowerCase(),
+                profile.age
             )
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+        )
     }
 
-    fun getFriendList(params: Map<String, JsonElement>): ResponseDTO {
+    fun getFriendList(params: ApiParams): ResponseDTO {
         val friendList = mutableListOf<FriendData>()
         bot.friends.forEach { friend ->
             friendList.add(FriendData(friend.id, friend.nick, friend.remark))
@@ -394,7 +359,7 @@ class MiraiApi(val bot: Bot) {
         return ResponseDTO.FriendList(friendList)
     }
 
-    fun getGroupList(params: Map<String, JsonElement>): ResponseDTO {
+    fun getGroupList(params: ApiParams): ResponseDTO {
         val groupList = mutableListOf<GroupData>()
         bot.groups.forEach { group ->
             groupList.add(GroupData(group.id, group.name))
@@ -406,75 +371,64 @@ class MiraiApi(val bot: Bot) {
      * 获取群信息
      * 不支持获取群容量, 返回0
      */
-    fun getGroupInfo(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
+    fun getGroupInfo(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val noCache = params["no_cache"].booleanOrNull ?: false // unused
 
-        return if (groupId != null) {
-            val group = bot.getGroupOrFail(groupId)
-            ResponseDTO.GroupInfo(group.id, group.name, group.members.size + 1, 0)
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+        val group = bot.getGroupOrFail(groupId)
+        return ResponseDTO.GroupInfo(group.id, group.name, group.members.size + 1, 0)
     }
 
     @MiraiExperimentalApi
     @LowLevelApi
-    suspend fun getGroupMemberInfo(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val memberId = params["user_id"]?.jsonPrimitive?.long
-        val noCache = params["no_cache"]?.jsonPrimitive?.booleanOrNull ?: false
+    suspend fun getGroupMemberInfo(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val memberId = params["user_id"].long
+        val noCache = params["no_cache"].booleanOrNull ?: false
 
-        return if (groupId != null && memberId != null) {
-            val group = bot.getGroupOrFail(groupId)
-            if (noCache) {
-                val groupUin = Mirai.calculateGroupUinByGroupCode(groupId)
-                val members = Mirai.getRawGroupMemberList(bot, groupUin, groupId, group.owner.id)
-                val member = members.find { m -> m.uin == memberId }
-                member?.let {
-                    ResponseDTO.MemberInfo(
-                        MemberInfoData(
-                            group.id,
-                            it.uin,
-                            nickname = it.nameCard,
-                            card = it.nameCard,
-                            role = if (it.permission == MemberPermission.ADMINISTRATOR) "admin" else it.permission.name.toLowerCase(),
-                            title = it.specialTitle,
-                            card_changeable = group.botPermission == MemberPermission.OWNER
-                        )
+        val group = bot.getGroupOrFail(groupId)
+        return if (noCache) {
+            val groupUin = Mirai.calculateGroupUinByGroupCode(groupId)
+            val members = Mirai.getRawGroupMemberList(bot, groupUin, groupId, group.owner.id)
+            val member = members.find { m -> m.uin == memberId }
+            member?.let {
+                ResponseDTO.MemberInfo(
+                    MemberInfoData(
+                        group.id,
+                        it.uin,
+                        nickname = it.nameCard,
+                        card = it.nameCard,
+                        role = if (it.permission == MemberPermission.ADMINISTRATOR) "admin" else it.permission.name.toLowerCase(),
+                        title = it.specialTitle,
+                        card_changeable = group.botPermission == MemberPermission.OWNER
                     )
-                } ?: ResponseDTO.MiraiFailure()
-            } else {
-                val member = bot.getGroupOrFail(groupId).getMemberOrFail(memberId)
-                ResponseDTO.MemberInfo(MemberInfoData(member))
-            }
+                )
+            } ?: ResponseDTO.MiraiFailure()
         } else {
-            ResponseDTO.InvalidRequest()
+            val member = bot.getGroupOrFail(groupId).getMemberOrFail(memberId)
+            ResponseDTO.MemberInfo(MemberInfoData(member))
         }
     }
 
-    fun getGroupMemberList(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
+    fun getGroupMemberList(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
         val groupMemberListData = mutableListOf<MemberInfoData>()
-        return if (groupId != null) {
-            var isBotIncluded = false
-            val group = bot.getGroupOrFail(groupId)
-            val members = group.members
-            members.forEach { member ->
-                run {
-                    if (member.id == bot.id) isBotIncluded = true
-                    groupMemberListData.add(MemberInfoData(member))
-                }
+
+        var isBotIncluded = false
+        val group = bot.getGroupOrFail(groupId)
+        val members = group.members
+        members.forEach { member ->
+            run {
+                if (member.id == bot.id) isBotIncluded = true
+                groupMemberListData.add(MemberInfoData(member))
             }
-            if (!isBotIncluded) groupMemberListData.add(MemberInfoData(group.botAsMember))
-            ResponseDTO.MemberList(groupMemberListData)
-        } else {
-            ResponseDTO.InvalidRequest()
         }
+        if (!isBotIncluded) groupMemberListData.add(MemberInfoData(group.botAsMember))
+        return ResponseDTO.MemberList(groupMemberListData)
     }
 
     // https://github.com/richardchien/coolq-http-api/blob/master/src/cqhttp/plugins/web/http.cpp#L375
-    suspend fun handleQuickOperation(params: Map<String, JsonElement>): ResponseDTO {
+    suspend fun handleQuickOperation(params: ApiParams): ResponseDTO {
         try {
             val context = params["context"]?.jsonObject
             val operation = params["operation"]?.jsonObject
@@ -562,85 +516,79 @@ class MiraiApi(val bot: Bot) {
         }
     }
 
-    suspend fun getRecord(params: Map<String, JsonElement>): ResponseDTO {
-        val file = params["file"]?.jsonPrimitive?.contentOrNull
-        val outFormat = params["out_format"]?.jsonPrimitive?.contentOrNull // Currently not supported
-        return if (file != null) {
-            val cachedFile = getCachedRecordFile(file)
+    suspend fun getRecord(params: ApiParams): ResponseDTO {
+        val file = params["file"].string
+        val outFormat = params["out_format"].stringOrNull // Currently not supported
+
+        val cachedFile = getCachedRecordFile(file)
+        cachedFile?.let {
+            val fileType = with(it.readBytes().copyOfRange(0, 10).toUHexString("")) {
+                when {
+                    startsWith("2321414D52") -> "amr"
+                    startsWith("02232153494C4B5F5633") -> "silk"
+                    else -> "unknown"
+                }
+            }
+            return ResponseDTO.RecordInfo(
+                RecordInfoData(
+                    it.absolutePath,
+                    it.nameWithoutExtension,
+                    it.nameWithoutExtension,
+                    fileType
+                )
+            )
+        } ?: return ResponseDTO.PluginFailure()
+    }
+
+    suspend fun getImage(params: ApiParams): ResponseDTO {
+        val file = params["file"].string
+
+        val image = getCachedImageFile(file)
+        image?.let { cachedImageMeta ->
+            var cachedFile = getDataFile("image", cachedImageMeta.fileName)
+            if (cachedFile == null) {
+                HttpClient.getBytes(cachedImageMeta.url)?.let { saveImage(cachedImageMeta.fileName, it) }
+            }
+            cachedFile = getDataFile("image", cachedImageMeta.fileName)
+
             cachedFile?.let {
-                val fileType = with(it.readBytes().copyOfRange(0, 10).toUHexString("")) {
+                val fileType = with(it.readBytes().copyOfRange(0, 8).toUHexString("")) {
                     when {
-                        startsWith("2321414D52") -> "amr"
-                        startsWith("02232153494C4B5F5633") -> "silk"
+                        startsWith("FFD8") -> "jpg"
+                        startsWith("89504E47") -> "png"
+                        startsWith("47494638") -> "gif"
+                        startsWith("424D") -> "bmp"
                         else -> "unknown"
                     }
                 }
-                ResponseDTO.RecordInfo(
-                    RecordInfoData(
+                return ResponseDTO.ImageInfo(
+                    ImageInfoData(
                         it.absolutePath,
-                        it.nameWithoutExtension,
-                        it.nameWithoutExtension,
+                        cachedImageMeta.fileName,
+                        cachedImageMeta.md5,
+                        cachedImageMeta.size,
+                        cachedImageMeta.url,
+                        cachedImageMeta.addTime,
                         fileType
                     )
                 )
-            } ?: ResponseDTO.PluginFailure()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
+            }
+        } ?: return ResponseDTO.PluginFailure()
     }
 
-    suspend fun getImage(params: Map<String, JsonElement>): ResponseDTO {
-        val file = params["file"]?.jsonPrimitive?.contentOrNull
-        return if (file != null) {
-            val image = getCachedImageFile(file)
-            image?.let { cachedImageMeta ->
-                var cachedFile = getDataFile("image", cachedImageMeta.fileName)
-                if (cachedFile == null) {
-                    HttpClient.getBytes(cachedImageMeta.url)?.let { saveImage(cachedImageMeta.fileName, it) }
-                }
-                cachedFile = getDataFile("image", cachedImageMeta.fileName)
-
-                cachedFile?.let {
-                    val fileType = with(it.readBytes().copyOfRange(0, 8).toUHexString("")) {
-                        when {
-                            startsWith("FFD8") -> "jpg"
-                            startsWith("89504E47") -> "png"
-                            startsWith("47494638") -> "gif"
-                            startsWith("424D") -> "bmp"
-                            else -> "unknown"
-                        }
-                    }
-                    ResponseDTO.ImageInfo(
-                        ImageInfoData(
-                            it.absolutePath,
-                            cachedImageMeta.fileName,
-                            cachedImageMeta.md5,
-                            cachedImageMeta.size,
-                            cachedImageMeta.url,
-                            cachedImageMeta.addTime,
-                            fileType
-                        )
-                    )
-                }
-            } ?: ResponseDTO.PluginFailure()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
-    }
-
-    fun canSendImage(params: Map<String, JsonElement>): ResponseDTO {
+    fun canSendImage(params: ApiParams): ResponseDTO {
         return ResponseDTO.CanSendImage()
     }
 
-    fun canSendRecord(params: Map<String, JsonElement>): ResponseDTO {
+    fun canSendRecord(params: ApiParams): ResponseDTO {
         return ResponseDTO.CanSendRecord()
     }
 
-    fun getStatus(params: Map<String, JsonElement>): ResponseDTO {
+    fun getStatus(params: ApiParams): ResponseDTO {
         return ResponseDTO.PluginStatus(PluginStatusData(online = bot.isActive, good = bot.isActive))
     }
 
-    fun getVersionInfo(params: Map<String, JsonElement>): ResponseDTO {
+    fun getVersionInfo(params: ApiParams): ResponseDTO {
         return ResponseDTO.VersionInfo(
             VersionInfoData(
                 coolq_directory = PluginBase.dataFolder.absolutePath
@@ -648,16 +596,16 @@ class MiraiApi(val bot: Bot) {
         )
     }
 
-    fun setRestartPlugin(params: Map<String, JsonElement>): ResponseDTO {
-        val delay = params["delay"]?.jsonPrimitive?.int ?: 0
+    fun setRestartPlugin(params: ApiParams): ResponseDTO {
+        val delay = params["delay"]?.jsonPrimitive?.int ?: 0 // unused
         return ResponseDTO.GeneralSuccess()
     }
 
-    fun cleanDataDir(params: Map<String, JsonElement>): ResponseDTO {
+    fun cleanDataDir(params: ApiParams): ResponseDTO {
         return ResponseDTO.GeneralSuccess()
     }
 
-    fun cleanPluginLog(params: Map<String, JsonElement>): ResponseDTO {
+    fun cleanPluginLog(params: ApiParams): ResponseDTO {
         return ResponseDTO.GeneralSuccess()
     }
 
@@ -665,11 +613,11 @@ class MiraiApi(val bot: Bot) {
     ////  v11  ////
     //////////////
 
-    fun setGroupName(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val name = params["group_name"]?.jsonPrimitive?.content
+    fun setGroupName(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val name = params["group_name"].string
 
-        return if (groupId != null && name != null && name != "") {
+        return if (name != "") {
             bot.getGroupOrFail(groupId).name = name
             ResponseDTO.GeneralSuccess()
         } else {
@@ -680,76 +628,72 @@ class MiraiApi(val bot: Bot) {
     @MiraiExperimentalApi
     @LowLevelApi
     @Suppress("DuplicatedCode")
-    suspend fun getGroupHonorInfo(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.longOrNull
-        val type = params["type"]?.jsonPrimitive?.contentOrNull
+    suspend fun getGroupHonorInfo(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val type = params["type"].string
 
-        return if (groupId != null && type != null) {
-            var finalData: GroupHonorInfoData? = null
+        var finalData: GroupHonorInfoData? = null
 
-            if (type == "talkative" || type == "all") {
-                val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.TALKATIVE)
-                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
-                finalData = cqData?.let { cqData }
-            }
-
-            if (type == "performer" || type == "all") {
-                val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.PERFORMER)
-                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
-                finalData = finalData?.apply { performerList = cqData?.actorList } ?: cqData?.let { cqData }
-            }
-
-            if (type == "legend" || type == "all") {
-                val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.LEGEND)
-                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
-                finalData = finalData?.apply { legendList = cqData?.legendList } ?: cqData?.let { cqData }
-            }
-
-            if (type == "strong_newbie" || type == "all") {
-                val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.STRONG_NEWBIE)
-                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
-                finalData = finalData?.apply { strongNewbieList = cqData?.strongNewbieList } ?: cqData?.let { cqData }
-            }
-
-            if (type == "emotion" || type == "all") {
-                val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.EMOTION)
-                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
-                finalData = finalData?.apply { emotionList = cqData?.emotionList } ?: cqData?.let { cqData }
-            }
-
-            if (type == "active") {
-                val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.ACTIVE)
-                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
-                finalData = finalData?.apply {
-                    activeObj = cqData?.activeObj
-                    showActiveObj = cqData?.showActiveObj
-                } ?: cqData?.let { cqData }
-            }
-
-            if (type == "exclusive") {
-                val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.EXCLUSIVE)
-                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
-                finalData = finalData?.apply { exclusiveList = cqData?.exclusiveList } ?: cqData?.let { cqData }
-            }
-
-            if (type == "manage") {
-                val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.MANAGE)
-                val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
-                val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
-                finalData = finalData?.apply { manageList = cqData?.manageList } ?: cqData?.let { cqData }
-            }
-
-            finalData?.let { ResponseDTO.HonorInfo(it) } ?: ResponseDTO.MiraiFailure()
-        } else {
-            ResponseDTO.InvalidRequest()
+        if (type == "talkative" || type == "all") {
+            val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.TALKATIVE)
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
+            finalData = cqData?.let { cqData }
         }
+
+        if (type == "performer" || type == "all") {
+            val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.PERFORMER)
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
+            finalData = finalData?.apply { performerList = cqData?.actorList } ?: cqData?.let { cqData }
+        }
+
+        if (type == "legend" || type == "all") {
+            val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.LEGEND)
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
+            finalData = finalData?.apply { legendList = cqData?.legendList } ?: cqData?.let { cqData }
+        }
+
+        if (type == "strong_newbie" || type == "all") {
+            val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.STRONG_NEWBIE)
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
+            finalData = finalData?.apply { strongNewbieList = cqData?.strongNewbieList } ?: cqData?.let { cqData }
+        }
+
+        if (type == "emotion" || type == "all") {
+            val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.EMOTION)
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
+            finalData = finalData?.apply { emotionList = cqData?.emotionList } ?: cqData?.let { cqData }
+        }
+
+        if (type == "active") {
+            val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.ACTIVE)
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
+            finalData = finalData?.apply {
+                activeObj = cqData?.activeObj
+                showActiveObj = cqData?.showActiveObj
+            } ?: cqData?.let { cqData }
+        }
+
+        if (type == "exclusive") {
+            val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.EXCLUSIVE)
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
+            finalData = finalData?.apply { exclusiveList = cqData?.exclusiveList } ?: cqData?.let { cqData }
+        }
+
+        if (type == "manage") {
+            val data = Mirai.getRawGroupHonorListData(bot, groupId, GroupHonorType.MANAGE)
+            val jsonData = data?.let { Json.encodeToString(GroupHonorListData.serializer(), it) }
+            val cqData = jsonData?.let { Gson().fromJson(it, GroupHonorInfoData::class.java) }
+            finalData = finalData?.apply { manageList = cqData?.manageList } ?: cqData?.let { cqData }
+        }
+
+        finalData?.let { return ResponseDTO.HonorInfo(it) } ?: return ResponseDTO.MiraiFailure()
     }
 
     /////////////////
@@ -758,11 +702,11 @@ class MiraiApi(val bot: Bot) {
 
     @MiraiExperimentalApi
     @LowLevelApi
-    suspend fun setGroupAnnouncement(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val content = params["content"]?.jsonPrimitive?.content
+    suspend fun setGroupAnnouncement(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val content = params["content"].string
 
-        return if (groupId != null && content != null && content != "") {
+        return if (content != "") {
             Mirai.sendGroupAnnouncement(bot, groupId, GroupAnnouncement(msg = GroupAnnouncementMsg(text = content)))
             ResponseDTO.GeneralSuccess()
         } else {
@@ -774,52 +718,46 @@ class MiraiApi(val bot: Bot) {
     //// currently unsupported ////
     //////////////////////////////
 
-    fun getCookies(params: Map<String, JsonElement>): ResponseDTO {
+    fun getCookies(params: ApiParams): ResponseDTO {
         return ResponseDTO.MiraiFailure()
     }
 
-    fun getCSRFToken(params: Map<String, JsonElement>): ResponseDTO {
+    fun getCSRFToken(params: ApiParams): ResponseDTO {
         return ResponseDTO.MiraiFailure()
     }
 
-    fun getCredentials(params: Map<String, JsonElement>): ResponseDTO {
+    fun getCredentials(params: ApiParams): ResponseDTO {
         return ResponseDTO.MiraiFailure()
     }
 
-    fun sendDiscussMessage(params: Map<String, JsonElement>): ResponseDTO {
+    fun sendDiscussMessage(params: ApiParams): ResponseDTO {
         return ResponseDTO.MiraiFailure()
     }
 
-    fun setGroupAnonymous(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
+    fun setGroupAnonymous(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
         val enable = params["enable"]?.jsonPrimitive?.long ?: true
-        return if (groupId != null) {
-            // Not supported
-            // bot.getGroupOrFail(groupId).settings.isAnonymousChatEnabled = enable
-            ResponseDTO.MiraiFailure()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
-    }
 
-    fun setGroupAdmin(params: Map<String, JsonElement>): ResponseDTO {
-        val groupId = params["group_id"]?.jsonPrimitive?.long
-        val memberId = params["user_id"]?.jsonPrimitive?.long
-        val enable = params["enable"]?.jsonPrimitive?.long ?: true
-        return if (groupId != null && memberId != null) {
-            // Not supported
-            // bot.getGroupOrFail(groupId).getMemberOrFail(memberId).permission = if (enable) MemberPermission.ADMINISTRATOR else MemberPermission.MEMBER
-            ResponseDTO.MiraiFailure()
-        } else {
-            ResponseDTO.InvalidRequest()
-        }
-    }
-
-    fun setDiscussLeave(params: Map<String, JsonElement>): ResponseDTO {
+        // Not supported
+        // bot.getGroupOrFail(groupId).settings.isAnonymousChatEnabled = enable
         return ResponseDTO.MiraiFailure()
     }
 
-    fun sendLike(params: Map<String, JsonElement>): ResponseDTO {
+    fun setGroupAdmin(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val memberId = params["user_id"].long
+        val enable = params["enable"]?.jsonPrimitive?.long ?: true
+
+        // Not supported
+        // bot.getGroupOrFail(groupId).getMemberOrFail(memberId).permission = if (enable) MemberPermission.ADMINISTRATOR else MemberPermission.MEMBER
+        return ResponseDTO.MiraiFailure()
+    }
+
+    fun setDiscussLeave(params: ApiParams): ResponseDTO {
+        return ResponseDTO.MiraiFailure()
+    }
+
+    fun sendLike(params: ApiParams): ResponseDTO {
         return ResponseDTO.MiraiFailure()
     }
 
