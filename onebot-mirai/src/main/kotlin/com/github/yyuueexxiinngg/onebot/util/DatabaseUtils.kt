@@ -19,7 +19,7 @@ fun Int.toByteArray(): ByteArray = ByteBuffer.allocate(4).putInt(this).array()
 
 fun MessageEvent.saveMessageToDB() {
     if (PluginSettings.db.enable) {
-        val messageId = message.internalId.toMessageId(bot.id, subject.id)
+        val messageId = message.internalId.toMessageId(bot.id, source.fromId)
         PluginBase.db?.put(
             messageId.toByteArray(),
             message.serializeToJsonString().toByteArray()

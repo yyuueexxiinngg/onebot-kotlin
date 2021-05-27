@@ -24,8 +24,10 @@
 package com.github.yyuueexxiinngg.onebot.util
 
 import com.github.yyuueexxiinngg.onebot.PluginBase
+import com.github.yyuueexxiinngg.onebot.PluginBase.db
 import com.github.yyuueexxiinngg.onebot.PluginBase.saveImageAsync
 import com.github.yyuueexxiinngg.onebot.PluginBase.saveRecordAsync
+import com.github.yyuueexxiinngg.onebot.PluginSettings
 import com.github.yyuueexxiinngg.onebot.logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,6 +37,8 @@ import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
+import net.mamoe.mirai.message.data.MessageChain.Companion.deserializeJsonToMessageChain
+import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.MiraiInternalApi
@@ -206,6 +210,17 @@ private suspend fun convertToMiraiMessage(
                 jsonMessage(args["data"]!!)
             }
         }
+        "reply" -> {
+            if (PluginSettings.db.enable) {
+                db?.apply {
+                    return String(
+                        get(
+                            args["id"]!!.toInt().toByteArray()
+                        )
+                    ).deserializeJsonToMessageChain().sourceOrNull?.quote() ?: MSG_EMPTY
+                }
+            }
+        }
         else -> {
             logger.debug("不支持的 CQ码：${type}")
         }
@@ -258,7 +273,7 @@ suspend fun Message.toCQString(): String {
         }
         is LightApp -> "[CQ:json,data=${content.escape()}]"
         is MessageSource -> ""
-        is QuoteReply -> ""
+        is QuoteReply -> "[CQ:reply,id=${source.internalIds.toMessageId(source.botId, source.fromId)}]"
         is Voice -> "[CQ:record,url=${url?.escape()},file=${md5.toUHexString("")}]"
         else -> "此处消息的转义尚未被插件支持"
     }
@@ -415,14 +430,12 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                                 md5(it)
                             }?.toUHexString("")
                             if (imageMD5 != null) {
-                                val imgContent = """
-                                    [image]
-                                    md5=$imageMD5
-                                    size=${mediaBytes?.size ?: 0}
-                                    url=https://gchat.qpic.cn/gchatpic_new/${contact!!.bot.id}/0-00-$imageMD5/0?term=2
-                                    addtime=${currentTimeMillis()}
-                                    type=$imageType
-                                    """.trimIndent()
+                                val imgContent = constructCacheImageMeta(
+                                    imageMD5,
+                                    mediaBytes?.size,
+                                    (media as Image?)?.queryUrl(),
+                                    imageType
+                                )
                                 logger.info("此链接图片将缓存为$urlHash.cqimg")
                                 saveImageAsync("$urlHash.cqimg", imgContent).start()
                             }

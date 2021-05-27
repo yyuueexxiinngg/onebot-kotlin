@@ -131,7 +131,7 @@ class MiraiApi(val bot: Bot) {
             return if (it.content.isNotEmpty()) {
                 val receipt = group.sendMessage(it)
                 cachedSourceQueue.add(receipt.source)
-                ResponseDTO.MessageResponse(receipt.source.internalIds.toMessageId(bot.id, group.id))
+                ResponseDTO.MessageResponse(receipt.source.internalIds.toMessageId(bot.id, receipt.source.fromId))
             } else {
                 ResponseDTO.MessageResponse(-1)
             }
@@ -157,7 +157,7 @@ class MiraiApi(val bot: Bot) {
             return if (it.content.isNotEmpty()) {
                 val receipt = contact.sendMessage(it)
                 cachedSourceQueue.add(receipt.source)
-                ResponseDTO.MessageResponse(receipt.source.internalIds.toMessageId(bot.id, contact.id))
+                ResponseDTO.MessageResponse(receipt.source.internalIds.toMessageId(bot.id, receipt.source.fromId))
             } else {
                 ResponseDTO.MessageResponse(-1)
             }

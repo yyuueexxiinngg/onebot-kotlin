@@ -143,6 +143,17 @@ internal fun getImageType(image: Image): String {
     }
 }
 
+fun constructCacheImageMeta(md5: String, size: Int?, url: String?, imageType: String?): String {
+    return """
+                [image]
+                md5=${md5}
+                size=${size ?: 0}
+                url=${url ?: "https://c2cpicdw.qpic.cn/offpic_new/0/0-00-${md5}/0?term=2"}
+                addtime=${currentTimeMillis()}
+                type=${imageType ?: "unknown"}
+            """.trimIndent()
+}
+
 internal fun getImageType(bytes: ByteArray): String {
     return with(bytes.copyOfRange(0, 8).toUHexString("")) {
         when {
@@ -174,14 +185,12 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
                     cachedImage.file.delete()
                 } else { // If file exists
                     image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
-                    val imgContent = """
-                                                [image]
-                                                md5=${cachedImage.md5}
-                                                size=${cachedImage.size}
-                                                url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-${cachedImage.md5}/0?term=2
-                                                addtime=${currentTimeMillis()}
-                                                type=${cachedImage.imageType ?: "unknown"}
-                                            """.trimIndent()
+                    val imgContent = constructCacheImageMeta(
+                        cachedImage.md5,
+                        cachedImage.size,
+                        cachedImage.url,
+                        cachedImage.imageType
+                    )
                     PluginBase.saveImageAsync("$name.cqimg", imgContent).start() // Update cache file
                 }
             } else { // If time < one day
@@ -232,7 +241,7 @@ suspend fun getCachedImageFile(name: String): CachedImage? = withContext(Dispatc
                     val bytes = cacheFile.readBytes()
                     md5 = bytes.copyOf(16).toUHexString("")
                     size = bytes.copyOfRange(16, 20).toUnsignedInt().toInt()
-                    url = "https://gchat.qpic.cn/gchatpic_new/0/0-00-$md5/0?term=2"
+                    url = "https://c2cpicdw.qpic.cn/offpic_new//0/0-00-$md5/0?term=2"
                 }
             }
 

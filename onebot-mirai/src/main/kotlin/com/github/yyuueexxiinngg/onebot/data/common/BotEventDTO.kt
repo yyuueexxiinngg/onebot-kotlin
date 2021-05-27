@@ -236,7 +236,7 @@ suspend fun BotEvent.toDTO(isRawMessage: Boolean = false): EventDTO {
                         group_id = group.id,
                         user_id = authorId,
                         operator_id = operator?.id ?: bot.id,
-                        message_id = messageInternalIds.toMessageId(bot.id, group.id),
+                        message_id = messageInternalIds.toMessageId(bot.id, operator?.id ?: bot.id),
                         time = currentTimeSeconds()
                     )
                 }

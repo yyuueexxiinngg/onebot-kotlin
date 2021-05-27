@@ -30,7 +30,7 @@ dependencies {
     implementation("com.google.code.gson:gson:${Versions.gson}")
     implementation("io.github.pcmind:leveldb:${Versions.leveldb}")
     implementation("org.iq80.snappy:snappy:${Versions.snappy}")
-    implementation("io.github.mzdluo123:silk4j:${Versions.silk4j}")
+//    implementation("io.github.mzdluo123:silk4j:${Versions.silk4j}") // mamoe/mirai#1249 eta wen
 
     testImplementation(kotlin("stdlib-jdk8"))
     testImplementation("net.mamoe:mirai-core-api-jvm:${Versions.miraiCoreVersion}")

@@ -143,20 +143,16 @@ data class JsonDTO(val data: JsonData, val type: String = "json") : MessageDTO()
 @Serializable
 data class JsonData(val data: String)
 
+@Serializable
+@SerialName("Reply")
+data class ReplyDTO(val data: ReplyData, val type: String = "reply") : MessageDTO()
+
+@Serializable
+data class ReplyData(val id: Int)
+
 /*@Serializable
 @SerialName("Source")
 data class MessageSourceDTO(val id: Int, val time: Int) : MessageDTO()*/
-
-/*@Serializable
-@SerialName("Quote")
-data class QuoteDTO(
-    val id: Int,
-    val senderId: Long,
-    val targetId: Long,
-    val groupId: Long,
-    val origin: MessageChainDTO
-) : MessageDTO()*/
-
 
 /**
  * Hacky way to get message chain can be both String or List<MessageDTO>
@@ -233,7 +229,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): EventDTO {
         is GroupMessageEvent -> GroupMessagePacketDTO(
             self_id = bot.id,
             sub_type = if (sender is AnonymousMember) "anonymous" else "normal",
-            message_id = message.internalId.toMessageId(bot.id, group.id),
+            message_id = message.internalId.toMessageId(bot.id, source.fromId),
             group_id = group.id,
             user_id = sender.id,
             anonymous = if (sender is AnonymousMember) AnonymousMemberDTO(sender as AnonymousMember) else null,
@@ -246,7 +242,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): EventDTO {
         is FriendMessageEvent -> PrivateMessagePacketDTO(
             self_id = bot.id,
             sub_type = "friend",
-            message_id = message.internalId.toMessageId(bot.id, sender.id),
+            message_id = message.internalId.toMessageId(bot.id, source.fromId),
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
@@ -257,7 +253,7 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): EventDTO {
         is GroupTempMessageEvent -> PrivateMessagePacketDTO(
             self_id = bot.id,
             sub_type = "group",
-            message_id = message.internalId.toMessageId(bot.id, sender.id),
+            message_id = message.internalId.toMessageId(bot.id, source.fromId),
             user_id = sender.id,
             message = if (isRawMessage) rawMessage else message.toMessageChainDTO { it != UnknownMessageDTO },
             raw_message = rawMessage.value,
@@ -270,8 +266,9 @@ suspend fun MessageEvent.toDTO(isRawMessage: Boolean = false): EventDTO {
 }
 
 suspend inline fun MessageChain.toMessageChainDTO(filter: (MessageDTO) -> Boolean): WrappedMessageChainList {
+    val messages = this
     return WrappedMessageChainList(mutableListOf<MessageDTO>().apply {
-        contentsSequence().forEach { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
+        messages.forEach { content -> content.toDTO().takeIf { filter(it) }?.let(::add) }
     })
 }
 
@@ -291,16 +288,9 @@ suspend fun Message.toDTO() = when (this) {
             }
         }
     is LightApp -> AppDTO(AppData(content))
-//    is FlashImage -> FlashImageDTO(image.imageId, image.queryUrl())
-//    is QuoteReply -> QuoteDTO(source.id, source.fromId, source.targetId,
-//        groupId = when {
-//            source is OfflineMessageSource && (source as OfflineMessageSource).kind == OfflineMessageSource.Kind.GROUP ||
-//                    source is OnlineMessageSource && (source as OnlineMessageSource).subject is Group -> source.targetId
-//            else -> 0L
-//        },
-//        // 避免套娃
-//        origin = source.originalMessage.toMessageChainDTO { it != UnknownMessageDTO && it !is QuoteDTO })
+    is QuoteReply -> ReplyDTO(ReplyData(source.internalIds.toMessageId(source.botId, source.fromId)))
     is PokeMessage -> PokeMessageDTO(PokeData(name))
+    is MessageSource -> UnknownMessageDTO
     else -> {
         logger.debug("收到未支持消息: $this")
         UnknownMessageDTO

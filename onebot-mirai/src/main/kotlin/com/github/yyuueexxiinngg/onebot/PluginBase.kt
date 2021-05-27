@@ -20,6 +20,7 @@ import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.message.data.Image
+import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.Voice
 import net.mamoe.mirai.message.data.source
 import net.mamoe.mirai.utils.MiraiExperimentalApi
@@ -156,14 +157,12 @@ object PluginBase : KotlinPlugin(
                                         }
                                     }
 
-                                    val imgMetaContent = """
-                                    [image]
-                                    md5=$imageMD5
-                                    size=$imageSize
-                                    url=https://gchat.qpic.cn/gchatpic_new/0/0-00-$imageMD5/0?term=2
-                                    addtime=${currentTimeMillis()}
-                                    type=${getImageType(image)}
-                                """.trimIndent()
+                                    val imgMetaContent = constructCacheImageMeta(
+                                        imageMD5,
+                                        imageSize,
+                                        image.queryUrl(),
+                                        getImageType(image)
+                                    )
 
                                     saveImageAsync("${image.imageId}.cqimg", imgMetaContent).start()
                                 }
