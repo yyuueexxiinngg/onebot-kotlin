@@ -2,14 +2,14 @@ package com.github.yyuueexxiinngg.onebot
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import net.mamoe.mirai.console.data.AutoSavePluginConfig
+import net.mamoe.mirai.console.data.ReadOnlyPluginConfig
 import net.mamoe.mirai.console.data.value
 import net.mamoe.yamlkt.Comment
 
-object PluginSettings : AutoSavePluginConfig("settings") {
-    var proxy by value("")
-    var db by value(DBSettings())
-    var bots: MutableMap<String, BotSettings>? by value(mutableMapOf("12345654321" to BotSettings()))
+object PluginSettings : ReadOnlyPluginConfig("settings") {
+    val proxy by value("")
+    val db by value(DBSettings())
+    val bots: MutableMap<String, BotSettings>? by value(mutableMapOf("12345654321" to BotSettings()))
 
     @Serializable
     data class DBSettings(
