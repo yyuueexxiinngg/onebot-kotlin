@@ -29,17 +29,24 @@ import com.github.yyuueexxiinngg.onebot.PluginBase.saveImageAsync
 import com.github.yyuueexxiinngg.onebot.PluginBase.saveRecordAsync
 import com.github.yyuueexxiinngg.onebot.PluginSettings
 import com.github.yyuueexxiinngg.onebot.logger
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.server.engine.*
+import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.Mirai
+import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.event.events.ImageUploadEvent
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.MessageChain.Companion.deserializeJsonToMessageChain
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.MiraiInternalApi
 import java.io.File
@@ -415,14 +422,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
 
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
-
-
-                        media = mediaBytes?.let { bytes ->
-                            bytes.toExternalResource().use {
-                                contact!!.uploadImage(it)
-                            }
-                        }
-
+                        media = mediaBytes?.toExternalResource()?.use { it.uploadAsImage(contact!!) }
                         if (useCache) {
                             var imageType = "unknown"
                             val imageMD5 = mediaBytes?.let {
@@ -482,9 +482,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
             if (media == null && mediaBytes != null) {
                 media =
                     withContext(Dispatchers.IO) {
-                        mediaBytes!!.toExternalResource().use { res ->
-                            (contact!! as Group).uploadVoice(res)
-                        }
+                        mediaBytes!!.toExternalResource().use { (contact!! as Group).uploadVoice(it) }
                     }
             }
             return media as Voice

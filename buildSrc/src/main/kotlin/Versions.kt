@@ -2,18 +2,18 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 object Versions {
-    const val projectVersion = "0.3.4"
+    const val projectVersion = "0.3.5"
 
-    const val miraiCoreVersion = "2.6.7"
-    const val miraiConsoleVersion = "2.6.7"
+    const val miraiCoreVersion = "2.7-M2"
+    const val miraiConsoleVersion = "2.7-M2"
 
     const val ktorVersion = "1.5.0"
-    const val kotlinVersion = "1.4.30"
+    const val kotlinVersion = "1.5.20"
     const val kotlinSerializationVersion = "1.1.0"
     const val autoService = "1.0-rc7"
     const val logback = "1.2.3"
     const val gson = "2.8.6"
-    const val yamlkt = "0.7.4"
+    const val yamlkt = "0.9.0"
     const val leveldb = "1.2"
     const val snappy = "0.4"
     const val silk4j = "1.2-dev"
