@@ -29,18 +29,12 @@ import com.github.yyuueexxiinngg.onebot.PluginBase.saveImageAsync
 import com.github.yyuueexxiinngg.onebot.PluginBase.saveRecordAsync
 import com.github.yyuueexxiinngg.onebot.PluginSettings
 import com.github.yyuueexxiinngg.onebot.logger
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.server.engine.*
-import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.Mirai
-import net.mamoe.mirai.contact.*
-import net.mamoe.mirai.event.events.ImageUploadEvent
+import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.MessageChain.Companion.deserializeJsonToMessageChain
@@ -461,10 +455,14 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
         }
     }
 
+    if (media == null && mediaBytes == null) {
+        return PlainText("插件无法获取到媒体" + if (mediaUrl != null) ", 媒体链接: $mediaUrl" else "")
+    }
+
     when (type) {
         "image" -> {
             val flash = args.containsKey("type") && args["type"] == "flash"
-            if (media == null && mediaBytes != null) {
+            if (media == null) {
                 media = withContext(Dispatchers.IO) {
                     mediaBytes!!.toExternalResource().use { res ->
                         contact!!.uploadImage(res)
@@ -479,7 +477,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
             }
         }
         "record" -> {
-            if (media == null && mediaBytes != null) {
+            if (media == null) {
                 media =
                     withContext(Dispatchers.IO) {
                         mediaBytes!!.toExternalResource().use { (contact!! as Group).uploadVoice(it) }

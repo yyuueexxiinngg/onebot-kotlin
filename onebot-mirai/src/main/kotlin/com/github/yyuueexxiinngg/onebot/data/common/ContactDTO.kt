@@ -42,7 +42,7 @@ data class MemberDTO(
         0,
         "unknown",
         "unknown",
-        if (member.permission == MemberPermission.ADMINISTRATOR) "admin" else member.permission.name.toLowerCase(),
+        if (member.permission == MemberPermission.ADMINISTRATOR) "admin" else member.permission.name.lowercase(),
         "unknown"
     )
 }

@@ -259,7 +259,7 @@ suspend fun BotEvent.toDTO(isRawMessage: Boolean = false): EventDTO {
                 self_id = bot.id,
                 user_id = user.id,
                 group_id = group.id,
-                honor_type = honorType.name.toLowerCase(),
+                honor_type = honorType.name.lowercase(),
                 time = currentTimeSeconds()
             )
         }

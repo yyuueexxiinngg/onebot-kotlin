@@ -344,7 +344,7 @@ class MiraiApi(val bot: Bot) {
             StrangerInfoData(
                 userId,
                 profile.nickname,
-                profile.sex.name.toLowerCase(),
+                profile.sex.name.lowercase(),
                 profile.age
             )
         )
@@ -397,7 +397,7 @@ class MiraiApi(val bot: Bot) {
                         it.uin,
                         nickname = it.nameCard,
                         card = it.nameCard,
-                        role = if (it.permission == MemberPermission.ADMINISTRATOR) "admin" else it.permission.name.toLowerCase(),
+                        role = if (it.permission == MemberPermission.ADMINISTRATOR) "admin" else it.permission.name.lowercase(),
                         title = it.specialTitle,
                         card_changeable = group.botPermission == MemberPermission.OWNER
                     )
@@ -697,9 +697,9 @@ class MiraiApi(val bot: Bot) {
         val groupId = params["group_id"].long
         val content = params["content"].string
 
-        return if (groupId != null && content != null && content != "") {
+        return if (content != "") {
             bot.getGroupOrFail(groupId).announcements.publish(OfflineAnnouncement(content))
-            CQResponseDTO.CQGeneralSuccess()
+            ResponseDTO.GeneralSuccess()
         } else {
             ResponseDTO.InvalidRequest()
         }

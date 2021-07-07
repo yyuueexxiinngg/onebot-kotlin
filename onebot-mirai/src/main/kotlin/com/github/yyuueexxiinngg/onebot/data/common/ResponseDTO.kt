@@ -151,7 +151,7 @@ data class MemberInfoData(
         0,
         0,
         "unknown",
-        if (member.permission == MemberPermission.ADMINISTRATOR) "admin" else member.permission.name.toLowerCase(),
+        if (member.permission == MemberPermission.ADMINISTRATOR) "admin" else member.permission.name.lowercase(),
         false,
         member.specialTitle,
         0,

@@ -2,126 +2,18 @@ package com.github.yyuueexxiinngg.onebot.util
 
 import com.github.yyuueexxiinngg.onebot.PluginBase
 import com.github.yyuueexxiinngg.onebot.logger
+import io.ktor.client.*
+import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.message.data.Image
 import java.io.File
 import java.nio.Buffer
 import java.nio.ByteBuffer
-import kotlin.random.Random
-import kotlin.random.nextInt
-import kotlin.reflect.full.callSuspend
-import kotlin.reflect.jvm.kotlinFunction
-
-class ImgUtils {
-    enum class ImageState {
-        RequireUpload,
-        FileExist
-    }
-
-    companion object {
-        private val imgStoreGroupPicUpClass =
-            Class.forName("net.mamoe.mirai.internal.network.protocol.packet.chat.image.ImgStore\$GroupPicUp")
-        private val imgStoreGroupPicUpClassConstructor = imgStoreGroupPicUpClass.getDeclaredConstructor()
-        private val netWorkHandlerClass =
-            Class.forName("net.mamoe.mirai.internal.network.handler.QQAndroidBotNetworkHandler")
-        private val netWorkHandlerClassConstructor = netWorkHandlerClass.getDeclaredConstructor(
-            Class.forName("kotlin.coroutines.CoroutineContext"),
-            Class.forName("net.mamoe.mirai.internal.QQAndroidBot")
-        )
-        private val sendAndExpectMethod = netWorkHandlerClass.declaredMethods.find { it.name == "sendAndExpect" }
-        private val groupPicUpInvokeMethod = imgStoreGroupPicUpClass.getDeclaredMethod(
-            "invoke",
-            Class.forName("net.mamoe.mirai.internal.network.QQAndroidClient"),
-            Long::class.java,
-            Long::class.java,
-            ByteArray::class.java,
-            Long::class.java,
-            Int::class.java,
-            Int::class.java,
-            Int::class.java,
-            Long::class.java,
-            String::class.java,
-            Int::class.java,
-            Int::class.java,
-            Int::class.java,
-            Int::class.java,
-            Int::class.java
-        )
-
-        init {
-            imgStoreGroupPicUpClassConstructor.isAccessible = true
-            netWorkHandlerClassConstructor.isAccessible = true
-            groupPicUpInvokeMethod.isAccessible = true
-        }
-
-        suspend fun tryGroupPicUp(bot: Bot, groupCode: Long, md5: String, size: Int): ImageState {
-            val botClientFiled = bot.javaClass.superclass.getDeclaredField("client")
-            botClientFiled.isAccessible = true
-            val botClient = botClientFiled.get(bot)
-
-            val network = bot::class.members.find { it.name == "_network" }
-
-            val outGoingPacket = groupPicUpInvokeMethod.invoke(
-                imgStoreGroupPicUpClassConstructor.newInstance(),
-                botClient,
-                bot.id,
-                groupCode,
-                hexStringToByteArray(md5),
-                size.toLong(),
-                0, 0, 2001, 0, getRandomString(16) + ".gif", 5, 9, 2, 1006, 0
-            )
-            val response = sendAndExpectMethod?.kotlinFunction?.callSuspend(
-                network!!.call(bot),
-                outGoingPacket,
-                5000, 2
-            )
-
-            return if (response.toString().contains("FileExists")) {
-                ImageState.FileExist
-            } else {
-                ImageState.RequireUpload
-            }
-        }
-
-        fun md5ToImageId(md5: String, contact: Contact, imageType: String?): String {
-            return when (contact) {
-                is Group -> "{${md5.substring(0, 8)}-" +
-                        "${md5.substring(8, 12)}-" +
-                        "${md5.substring(12, 16)}-" +
-                        "${md5.substring(16, 20)}-" +
-                        "${md5.substring(20)}}.${imageType ?: "mirai"}"
-                is Friend, is Member -> "/0-00-$md5"
-                else -> ""
-            }
-        }
-
-        private fun getRandomString(length: Int): String =
-            getRandomString(length, *defaultRanges)
-
-        private val defaultRanges: Array<CharRange> = arrayOf('a'..'z', 'A'..'Z', '0'..'9')
-
-        private fun getRandomString(length: Int, vararg charRanges: CharRange): String =
-            String(CharArray(length) { charRanges[Random.Default.nextInt(0..charRanges.lastIndex)].random() })
-
-        private fun hexStringToByteArray(s: String): ByteArray {
-            val len = s.length
-            val data = ByteArray(len / 2)
-            var i = 0
-            while (i < len) {
-                data[i / 2] = ((Character.digit(s[i], 16) shl 4)
-                        + Character.digit(s[i + 1], 16)).toByte()
-                i += 2
-            }
-            return data
-        }
-    }
-}
+import java.util.*
 
 data class CachedImage(
     val file: File,
@@ -167,35 +59,47 @@ internal fun getImageType(bytes: ByteArray): String {
     }
 }
 
+fun md5ToImageId(md5: String, contact: Contact): String {
+    return when (contact) {
+        is Group -> "{${md5.substring(0, 8)}-" +
+                "${md5.substring(8, 12)}-" +
+                "${md5.substring(12, 16)}-" +
+                "${md5.substring(16, 20)}-" +
+                "${md5.substring(20)}}.mirai"
+        is User -> "/0-00-$md5"
+        else -> ""
+    }
+}
+
 suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
     var image: Image? = null
     val cachedImage = getCachedImageFile(name)
 
+
     if (cachedImage != null) {
+        // If add time till now more than one day, check if the image exists
         if (contact != null) {
-            // If add time till now more than one day, check if the image exists
-            if (cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
-                if (ImgUtils.tryGroupPicUp(
-                        contact.bot,
-                        contact.id,
-                        cachedImage.md5,
-                        cachedImage.size
-                    ) != ImgUtils.ImageState.FileExist
-                ) {
+            if (currentTimeMillis() - cachedImage.addTime >= 1000 * 60 * 60 * 24) {
+                runCatching {
+                    HttpClient {}.head<ByteArray>(cachedImage.url)
+                }.onFailure {
+                    //Not existed, delete file and return null
+                    logger.error("Failed to fetch cache image", it)
                     cachedImage.file.delete()
-                } else { // If file exists
-                    image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
+                    return null
+                }.onSuccess {
+                    //Existed and update cache file
                     val imgContent = constructCacheImageMeta(
                         cachedImage.md5,
                         cachedImage.size,
                         cachedImage.url,
                         cachedImage.imageType
                     )
-                    PluginBase.saveImageAsync("$name.cqimg", imgContent).start() // Update cache file
+                    PluginBase.saveImageAsync("$name.cqimg", imgContent).start()
                 }
-            } else { // If time < one day
-                image = Image(ImgUtils.md5ToImageId(cachedImage.md5, contact, cachedImage.imageType))
             }
+            //Only use id when existing
+            image = Image.fromId(md5ToImageId(cachedImage.md5, contact))
         }
     }
     return image
@@ -206,8 +110,11 @@ suspend fun getCachedImageFile(name: String): CachedImage? = withContext(Dispatc
         with(name) {
             when {
                 endsWith(".cqimg") -> getDataFile("image", name)
-                endsWith(".image") -> getDataFile("image", name.toLowerCase())
-                else -> getDataFile("image", "$name.cqimg") ?: getDataFile("image", "${name.toLowerCase()}.image")
+                endsWith(".image") -> getDataFile("image", name.lowercase(Locale.getDefault()))
+                else -> getDataFile("image", "$name.cqimg") ?: getDataFile(
+                    "image",
+                    "${name.lowercase(Locale.getDefault())}.image"
+                )
             }
         }
 
