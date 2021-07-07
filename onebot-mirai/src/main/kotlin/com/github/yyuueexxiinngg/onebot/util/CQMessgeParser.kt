@@ -553,29 +553,17 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
 
     if (cachedImage != null) {
         if (contact != null) {
-            // If add time till now more than one day, check if the image exists
-            if (cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
-                if (ImgUtil.tryGroupPicUp(
-                        contact.bot,
-                        contact.id,
-                        cachedImage.md5,
-                        cachedImage.size
-                    ) != ImgUtil.ImageState.FileExist
-                ) {
-                    cachedImage.file.delete()
-                } else { // If file exists
-                    image = Image(ImgUtil.md5ToImageId(cachedImage.md5, contact))
-                    val cqImgContent = """
-                                                [image]
-                                                md5=${cachedImage.md5}
-                                                size=${cachedImage.size}
-                                                url=https://gchat.qpic.cn/gchatpic_new/${contact.bot.id}/0-00-${cachedImage.md5}/0?term=2
-                                                addtime=${currentTimeMillis()}
-                                            """.trimIndent()
-                    saveImageAsync("$name.cqimg", cqImgContent).start() // Update cache file
-                }
-            } else { // If time < one day
-                image = Image(ImgUtil.md5ToImageId(cachedImage.md5, contact))
+            image = cachedImage.file.uploadAsImage(contact)
+            val url=image.queryUrl();
+            if(cachedImage.url!=url){
+            val cqImgContent = """
+                [image]
+                md5=${cachedImage.md5}
+                size=${cachedImage.size}
+                url=${url}
+                addtime=${currentTimeMillis()}
+                """.trimIndent()
+                saveImageAsync("$name.cqimg", cqImgContent).start() // Update cache file
             }
         }
     }
