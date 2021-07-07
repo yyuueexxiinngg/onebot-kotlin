@@ -569,26 +569,29 @@ suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
 
     if (cachedImage != null) {
         // If add time till now more than one day, check if the image exists
-        if (contact != null&&cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
-            runCatching {
-                HttpClient {}.head<ByteArray>(cachedImage.url)
-            }.onFailure {
-                //Not exist
-                logger.error("Failed to fetch cache image",it)
-                cachedImage.file.delete()
-                return null
-            }.onSuccess {
-                //Existed
-                image= Image.fromId(md5ToImageId(cachedImage.md5,contact))
-                val cqImgContent = """
+        if (contact != null) {
+            if (cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
+                runCatching {
+                    HttpClient {}.head<ByteArray>(cachedImage.url)
+                }.onFailure {
+                    //Not existed, delete file and return null
+                    logger.error("Failed to fetch cache image", it)
+                    cachedImage.file.delete()
+                    return null
+                }.onSuccess {
+                    //Existed and update cache file
+                    val cqImgContent = """
                 [image]
                 md5=${cachedImage.md5}
                 size=${cachedImage.size}
                 url=${cachedImage.url}
                 addtime=${currentTimeMillis()}
                 """.trimIndent()
-                saveImageAsync("$name.cqimg", cqImgContent).start() // Update cache file
+                    saveImageAsync("$name.cqimg", cqImgContent).start()
+                }
             }
+            //Only use id when existing
+            image = Image.fromId(md5ToImageId(cachedImage.md5, contact))
         }
     }
     return image
