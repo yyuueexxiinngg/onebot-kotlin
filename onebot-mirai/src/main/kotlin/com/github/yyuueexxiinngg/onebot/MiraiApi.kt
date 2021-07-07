@@ -14,9 +14,8 @@ import net.mamoe.mirai.Mirai
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.contact.PermissionDeniedException
+import net.mamoe.mirai.contact.announcement.OfflineAnnouncement
 import net.mamoe.mirai.contact.getMemberOrFail
-import net.mamoe.mirai.data.GroupAnnouncement
-import net.mamoe.mirai.data.GroupAnnouncementMsg
 import net.mamoe.mirai.data.GroupHonorListData
 import net.mamoe.mirai.data.GroupHonorType
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
@@ -763,7 +762,7 @@ class MiraiApi(val bot: Bot) {
         val content = params["content"]?.jsonPrimitive?.content
 
         return if (groupId != null && content != null && content != "") {
-            Mirai.sendGroupAnnouncement(bot, groupId, GroupAnnouncement(msg = GroupAnnouncementMsg(text = content)))
+            bot.getGroupOrFail(groupId).announcements.publish(OfflineAnnouncement(content))
             CQResponseDTO.CQGeneralSuccess()
         } else {
             CQResponseDTO.CQInvalidRequest()

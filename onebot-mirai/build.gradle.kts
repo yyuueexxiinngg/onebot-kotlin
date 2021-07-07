@@ -77,9 +77,10 @@ tasks {
                     .maxBy { it.lastModified() }
                     ?.let {
                         println("Coping ${it.name}")
-                        it.inputStream()
-                            .transferTo(File("$testConsoleDir/plugins/${it.name}").apply { createNewFile() }
-                                .outputStream())
+                        it.inputStream().use {input->
+                            File("$testConsoleDir/plugins/${it.name}").apply { createNewFile() }
+                                .outputStream().use {output->output.write(input.readBytes())  }
+                        }
                         println("Copied ${it.name}")
                     }
             }
