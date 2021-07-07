@@ -27,6 +27,11 @@ import com.github.yyuueexxiinngg.onebot.PluginBase
 import com.github.yyuueexxiinngg.onebot.PluginBase.saveImageAsync
 import com.github.yyuueexxiinngg.onebot.PluginBase.saveRecordAsync
 import com.github.yyuueexxiinngg.onebot.logger
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.server.engine.*
+import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -34,6 +39,7 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.Mirai
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.event.events.ImageUploadEvent
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
@@ -547,17 +553,22 @@ suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
     }
     return null
 }
-
 suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
     var image: Image? = null
     val cachedImage = getCachedImageFile(name)
 
     if (cachedImage != null) {
         if (contact != null) {
-            image = cachedImage.file.uploadAsImage(contact)
-            val url=image.queryUrl();
-            if(cachedImage.url!=url){
-            val cqImgContent = """
+            runCatching {
+                HttpClient {}.get<ByteArray>(cachedImage.url)
+            }.onFailure {
+                logger.error("Failed to fetch cache image",it)
+                cachedImage.file.delete()
+                return null
+            }.onSuccess {
+                image= it.toExternalResource().use { res->res.uploadAsImage(contact) }
+                val url=image!!.queryUrl();
+                val cqImgContent = """
                 [image]
                 md5=${cachedImage.md5}
                 size=${cachedImage.size}
