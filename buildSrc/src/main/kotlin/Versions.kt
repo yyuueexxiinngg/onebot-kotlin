@@ -8,7 +8,7 @@ object Versions {
     const val miraiConsoleVersion = "2.7-M2"
 
     const val ktorVersion = "1.5.0"
-    const val kotlinVersion = "1.5.10"
+    const val kotlinVersion = "1.5.20"
     const val kotlinSerializationVersion = "1.0.1"
     const val autoService = "1.0-rc7"
     const val logback = "1.2.3"
