@@ -31,11 +31,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.Mirai
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.MiraiInternalApi
 import java.io.ByteArrayInputStream
@@ -45,7 +47,6 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
-import kotlin.collections.HashMap
 
 suspend fun cqMessageToMessageChains(
     bot: Bot,
@@ -406,11 +407,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
 
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
-
-                        media = mediaBytes?.let {
-                            contact!!.uploadImage(it.toExternalResource())
-                        }
-
+                        media = mediaBytes?.toExternalResource()?.use { it.uploadAsImage(contact!!) }
                         if (useCache) {
                             val imageMD5 = mediaBytes?.let { md5(it) }?.toUHexString("")
                             if (imageMD5 != null) {
@@ -418,7 +415,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                                     [image]
                                     md5=$imageMD5
                                     size=${mediaBytes?.size ?: 0}
-                                    url=https://gchat.qpic.cn/gchatpic_new/${contact!!.bot.id}/0-00-$imageMD5/0?term=2
+                                    url=${Mirai.queryImageUrl(contact!!.bot, media as Image)}
                                     addtime=${currentTimeMillis()}
                                     """.trimIndent()
                                 logger.info("此链接图片将缓存为$urlHash.cqimg")
@@ -434,7 +431,9 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
                         media = mediaBytes?.let { mBytes ->
-                            contact?.let { (it as Group).uploadVoice(mBytes.toExternalResource()) }
+                            contact?.let { group ->
+                                mBytes.toExternalResource()?.use { (group as Group).uploadVoice(it) }
+                            }
                         }
 
                         if (useCache && mediaBytes != null) {
@@ -451,7 +450,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
             val flash = args.containsKey("type") && args["type"] == "flash"
             if (media == null && mediaBytes != null) {
                 val bis = ByteArrayInputStream(mediaBytes)
-                media = withContext(Dispatchers.IO) { contact!!.uploadImage(bis.toExternalResource()) }
+                media = withContext(Dispatchers.IO) { bis.toExternalResource().use { contact!!.uploadImage(it) } }
             }
 
             return if (flash) {
@@ -463,7 +462,9 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
         "record" -> {
             if (media == null && mediaBytes != null) {
                 media =
-                    withContext(Dispatchers.IO) { (contact!! as Group).uploadVoice(mediaBytes!!.toExternalResource()) }
+                    withContext(Dispatchers.IO) {
+                        mediaBytes!!.toExternalResource().use { (contact!! as Group).uploadVoice(it) }
+                    }
             }
             return media as Voice
         }
@@ -537,7 +538,7 @@ suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
     if (cacheFile != null) {
         if (cacheFile.canRead()) {
             logger.info("此语音已缓存, 如需删除缓存请至 ${cacheFile.absolutePath}")
-            return contact?.let { (it as Group).uploadVoice(cacheFile.toExternalResource()) }
+            return contact?.let { group -> cacheFile.toExternalResource().use { (group as Group).uploadVoice(it) } }
         } else {
             logger.error("Record $name cache file cannot read.")
         }
