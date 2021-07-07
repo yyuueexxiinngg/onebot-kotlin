@@ -37,8 +37,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.Mirai
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.events.ImageUploadEvent
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
@@ -554,25 +553,38 @@ suspend fun tryResolveCachedRecord(name: String, contact: Contact?): Voice? {
     return null
 }
 suspend fun tryResolveCachedImage(name: String, contact: Contact?): Image? {
+    fun md5ToImageId(md5: String, contact: Contact): String {
+        return when (contact) {
+            is Group -> "{${md5.substring(0, 8)}-" +
+                    "${md5.substring(8, 12)}-" +
+                    "${md5.substring(12, 16)}-" +
+                    "${md5.substring(16, 20)}-" +
+                    "${md5.substring(20)}}.mirai"
+            is User -> "/0-00-$md5"
+            else -> ""
+        }
+    }
     var image: Image? = null
     val cachedImage = getCachedImageFile(name)
 
     if (cachedImage != null) {
-        if (contact != null) {
+        // If add time till now more than one day, check if the image exists
+        if (contact != null&&cachedImage.addTime - currentTimeMillis() >= 1000 * 60 * 60 * 24) {
             runCatching {
-                HttpClient {}.get<ByteArray>(cachedImage.url)
+                HttpClient {}.head<ByteArray>(cachedImage.url)
             }.onFailure {
+                //Not exist
                 logger.error("Failed to fetch cache image",it)
                 cachedImage.file.delete()
                 return null
             }.onSuccess {
-                image= it.toExternalResource().use { res->res.uploadAsImage(contact) }
-                val url=image!!.queryUrl();
+                //Existed
+                image= Image.fromId(md5ToImageId(cachedImage.md5,contact))
                 val cqImgContent = """
                 [image]
                 md5=${cachedImage.md5}
                 size=${cachedImage.size}
-                url=${url}
+                url=${cachedImage.url}
                 addtime=${currentTimeMillis()}
                 """.trimIndent()
                 saveImageAsync("$name.cqimg", cqImgContent).start() // Update cache file
