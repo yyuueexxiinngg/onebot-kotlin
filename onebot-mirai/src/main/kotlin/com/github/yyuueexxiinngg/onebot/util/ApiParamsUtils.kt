@@ -6,10 +6,12 @@ import kotlinx.serialization.json.jsonPrimitive
 
 typealias ApiParams = Map<String, JsonElement>
 
-internal val JsonElement?.int: Int get() = this?.jsonPrimitive?.content?.toInt() ?: throw IllegalArgumentException()
+internal val JsonElement?.int: Int
+    get() = this?.jsonPrimitive?.content?.toIntOrNull() ?: throw IllegalArgumentException()
 internal val JsonElement?.intOrNull: Int? get() = this?.jsonPrimitive?.content?.toIntOrNull()
 
-internal val JsonElement?.long: Long get() = this?.jsonPrimitive?.content?.toLong() ?: throw IllegalArgumentException()
+internal val JsonElement?.long: Long
+    get() = this?.jsonPrimitive?.content?.toLongOrNull() ?: throw IllegalArgumentException()
 internal val JsonElement?.longOrNull: Long? get() = this?.jsonPrimitive?.content?.toLongOrNull()
 
 internal val JsonElement?.booleanOrNull: Boolean? get() = this?.jsonPrimitive?.content?.toBooleanStrictOrNull()
