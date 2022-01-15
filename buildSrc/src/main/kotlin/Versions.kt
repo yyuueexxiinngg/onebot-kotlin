@@ -4,16 +4,16 @@ import java.util.concurrent.TimeUnit
 object Versions {
     const val projectVersion = "0.3.5"
 
-    const val miraiCoreVersion = "2.8.2"
-    const val miraiConsoleVersion = "2.8.2"
+    const val miraiCoreVersion = "2.9.2"
+    const val miraiConsoleVersion = "2.9.2"
 
-    const val ktorVersion = "1.5.4"
-    const val kotlinVersion = "1.5.30"
+    const val ktorVersion = "1.6.5"
+    const val kotlinVersion = "1.6.0"
     const val kotlinSerializationVersion = "1.2.2"
     const val autoService = "1.0.1"
-    const val logback = "1.2.7"
+    const val logback = "1.2.10"
     const val gson = "2.8.9"
-    const val yamlkt = "0.9.0"
+    const val yamlkt = "0.10.2"
     const val leveldb = "1.2"
     const val snappy = "0.4"
     const val silk4j = "1.2-dev"

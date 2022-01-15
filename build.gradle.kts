@@ -1,5 +1,4 @@
 plugins {
-    java
     kotlin("jvm") version Versions.kotlinVersion
     kotlin("plugin.serialization") version Versions.kotlinVersion
     kotlin("kapt") version Versions.kotlinVersion
@@ -18,6 +17,7 @@ allprojects {
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
+        maven(url = "https://mirrors.huaweicloud.com/repository/maven")
         gradlePluginPortal()
         mavenCentral()
     }

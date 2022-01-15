@@ -1,6 +1,6 @@
 ## `0.3.5`
 
-- 适配`mirai` 2.6.4
+- 适配`mirai` 2.9.2
   - 修复`mirai` 2.4.0后图片缓存导致的错误 (by @Metric-Void)
 - `get_stranger_info`现支持获取陌生人名片
 - 修复错误的array消息上报中错误的数据类型 #127

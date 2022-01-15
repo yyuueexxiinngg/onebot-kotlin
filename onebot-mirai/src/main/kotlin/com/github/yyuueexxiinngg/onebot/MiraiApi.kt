@@ -248,7 +248,7 @@ class MiraiApi(val bot: Bot) {
     suspend fun setGroupBan(params: ApiParams): ResponseDTO {
         val groupId = params["group_id"].long
         val memberId = params["user_id"].long
-        val duration = params["duration"].intOrNull ?: 30 * 60
+        val duration = params["duration"].intOrNull ?: (30 * 60)
 
         bot.getGroupOrFail(groupId).getMemberOrFail(memberId).mute(duration)
         return ResponseDTO.GeneralSuccess()
@@ -261,7 +261,7 @@ class MiraiApi(val bot: Bot) {
             ?: params["anonymous_flag"].stringOrNull
             ?: params["flag"].string
 
-        val duration = params["duration"].intOrNull ?: 30 * 60
+        val duration = params["duration"].intOrNull ?: (30 * 60)
         val splits = flag.split("&", limit = 2)
         Mirai.muteAnonymousMember(bot, splits[0], splits[1], groupId, duration)
         return ResponseDTO.GeneralSuccess()
@@ -387,7 +387,7 @@ class MiraiApi(val bot: Bot) {
 
         val group = bot.getGroupOrFail(groupId)
         return if (noCache) {
-            val groupUin = Mirai.calculateGroupUinByGroupCode(groupId)
+            val groupUin = Mirai.getUin(group)
             val members = Mirai.getRawGroupMemberList(bot, groupUin, groupId, group.owner.id)
             val member = members.find { m -> m.uin == memberId }
             member?.let {

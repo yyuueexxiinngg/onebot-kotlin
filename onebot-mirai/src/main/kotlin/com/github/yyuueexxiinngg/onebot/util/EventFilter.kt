@@ -1,8 +1,8 @@
 package com.github.yyuueexxiinngg.onebot.util
 
-import kotlinx.serialization.json.*
 import com.github.yyuueexxiinngg.onebot.PluginBase
 import com.github.yyuueexxiinngg.onebot.logger
+import kotlinx.serialization.json.*
 import java.io.File
 
 class EventFilter {
@@ -155,7 +155,7 @@ class EventFilter {
         class InOperator(private val argument: JsonElement) : Filter {
             init {
                 if (!(argument is JsonPrimitive || argument is JsonArray)) {
-                    throw FilterSyntaxError("the argument of 'in' operator must be a string or an array");
+                    throw FilterSyntaxError("the argument of 'in' operator must be a string or an array")
                 }
             }
 
@@ -175,7 +175,7 @@ class EventFilter {
         class ContainsOperator(private val argument: JsonElement) : Filter {
             init {
                 if (!(argument is JsonPrimitive && argument.isString)) {
-                    throw FilterSyntaxError("the argument of 'contains' operator must be a string");
+                    throw FilterSyntaxError("the argument of 'contains' operator must be a string")
                 }
             }
 
@@ -191,7 +191,7 @@ class EventFilter {
         class RegexOperator(private val argument: JsonElement) : Filter {
             init {
                 if (!(argument is JsonPrimitive && argument.isString)) {
-                    throw FilterSyntaxError("the argument of 'regex' operator must be a string");
+                    throw FilterSyntaxError("the argument of 'regex' operator must be a string")
                 }
             }
 
