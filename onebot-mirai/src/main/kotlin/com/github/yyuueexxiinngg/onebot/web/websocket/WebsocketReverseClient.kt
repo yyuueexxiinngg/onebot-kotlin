@@ -14,7 +14,6 @@ import io.ktor.client.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.header
 import io.ktor.http.cio.websocket.*
-import io.ktor.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
@@ -66,7 +65,7 @@ class WebSocketReverseClient(
         }
     }
 
-    @OptIn(KtorExperimentalAPI::class, ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Suppress("DuplicatedCode")
     private suspend fun startGeneralWebsocketClient(
         bot: Bot,
@@ -253,7 +252,7 @@ class WebSocketReverseClient(
         if (clientType != "Universal") websocketSession.incoming.consumeEach { logger.warning("WS Reverse Event 路由只负责发送事件, 不响应收到的请求") }
     }
 
-    @OptIn(KtorExperimentalAPI::class, ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun startWebsocketConnectivityCheck(
         bot: Bot,
         settings: PluginSettings.WebsocketReverseClientSettings,

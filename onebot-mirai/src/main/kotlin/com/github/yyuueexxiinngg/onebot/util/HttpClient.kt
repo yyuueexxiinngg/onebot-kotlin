@@ -1,14 +1,13 @@
 package com.github.yyuueexxiinngg.onebot.util
 
+import com.github.yyuueexxiinngg.onebot.PluginSettings
+import com.github.yyuueexxiinngg.onebot.logger
 import io.ktor.client.engine.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.network.sockets.*
-import io.ktor.util.*
-import com.github.yyuueexxiinngg.onebot.PluginSettings
-import com.github.yyuueexxiinngg.onebot.logger
 import java.io.InputStream
 
 class HttpClient {
@@ -58,7 +57,6 @@ class HttpClient {
             }
         }
 
-        @OptIn(KtorExperimentalAPI::class)
         @Suppress("DuplicatedCode")
         fun initHTTPClientProxy() {
             if (PluginSettings.proxy != "") {

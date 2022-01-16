@@ -14,7 +14,6 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
-import io.ktor.util.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.SendChannel
@@ -28,7 +27,6 @@ class WebsocketServerScope(coroutineContext: CoroutineContext) : CoroutineScope 
     } + SupervisorJob()
 }
 
-@OptIn(KtorExperimentalAPI::class)
 class WebSocketServer(
     private val session: BotSession
 ) {

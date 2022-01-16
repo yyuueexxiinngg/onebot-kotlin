@@ -141,9 +141,18 @@ private suspend fun convertToMiraiMessage(
             if (args["qq"] == "all") {
                 return AtAll
             } else {
-                val group = bot.getGroup(contact!!.id) ?: return MSG_EMPTY
-                val member = group[args["qq"]!!.toLong()] ?: return MSG_EMPTY
-                return At(member)
+                return if (contact !is Group) {
+                    logger.debug("不能在私聊中发送 At。")
+                    MSG_EMPTY
+                } else {
+                    val member = contact[args["qq"]!!.toLong()]
+                    if (member == null) {
+                        logger.debug("无法找到群员：${args["qq"]}")
+                        MSG_EMPTY
+                    } else {
+                        At(member)
+                    }
+                }
             }
         }
         "face" -> {
@@ -177,6 +186,13 @@ private suspend fun convertToMiraiMessage(
             return when (args["type"]) {
                 "qq" -> QQMusic.send(args["id"]!!)
                 "163" -> NeteaseMusic.send(args["id"]!!)
+                "custom" -> Music.custom(
+                    args["url"]!!,
+                    args["audio"]!!,
+                    args["title"]!!,
+                    args["content"],
+                    args["image"]
+                )
                 else -> throw IllegalArgumentException("Custom music share not supported anymore")
             }
         }

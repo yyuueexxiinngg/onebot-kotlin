@@ -83,6 +83,7 @@ suspend fun callMiraiApi(action: String?, params: ApiParams, mirai: MiraiApi): R
             }
         }
     } catch (e: IllegalArgumentException) {
+        logger.info(e)
         responseDTO = ResponseDTO.InvalidRequest()
     } catch (e: PermissionDeniedException) {
         logger.debug("机器人无操作权限, 调用的API: /$action")
@@ -249,8 +250,11 @@ class MiraiApi(val bot: Bot) {
         val groupId = params["group_id"].long
         val memberId = params["user_id"].long
         val duration = params["duration"].intOrNull ?: (30 * 60)
-
-        bot.getGroupOrFail(groupId).getMemberOrFail(memberId).mute(duration)
+        if (duration == 0) {
+            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).unmute()
+        } else {
+            bot.getGroupOrFail(groupId).getMemberOrFail(memberId).mute(duration)
+        }
         return ResponseDTO.GeneralSuccess()
     }
 
@@ -272,6 +276,15 @@ class MiraiApi(val bot: Bot) {
         val enable = params["enable"].booleanOrNull ?: true
 
         bot.getGroupOrFail(groupId).settings.isMuteAll = enable
+        return ResponseDTO.GeneralSuccess()
+    }
+
+    suspend fun setGroupAdmin(params: ApiParams): ResponseDTO {
+        val groupId = params["group_id"].long
+        val memberId = params["user_id"].long
+        val enable = params["enable"].booleanOrNull ?: true
+
+        bot.getGroupOrFail(groupId).getMemberOrFail(memberId).modifyAdmin(enable)
         return ResponseDTO.GeneralSuccess()
     }
 
@@ -731,16 +744,6 @@ class MiraiApi(val bot: Bot) {
 
         // Not supported
         // bot.getGroupOrFail(groupId).settings.isAnonymousChatEnabled = enable
-        return ResponseDTO.MiraiFailure()
-    }
-
-    fun setGroupAdmin(params: ApiParams): ResponseDTO {
-        val groupId = params["group_id"].long
-        val memberId = params["user_id"].long
-        val enable = params["enable"]?.jsonPrimitive?.long ?: true
-
-        // Not supported
-        // bot.getGroupOrFail(groupId).getMemberOrFail(memberId).permission = if (enable) MemberPermission.ADMINISTRATOR else MemberPermission.MEMBER
         return ResponseDTO.MiraiFailure()
     }
 

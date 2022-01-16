@@ -27,14 +27,13 @@ package com.github.yyuueexxiinngg.onebot.util
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
-import io.ktor.util.*
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MusicKind
 import net.mamoe.mirai.message.data.MusicShare
 import net.mamoe.mirai.message.data.SimpleServiceMessage
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 
-@OptIn(KtorExperimentalAPI::class)
 abstract class MusicProvider {
     val http = HttpClient(OkHttp) {
         engine {
@@ -48,6 +47,7 @@ abstract class MusicProvider {
 }
 
 object Music {
+    @OptIn(MiraiExperimentalApi::class)
     fun custom(url: String, audio: String, title: String, content: String?, image: String?): Message {
         return xmlMessage(
             "<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>" +
@@ -55,7 +55,7 @@ object Music {
                     "url=\"$url\" " +
                     "flag=\"0\" adverSign=\"0\" multiMsgFlag=\"0\"><item layout=\"2\">" +
                     "<audio cover=\"$image\" " +
-                    "src=\"$audio\" /><title>$title</title><summary>$content</summary></item><source name=\"Mirai\" " +
+                    "src=\"$audio\" /><title>$title</title><summary>$content</summary></item><source name=\"音乐\" " +
                     "icon=\"https://i.gtimg.cn/open/app_icon/01/07/98/56/1101079856_100_m.png\" " +
                     "url=\"http://web.p.qq.com/qqmpmobile/aio/app.html?id=1101079856\" action=\"app\" " +
                     "a_actionData=\"com.tencent.qqmusic\" i_actionData=\"tencent1101079856://\" appid=\"1101079856\" /></msg>"
