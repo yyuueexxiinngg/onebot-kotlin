@@ -21,14 +21,13 @@ import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import net.mamoe.mirai.message.data.Voice
+import net.mamoe.mirai.message.data.OnlineAudio
 import net.mamoe.mirai.message.data.source
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import org.iq80.leveldb.DB
 import org.iq80.leveldb.Options
 import org.iq80.leveldb.impl.Iq80DBFactory
 import java.io.File
-import kotlin.reflect.jvm.isAccessible
 
 val logger = PluginBase.logger
 
@@ -169,16 +168,12 @@ object PluginBase : KotlinPlugin(
                             }
 
                             if (session.settings.cacheRecord) {
-                                message.filterIsInstance<Voice>().forEach { voice ->
-                                    val voiceUrl = if (voice.url != null) voice.url else {
-                                        val voiceUrlFiled = voice::class.members.find { it.name == "_url" }
-                                        voiceUrlFiled?.isAccessible = true
-                                        "http://grouptalk.c2c.qq.com${voiceUrlFiled?.call(voice)}"
-                                    }
-                                    val voiceBytes = voiceUrl?.let { it -> HttpClient.getBytes(it) }
+                                message.filterIsInstance<OnlineAudio>().forEach { voice ->
+                                    val voiceUrl = voice.urlForDownload
+                                    val voiceBytes = voiceUrl.let { HttpClient.getBytes(it) }
                                     if (voiceBytes != null) {
                                         saveRecordAsync(
-                                            "${voice.md5.toUHexString("")}.cqrecord",
+                                            "${voice.fileMd5.toUHexString("")}.cqrecord",
                                             voiceBytes
                                         ).start()
                                     }

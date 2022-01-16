@@ -170,7 +170,7 @@ suspend fun getCachedImageFile(name: String): CachedImage? = withContext(Dispatc
             logger.error("Image $name cache file cannot read.")
         }
     } else {
-        logger.error("Image $name cache file cannot be found.")
+        logger.info("Image $name cache file cannot be found.")
     }
     null
 }

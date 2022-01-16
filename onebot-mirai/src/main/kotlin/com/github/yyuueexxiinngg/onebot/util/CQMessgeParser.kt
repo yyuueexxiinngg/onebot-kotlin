@@ -292,6 +292,7 @@ suspend fun Message.toCQString(): String {
         is MessageSource -> ""
         is QuoteReply -> "[CQ:reply,id=${source.internalIds.toMessageId(source.botId, source.fromId)}]"
         is Voice -> "[CQ:record,url=${url?.escape()},file=${md5.toUHexString("")}]"
+        is OnlineAudio -> "[CQ:record,url=${urlForDownload.escape()},file=${fileMd5.toUHexString("")}]"
         else -> "此处消息的转义尚未被插件支持"
     }
 }
@@ -459,7 +460,7 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
                     if (media == null || !useCache) {
                         mediaBytes = HttpClient.getBytes(mediaUrl!!, timeoutSecond * 1000L, useProxy)
                         media = mediaBytes?.toExternalResource()?.use { res ->
-                            contact?.let { (it as Group).uploadVoice(res) }
+                            contact?.let { (it as Group).uploadAudio(res) }
                         }
 
                         if (useCache && mediaBytes != null) {
@@ -496,10 +497,10 @@ suspend fun tryResolveMedia(type: String, contact: Contact?, args: Map<String, S
             if (media == null) {
                 media =
                     withContext(Dispatchers.IO) {
-                        mediaBytes!!.toExternalResource().use { (contact!! as Group).uploadVoice(it) }
+                        mediaBytes!!.toExternalResource().use { (contact!! as Group).uploadAudio(it) }
                     }
             }
-            return media as Voice
+            return media as Audio
         }
     }
     return PlainText("插件无法获取到媒体" + if (mediaUrl != null) ", 媒体链接: $mediaUrl" else "")
