@@ -18,7 +18,7 @@ dependencies {
     compileOnly(kotlin("serialization", Versions.kotlinVersion))
     compileOnly("com.google.auto.service", "auto-service-annotations", Versions.autoService)
 
-    implementation("net.mamoe.yamlkt:yamlkt:${Versions.yamlkt}")
+    // implementation("net.mamoe.yamlkt:yamlkt:${Versions.yamlkt}")
     implementation(kotlin("reflect", Versions.kotlinVersion))
     implementation(kotlinx("serialization-cbor", Versions.kotlinSerializationVersion))
     implementation(kotlinx("serialization-json", Versions.kotlinSerializationVersion))

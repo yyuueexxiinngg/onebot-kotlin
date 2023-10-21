@@ -2,7 +2,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 object Versions {
-    const val projectVersion = "0.3.4"
+    const val projectVersion = "0.3.5"
 
     const val miraiCoreVersion = "2.4.0"
     const val miraiConsoleVersion = "2.4.0"
