@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.value
-import net.mamoe.yamlkt.Comment
+// import net.mamoe.yamlkt.Comment
 
 object PluginSettings : AutoSavePluginConfig("settings") {
     var proxy by value("")
@@ -44,7 +44,7 @@ object PluginSettings : AutoSavePluginConfig("settings") {
         var postUrl: String = "",
         var postMessageFormat: String = "string",
         var secret: String = "",
-        @Comment("上报超时时间, 单位毫秒, 须大于0才会生效")
+        // @Comment("上报超时时间, 单位毫秒, 须大于0才会生效")
         var timeout: Long = 0L
     )
 
